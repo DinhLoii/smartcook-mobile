@@ -7,12 +7,11 @@ import {
 import { BrandColors } from "@/constants/brandColors";
 import ShoppingNoteModal from "@/components/common/ShoppingNoteModal";
 import ShoppingReminderBanner from "@/components/common/ShoppingReminderBanner";
+import CreateRecipeModal from "@/components/recipe/CreateRecipeModal";
 import { CartService } from "@/services/cartService";
-import {
-  CUISINE_OPTIONS,
-  PreferenceService,
-  UserPreferences,
-} from "@/services/preferenceService";
+import { PreferenceService, UserPreferences, CUISINE_OPTIONS } from "@/services/preferenceService";
+import { RecipeService } from "@/services/recipeService";
+import { Recipe } from "@/types";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -73,6 +72,43 @@ export default function HomeScreen() {
 
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [showCreateRecipeModal, setShowCreateRecipeModal] = useState<boolean>(false);
+  const [customDishes, setCustomDishes] = useState<
+    Array<{
+      id: string;
+      title: string;
+      badge: string;
+      price: string;
+      image: any;
+      sub: string;
+      fridge: string;
+    }>
+  >(() =>
+    RecipeService.getCustomRecipes().map((r) => ({
+      id: r.id,
+      title: r.title,
+      badge: r.badge,
+      price: r.price,
+      image: r.image,
+      sub: r.sub,
+      fridge: `${r.fridgeMatchPercent}%`,
+    }))
+  );
+
+  const handleRecipeCreated = (newRecipe: Recipe) => {
+    const formattedDish = {
+      id: newRecipe.id,
+      title: newRecipe.title,
+      badge: newRecipe.badge,
+      price: newRecipe.price,
+      image: newRecipe.image,
+      sub: newRecipe.sub,
+      fridge: `${newRecipe.fridgeMatchPercent}%`,
+    };
+    setCustomDishes((prev) => [formattedDish, ...prev]);
+    setSelectedCategory("all");
+    setCurrentPage(1);
+  };
   const ITEMS_PER_PAGE = 10;
 
   const toggleFavorite = (id: string) => {
@@ -98,7 +134,7 @@ export default function HomeScreen() {
       titleSuffix: " nguyên liệu có sẵn",
       subtitle: "Thịt gà • Cà chua • Bơ • Gạo",
       actionText: "Xem chi tiết →",
-      badge: "Gợi ý số 1",
+      tagBadge: "hot" as const,
       image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
       gradientColors: ["#FFF0EB", "#FFE2D7", "#FED7AA"] as const,
       highlightColor: "#FF4D6D",
@@ -113,7 +149,7 @@ export default function HomeScreen() {
       titleSuffix: " chỉ 380 kcal",
       subtitle: "Cá hồi • Quả bơ • Xà lách • Olive",
       actionText: "Xem chi tiết →",
-      badge: "Gợi ý số 2",
+      tagBadge: "popular" as const,
       image: require("@/assets/images/salad-salmon.jpg"),
       gradientColors: ["#F0FDF4", "#DCFCE7", "#BBF7D0"] as const,
       highlightColor: "#059669",
@@ -128,7 +164,7 @@ export default function HomeScreen() {
       titleSuffix: " cho cả nhà",
       subtitle: "Thịt bò • Măng tây • Bơ tỏi • Tiêu",
       actionText: "Xem chi tiết →",
-      badge: "Gợi ý số 3",
+      tagBadge: "hot" as const,
       image: require("@/assets/images/steak-asparagus.jpg"),
       gradientColors: ["#FFF5EB", "#FFE5D6", "#FED7AA"] as const,
       highlightColor: "#EA580C",
@@ -143,7 +179,7 @@ export default function HomeScreen() {
       titleSuffix: "",
       subtitle: "Mỳ Ý • Bò bằm • Cà chua bi • Phô mai",
       actionText: "Xem chi tiết →",
-      badge: "Gợi ý số 4",
+      tagBadge: "popular" as const,
       image: require("@/assets/images/pasta-bolognese.jpg"),
       gradientColors: ["#FFF0EB", "#FFE0D3", "#FED7AA"] as const,
       highlightColor: "#E11D48",
@@ -158,7 +194,7 @@ export default function HomeScreen() {
       titleSuffix: "",
       subtitle: "Ức gà • Mật ong • Hạt mè • Ớt cay",
       actionText: "Xem chi tiết →",
-      badge: "Gợi ý số 5",
+      tagBadge: "hot" as const,
       image: require("@/assets/images/crispy-chicken.jpg"),
       gradientColors: ["#FFF7ED", "#FFEDD5", "#FED7AA"] as const,
       highlightColor: "#D97706",
@@ -1125,11 +1161,13 @@ export default function HomeScreen() {
 
   // Filtered dishes based on category, search, and filter modal
   const filteredDishes = useMemo(() => {
-    let list =
+    let baseList =
       selectedCategory === "all"
         ? (popularDishesByCategory["all"] ?? [])
         : (popularDishesByCategory[selectedCategory] ??
           popularDishesByCategory["family"]);
+
+    let list = [...customDishes, ...baseList];
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
@@ -1370,19 +1408,14 @@ export default function HomeScreen() {
             </ScrollView>
           </View>
 
-          {/* 4. Hero Carousel Section (Gợi ý tủ lạnh - Tự động chuyển động qua lại 5 món) */}
+          {/* 4. Hero Carousel Section (Hot Hôm Nay) */}
           <View style={styles.heroSection}>
-            {/* Header Row with title, counter and arrows */}
+            {/* Header Row with title and arrows */}
             <View style={styles.heroHeaderRow}>
               <View style={styles.heroHeaderTitleGroup}>
                 <Text style={styles.heroSectionHeader}>
-                  Gợi ý tủ lạnh hôm nay
+                  Hot hôm nay
                 </Text>
-                <View style={styles.slideCounterBadge}>
-                  <Text style={styles.slideCounterText}>
-                    {currentHeroIndex + 1}/{heroSlides.length}
-                  </Text>
-                </View>
               </View>
 
               {/* Manual Back & Forth Buttons */}
@@ -1489,14 +1522,25 @@ export default function HomeScreen() {
                             </LinearGradient>
                           </TouchableOpacity>
 
-                          <Text
+                          <View
                             style={[
-                              styles.heroBestOfferBadge,
-                              { color: item.badgeColor },
+                              styles.heroTagBadgeBtn,
+                              item.tagBadge === "popular"
+                                ? styles.heroTagBadgePopular
+                                : styles.heroTagBadgeHot,
                             ]}
                           >
-                            {item.badge}
-                          </Text>
+                            <Text
+                              style={[
+                                styles.heroTagBadgeBtnText,
+                                item.tagBadge === "popular"
+                                  ? styles.heroTagTextPopular
+                                  : styles.heroTagTextHot,
+                              ]}
+                            >
+                              {item.tagBadge === "popular" ? "⭐ Popular" : "🔥 Hot"}
+                            </Text>
+                          </View>
                         </View>
                       </View>
 
@@ -1584,6 +1628,27 @@ export default function HomeScreen() {
                       style={styles.personalizedDishImg}
                       resizeMode="cover"
                     />
+                    <View
+                      style={[
+                        styles.cardHotPopularBadge,
+                        dish.id.includes("1") || dish.id.includes("custom")
+                          ? styles.badgeHot
+                          : styles.badgePopular,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.cardHotPopularText,
+                          dish.id.includes("1") || dish.id.includes("custom")
+                            ? styles.badgeTextHot
+                            : styles.badgeTextPopular,
+                        ]}
+                      >
+                        {dish.id.includes("1") || dish.id.includes("custom")
+                          ? "🔥 Hot"
+                          : "⭐ Popular"}
+                      </Text>
+                    </View>
                     <View style={styles.personalizedMatchPill}>
                       <Ionicons name="checkmark-circle" size={11} color="#16A34A" />
                       <Text style={styles.personalizedMatchPillText}>
@@ -1622,31 +1687,42 @@ export default function HomeScreen() {
                 </Text>
               </View>
 
-              {/* Right Side: Simple Clean Text Filter / Count */}
-              {selectedCategory !== "all" ? (
+              {/* Right Side: Actions (Create Recipe + Filter/Count) */}
+              <View style={styles.cleanHeaderActions}>
                 <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    setSelectedCategory("all");
-                    setCurrentPage(1);
-                  }}
-                  style={styles.cleanFilterTextBtn}
+                  activeOpacity={0.8}
+                  onPress={() => setShowCreateRecipeModal(true)}
+                  style={styles.cleanCreateRecipeBtn}
                 >
-                  <Text style={styles.cleanFilterActiveText}>
-                    {categories.find((c) => c.id === selectedCategory)?.label ?? ""} ✕
-                  </Text>
+                  <Ionicons name="add-circle" size={15} color={BrandColors.primaryDark} />
+                  <Text style={styles.cleanCreateRecipeBtnText}>Tạo món</Text>
                 </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => setShowFilterModal(true)}
-                  style={styles.cleanCountBtn}
-                >
-                  <Text style={styles.cleanCountText}>
-                    {filteredDishes.length} món
-                  </Text>
-                </TouchableOpacity>
-              )}
+
+                {selectedCategory !== "all" ? (
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setSelectedCategory("all");
+                      setCurrentPage(1);
+                    }}
+                    style={styles.cleanFilterTextBtn}
+                  >
+                    <Text style={styles.cleanFilterActiveText}>
+                      {categories.find((c) => c.id === selectedCategory)?.label ?? ""} ✕
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => setShowFilterModal(true)}
+                    style={styles.cleanCountBtn}
+                  >
+                    <Text style={styles.cleanCountText}>
+                      {filteredDishes.length} món
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
 
             {/* Empty State when no dishes match filters/search */}
@@ -1704,6 +1780,28 @@ export default function HomeScreen() {
                           style={styles.dishImage}
                           resizeMode="cover"
                         />
+                        {/* Small Hot / Popular Badge Button */}
+                        <View
+                          style={[
+                            styles.cardHotPopularBadge,
+                            ((dish as any).hotTag === "popular" || dish.id.includes("3") || dish.id.includes("5"))
+                              ? styles.badgePopular
+                              : styles.badgeHot,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.cardHotPopularText,
+                              ((dish as any).hotTag === "popular" || dish.id.includes("3") || dish.id.includes("5"))
+                                ? styles.badgeTextPopular
+                                : styles.badgeTextHot,
+                            ]}
+                          >
+                            {((dish as any).hotTag === "popular" || dish.id.includes("3") || dish.id.includes("5"))
+                              ? "⭐ Popular"
+                              : "🔥 Hot"}
+                          </Text>
+                        </View>
                       </View>
 
                       {/* Dish Details */}
@@ -2168,6 +2266,13 @@ export default function HomeScreen() {
         visible={showShoppingNote}
         onClose={() => setShowShoppingNote(false)}
       />
+
+      {/* Step-by-Step Recipe Creation Wizard Modal */}
+      <CreateRecipeModal
+        visible={showCreateRecipeModal}
+        onClose={() => setShowCreateRecipeModal(false)}
+        onRecipeCreated={handleRecipeCreated}
+      />
     </View>
   );
 }
@@ -2523,6 +2628,63 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
   },
+  heroTagBadgeBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  heroTagBadgeHot: {
+    backgroundColor: "#FFF7ED",
+    borderColor: "#FFEDD5",
+  },
+  heroTagBadgePopular: {
+    backgroundColor: "#FEF3C7",
+    borderColor: "#FDE68A",
+  },
+  heroTagBadgeBtnText: {
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  heroTagTextHot: {
+    color: "#EA580C",
+  },
+  heroTagTextPopular: {
+    color: "#D97706",
+  },
+  cardHotPopularBadge: {
+    position: "absolute",
+    top: 6,
+    left: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    zIndex: 10,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    borderWidth: 0.8,
+  },
+  badgeHot: {
+    backgroundColor: "rgba(255, 247, 237, 0.95)",
+    borderColor: "#FDBA74",
+  },
+  badgePopular: {
+    backgroundColor: "rgba(254, 243, 199, 0.95)",
+    borderColor: "#FCD34D",
+  },
+  cardHotPopularText: {
+    fontSize: 9.5,
+    fontWeight: "800",
+  },
+  badgeTextHot: {
+    color: "#EA580C",
+  },
+  badgeTextPopular: {
+    color: "#D97706",
+  },
   heroImageWrapper: {
     width: 106,
     height: 106,
@@ -2822,12 +2984,33 @@ const styles = StyleSheet.create({
   },
   cleanCountBtn: {
     paddingBottom: 2,
-    paddingLeft: 12,
+    paddingLeft: 6,
   },
   cleanCountText: {
     fontSize: 13,
     fontWeight: "700",
     color: BrandColors.primary,
+  },
+  cleanHeaderActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  cleanCreateRecipeBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#FFF7ED",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#FFEDD5",
+  },
+  cleanCreateRecipeBtnText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: BrandColors.primaryDark,
   },
   cleanFilterTextBtn: {
     paddingBottom: 2,
