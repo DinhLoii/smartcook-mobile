@@ -1,0 +1,133 @@
+export interface Store {
+  id: string;
+  name: string;
+  brand?: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+  openHours?: string;
+  phone?: string;
+}
+
+export const MOCK_STORES: Store[] = [
+  {
+    id: "store-1",
+    name: "WinMart+ Nguyễn Thị Minh Khai",
+    brand: "WinMart",
+    latitude: 10.7769,
+    longitude: 106.6909,
+    address: "123 Nguyễn Thị Minh Khai, P. Bến Thành, Quận 1, TP.HCM",
+    openHours: "06:00 - 22:00",
+    phone: "028 7108 1368",
+  },
+  {
+    id: "store-2",
+    name: "Co.opmart Cống Quỳnh",
+    brand: "Co.opmart",
+    latitude: 10.7676,
+    longitude: 106.6892,
+    address: "189C Cống Quỳnh, P. Nguyễn Cư Trinh, Quận 1, TP.HCM",
+    openHours: "07:30 - 22:00",
+    phone: "028 3832 5288",
+  },
+  {
+    id: "store-3",
+    name: "Annam Gourmet Hai Bà Trưng",
+    brand: "Annam Gourmet",
+    latitude: 10.7831,
+    longitude: 106.6989,
+    address: "16-18 Hai Bà Trưng, P. Bến Nghé, Quận 1, TP.HCM",
+    openHours: "07:00 - 22:00",
+    phone: "028 3822 9332",
+  },
+  {
+    id: "store-4",
+    name: "Co.opXtra Vạn Hạnh Mall",
+    brand: "Co.opXtra",
+    latitude: 10.7711,
+    longitude: 106.6698,
+    address: "Tầng B1 Vạn Hạnh Mall, 11 Sư Vạn Hạnh, Quận 10, TP.HCM",
+    openHours: "08:00 - 22:00",
+    phone: "028 3862 3888",
+  },
+  {
+    id: "store-5",
+    name: "Bách Hóa Xanh Điện Biên Phủ",
+    brand: "Bách Hóa Xanh",
+    latitude: 10.7988,
+    longitude: 106.7118,
+    address: "142 Điện Biên Phủ, Phường 25, Quận Bình Thạnh, TP.HCM",
+    openHours: "06:30 - 21:30",
+    phone: "1900 1908",
+  },
+  {
+    id: "store-6",
+    name: "WinMart Landmark 81",
+    brand: "WinMart",
+    latitude: 10.7951,
+    longitude: 106.7218,
+    address: "Tầng B1 Vincom Landmark 81, 720A Điện Biên Phủ, Bình Thạnh, TP.HCM",
+    openHours: "08:00 - 22:00",
+    phone: "028 3636 8181",
+  },
+  {
+    id: "store-7",
+    name: "Emart Sala Thủ Thiêm",
+    brand: "Emart",
+    latitude: 10.7712,
+    longitude: 106.7215,
+    address: "Tầng B1 Thiso Mall, 10 Mai Chí Thọ, TP. Thủ Đức, TP.HCM",
+    openHours: "07:30 - 22:30",
+    phone: "028 3622 9999",
+  },
+  {
+    id: "store-8",
+    name: "Tops Market An Phú",
+    brand: "Tops Market",
+    latitude: 10.8035,
+    longitude: 106.7412,
+    address: "Tầng B1, TTTM Estella Place, 88 Song Hành, TP. Thủ Đức, TP.HCM",
+    openHours: "08:00 - 22:00",
+    phone: "028 3620 4888",
+  },
+  {
+    id: "store-9",
+    name: "Lotte Mart Nam Sài Gòn",
+    brand: "Lotte Mart",
+    latitude: 10.7351,
+    longitude: 106.7022,
+    address: "469 Nguyễn Hữu Thọ, P. Tân Hưng, Quận 7, TP.HCM",
+    openHours: "07:30 - 22:00",
+    phone: "028 3775 3232",
+  },
+  {
+    id: "store-10",
+    name: "WinMart Vincom Bà Triệu",
+    brand: "WinMart",
+    latitude: 21.0118,
+    longitude: 105.8496,
+    address: "Tầng B1, Vincom Center, 191 Bà Triệu, Q. Hai Bà Trưng, Hà Nội",
+    openHours: "08:00 - 22:00",
+    phone: "024 3974 9999",
+  },
+  {
+    id: "store-11",
+    name: "Big C Thăng Long",
+    brand: "Big C",
+    latitude: 21.0069,
+    longitude: 105.7925,
+    address: "222 Trần Duy Hưng, P. Trung Hòa, Q. Cầu Giấy, Hà Nội",
+    openHours: "08:00 - 22:30",
+    phone: "024 3784 8596",
+  },
+  {
+    id: "store-12",
+    name: "Mega Market Đà Nẵng",
+    brand: "Mega Market",
+    latitude: 16.0354,
+    longitude: 108.2045,
+    address: "Cách Mạng Tháng 8, P. Khuê Trung, Q. Cẩm Lệ, Đà Nẵng",
+    openHours: "06:00 - 22:00",
+    phone: "0236 3644 999",
+  },
+];
