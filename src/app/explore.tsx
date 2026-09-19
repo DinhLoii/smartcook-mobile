@@ -3,8 +3,7 @@ import { SymbolView } from 'expo-symbols';
 import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ExternalLink, ThemedText, ThemedView, WebBadge } from '@/components/common';
-import { Collapsible } from '@/components/ui/collapsible';
+import { Collapsible, ExternalLink, ThemedText, ThemedView, WebBadge } from '@/components/common';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 

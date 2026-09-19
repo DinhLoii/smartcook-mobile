@@ -6,10 +6,9 @@ import {
   ScanAIView,
 } from "@/components/features";
 import { BrandColors } from "@/constants/brandColors";
-import ShoppingNoteModal from "@/components/common/ShoppingNoteModal";
-import ShoppingReminderBanner from "@/components/common/ShoppingReminderBanner";
-import DraggableAIAssistant from "@/components/common/DraggableAIAssistant";
-import CreateRecipeModal from "@/components/recipe/CreateRecipeModal";
+import { ShoppingNoteModal, ShoppingReminderBanner } from "@/components/planner";
+import { DraggableAIAssistant } from "@/components/ai";
+import { CreateRecipeModal } from "@/components/recipe";
 import { CartService } from "@/services/cartService";
 import { PreferenceService, UserPreferences, CUISINE_OPTIONS } from "@/services/preferenceService";
 import { RecipeService } from "@/services/recipeService";
