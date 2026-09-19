@@ -1,42 +1,24 @@
 import apiClient, { ApiResponse } from "./apiClient";
-import { tokenStorage, StoredUser } from "@/utils/tokenStorage";
+import { tokenStorage } from "@/utils/tokenStorage";
+import {
+  User,
+  StoredUser,
+  AuthResponseData,
+  RegisterPayload,
+  LoginPayload,
+  SurveyPayload,
+  UpdateProfilePayload,
+} from "@/types";
 
-export interface RegisterPayload {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-}
-
-export interface LoginPayload {
-  email: string;
-  password: string;
-}
-
-export interface AuthResponseData {
-  user: StoredUser;
-  tokens?: {
-    accessToken: string;
-    refreshToken: string;
-  };
-  accessToken?: string;
-  refreshToken?: string;
-}
-
-export interface SurveyPayload {
-  portion?: "1" | "2" | "3-4" | "5+";
-  cuisines?: string[];
-  healthGoal?: "healthy" | "loss" | "muscle" | "budget";
-  restrictions?: string[];
-  tasteProfile?: string[];
-  cookingTime?: "quick" | "medium" | "standard" | "slow";
-}
-
-export interface UpdateProfilePayload {
-  firstName?: string;
-  lastName?: string;
-  avatar?: string;
-}
+export type {
+  User,
+  StoredUser,
+  AuthResponseData,
+  RegisterPayload,
+  LoginPayload,
+  SurveyPayload,
+  UpdateProfilePayload,
+};
 
 export const authService = {
   /**

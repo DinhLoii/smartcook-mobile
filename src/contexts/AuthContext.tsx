@@ -5,13 +5,18 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import authService, {
+import authService from "@/services/authService";
+import { onSessionExpired } from "@/services/apiClient";
+import { tokenStorage } from "@/utils/tokenStorage";
+import {
+  User,
+  StoredUser,
   LoginPayload,
   RegisterPayload,
   SurveyPayload,
-} from "@/services/authService";
-import { onSessionExpired } from "@/services/apiClient";
-import { StoredUser, tokenStorage } from "@/utils/tokenStorage";
+} from "@/types";
+
+export type { User, StoredUser };
 
 interface AuthContextType {
   user: StoredUser | null;

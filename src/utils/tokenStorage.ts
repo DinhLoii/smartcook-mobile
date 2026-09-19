@@ -1,29 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StoredUser, User } from "@/types";
+
+export type { StoredUser, User };
 
 const ACCESS_TOKEN_KEY = "smartcook_access_token";
 const REFRESH_TOKEN_KEY = "smartcook_refresh_token";
 const USER_INFO_KEY = "smartcook_user_info";
-
-export interface StoredUser {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  fullName?: string;
-  avatar?: string;
-  role?: string;
-  chefExp?: number;
-  level?: string;
-  preferences?: {
-    hasCompletedSurvey?: boolean;
-    portion?: string;
-    cuisines?: string[];
-    healthGoal?: string;
-    restrictions?: string[];
-    tasteProfile?: string[];
-    cookingTime?: string;
-  };
-}
 
 export const tokenStorage = {
   async getAccessToken(): Promise<string | null> {
