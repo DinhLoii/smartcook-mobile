@@ -1,11 +1,9 @@
 import CookingHistoryModal from "@/components/common/CookingHistoryModal";
-import { BrandColors } from "@/constants/brandColors";
 import { RECIPES_DATA } from "@/data/recipesData";
-import { Recipe } from "@/types";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Alert,
   Image,
@@ -43,7 +41,15 @@ function normalizeText(text: string): string {
 const KEYWORD_MAP: Record<string, string[]> = {
   // Thịt
   "thit ga": ["ga", "dui ga", "uc ga", "canh ga", "thit ga"],
-  "thit heo": ["heo", "ba chi heo", "suon", "thit nac", "thit heo", "xay", "ba chi"],
+  "thit heo": [
+    "heo",
+    "ba chi heo",
+    "suon",
+    "thit nac",
+    "thit heo",
+    "xay",
+    "ba chi",
+  ],
   "thit bo": ["bo", "than bo", "bo bam", "bap bo", "ba chi bo", "bo uc"],
   "thit vit": ["vit", "thit vit"],
   "suon heo": ["suon", "suon non"],
@@ -202,14 +208,18 @@ const KEYWORD_MAP: Record<string, string[]> = {
   "ngo ngot dong hop": ["ngo ngot", "bap hop", "ngo hop"],
 };
 
-function matchIngredient(recipeIngName: string, selectedList: string[]): boolean {
+function matchIngredient(
+  recipeIngName: string,
+  selectedList: string[],
+): boolean {
   const normRecipe = normalizeText(recipeIngName);
 
   return selectedList.some((sel) => {
     const normSel = normalizeText(sel);
 
     // Direct match
-    if (normRecipe.includes(normSel) || normSel.includes(normRecipe)) return true;
+    if (normRecipe.includes(normSel) || normSel.includes(normRecipe))
+      return true;
 
     // Check alias dictionary
     const aliases = KEYWORD_MAP[normSel];
@@ -221,7 +231,9 @@ function matchIngredient(recipeIngName: string, selectedList: string[]): boolean
 
     // Token match for multi-word
     const selTokens = normSel.split(/[\s,/-]+/).filter((t) => t.length > 1);
-    const recipeTokens = normRecipe.split(/[\s,/-]+/).filter((t) => t.length > 1);
+    const recipeTokens = normRecipe
+      .split(/[\s,/-]+/)
+      .filter((t) => t.length > 1);
 
     return selTokens.some((st) => recipeTokens.includes(st));
   });
@@ -644,7 +656,12 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
   },
 ];
 
-export default function FridgeView({ insetsTop }: { insetsTop: number }) {
+interface FridgeViewProps {
+  insetsTop: number;
+  onBack?: () => void;
+}
+
+export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
   const router = useRouter();
   const { width } = useWindowDimensions();
 
@@ -663,7 +680,9 @@ export default function FridgeView({ insetsTop }: { insetsTop: number }) {
 
   // Accordion expanded state map (stores groupId -> boolean)
   // By default, ALL groups are CLOSED until user taps the arrow
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
+    {},
+  );
 
   // Custom User Input text state
   const [customInput, setCustomInput] = useState<string>("");
@@ -685,7 +704,9 @@ export default function FridgeView({ insetsTop }: { insetsTop: number }) {
   // Toggle ingredient selection
   const toggleIngredient = (name: string) => {
     setSelectedIngredients((prev) =>
-      prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]
+      prev.includes(name)
+        ? prev.filter((item) => item !== name)
+        : [...prev, name],
     );
   };
 
@@ -749,7 +770,7 @@ export default function FridgeView({ insetsTop }: { insetsTop: number }) {
       const totalRequired = recipe.ingredients.length;
       const matchPercent = Math.min(
         100,
-        Math.round((matchedCount / totalRequired) * 100)
+        Math.round((matchedCount / totalRequired) * 100),
       );
 
       return {
@@ -768,7 +789,7 @@ export default function FridgeView({ insetsTop }: { insetsTop: number }) {
   // Split into 100% ready vs partially ready
   const perfectMatches = rankedRecipes.filter((r) => r.matchPercent === 100);
   const partialMatches = rankedRecipes.filter(
-    (r) => r.matchPercent >= 50 && r.matchPercent < 100
+    (r) => r.matchPercent >= 50 && r.matchPercent < 100,
   );
 
   const currentCategoryData =
@@ -780,7 +801,19 @@ export default function FridgeView({ insetsTop }: { insetsTop: number }) {
       {/* 1. Header Section */}
       <View style={[styles.header, { paddingTop: insetsTop + 8 }]}>
         <View style={styles.headerTitleRow}>
-          <Text style={styles.headerTitle}>Chọn Nguyên Liệu Hiện Có</Text>
+          <View style={styles.headerLeftCol}>
+            {onBack && (
+              <TouchableOpacity
+                style={styles.exitBtn}
+                onPress={onBack}
+                activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="arrow-back" size={20} color="#0F172A" />
+              </TouchableOpacity>
+            )}
+            <Text style={styles.headerTitle}>Nguyên Liệu Của Tôi</Text>
+          </View>
           <TouchableOpacity
             style={styles.historyBtn}
             onPress={() => setShowHistoryModal(true)}
@@ -791,9 +824,6 @@ export default function FridgeView({ insetsTop }: { insetsTop: number }) {
             <Text style={styles.historyBtnText}>Lịch sử</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.headerDesc}>
-          Bấm vào các nhóm bên dưới (thịt, rau, gia vị...) để mở danh sách chọn nhanh, hoặc tự nhập nguyên liệu bạn đang có!
-        </Text>
       </View>
 
       {/* 2. Custom Text Input Row (User tìm kiếm hoặc thêm nguyên liệu) */}
@@ -854,7 +884,8 @@ export default function FridgeView({ insetsTop }: { insetsTop: number }) {
 
         {selectedIngredients.length === 0 ? (
           <Text style={styles.emptySelectedText}>
-            Chưa có nguyên liệu nào được chọn. Nhấn chọn bên dưới hoặc gõ để thêm!
+            Chưa có nguyên liệu nào được chọn. Nhấn chọn bên dưới hoặc gõ để
+            thêm!
           </Text>
         ) : (
           <ScrollView
@@ -945,7 +976,7 @@ export default function FridgeView({ insetsTop }: { insetsTop: number }) {
           const isExpanded = !!expandedGroups[group.id];
           const selectedInGroupCount = getSelectedCountInGroup(group.options);
           const selectedInThisGroup = group.options.filter((opt) =>
-            selectedIngredients.includes(opt)
+            selectedIngredients.includes(opt),
           );
 
           return (
@@ -1038,7 +1069,9 @@ export default function FridgeView({ insetsTop }: { insetsTop: number }) {
       <View style={styles.recommendSection}>
         <View style={styles.recommendHeaderRow}>
           <View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+            >
               <Ionicons name="restaurant" size={18} color="#EA580C" />
               <Text style={styles.recommendMainHeading}>
                 Gợi Ý Món Ăn Phù Hợp ({rankedRecipes.length})
@@ -1056,7 +1089,8 @@ export default function FridgeView({ insetsTop }: { insetsTop: number }) {
             <MaterialCommunityIcons name="chef-hat" size={40} color="#CBD5E1" />
             <Text style={styles.noResultTitle}>Chưa tìm thấy món phù hợp</Text>
             <Text style={styles.noResultSub}>
-              Hãy chọn thêm một số nguyên liệu cơ bản như thịt gà, thịt bò, trứng hoặc rau củ bên trên nhé!
+              Hãy chọn thêm một số nguyên liệu cơ bản như thịt gà, thịt bò,
+              trứng hoặc rau củ bên trên nhé!
             </Text>
           </View>
         )}
@@ -1074,58 +1108,62 @@ export default function FridgeView({ insetsTop }: { insetsTop: number }) {
             </View>
 
             <View style={styles.recipesVerticalList}>
-              {perfectMatches.map(({ recipe, matchPercent, matchedIngredients }) => (
-                <TouchableOpacity
-                  key={recipe.id}
-                  style={styles.recipeCardFull}
-                  activeOpacity={0.88}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/recipe-detail",
-                      params: { id: recipe.id },
-                    })
-                  }
-                >
-                  <Image source={recipe.image} style={styles.recipeCardImg} />
-                  <View style={styles.recipeCardRight}>
-                    <View style={styles.recipeMatchBadgeGreen}>
-                      <Text style={styles.recipeMatchTextGreen}>
-                        Khớp 100% nguyên liệu
+              {perfectMatches.map(
+                ({ recipe, matchPercent, matchedIngredients }) => (
+                  <TouchableOpacity
+                    key={recipe.id}
+                    style={styles.recipeCardFull}
+                    activeOpacity={0.88}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/recipe-detail",
+                        params: { id: recipe.id },
+                      })
+                    }
+                  >
+                    <Image source={recipe.image} style={styles.recipeCardImg} />
+                    <View style={styles.recipeCardRight}>
+                      <View style={styles.recipeMatchBadgeGreen}>
+                        <Text style={styles.recipeMatchTextGreen}>
+                          Khớp 100% nguyên liệu
+                        </Text>
+                      </View>
+
+                      <Text style={styles.recipeFullTitle} numberOfLines={1}>
+                        {recipe.title}
                       </Text>
-                    </View>
 
-                    <Text style={styles.recipeFullTitle} numberOfLines={1}>
-                      {recipe.title}
-                    </Text>
+                      <Text style={styles.recipeFullMeta}>
+                        ⏱ {recipe.minutes} phút • 🔥 {recipe.calories} kcal
+                      </Text>
 
-                    <Text style={styles.recipeFullMeta}>
-                      ⏱ {recipe.minutes} phút • 🔥 {recipe.calories} kcal
-                    </Text>
+                      <Text style={styles.matchedPreviewText} numberOfLines={1}>
+                        ✅ Đã có: {matchedIngredients.slice(0, 3).join(", ")}...
+                      </Text>
 
-                    <Text style={styles.matchedPreviewText} numberOfLines={1}>
-                      ✅ Đã có: {matchedIngredients.slice(0, 3).join(", ")}...
-                    </Text>
-
-                    <TouchableOpacity
-                      style={styles.cookActionBtn}
-                      activeOpacity={0.85}
-                      onPress={() =>
-                        router.push({
-                          pathname: "/recipe-detail",
-                          params: { id: recipe.id },
-                        })
-                      }
-                    >
-                      <LinearGradient
-                        colors={["#FF5722", "#FF7043"]}
-                        style={styles.cookActionGradient}
+                      <TouchableOpacity
+                        style={styles.cookActionBtn}
+                        activeOpacity={0.85}
+                        onPress={() =>
+                          router.push({
+                            pathname: "/recipe-detail",
+                            params: { id: recipe.id },
+                          })
+                        }
                       >
-                        <Text style={styles.cookActionText}>Xem chi tiết →</Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  </View>
-                </TouchableOpacity>
-              ))}
+                        <LinearGradient
+                          colors={["#FF5722", "#FF7043"]}
+                          style={styles.cookActionGradient}
+                        >
+                          <Text style={styles.cookActionText}>
+                            Xem chi tiết →
+                          </Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    </View>
+                  </TouchableOpacity>
+                ),
+              )}
             </View>
           </View>
         )}
@@ -1135,7 +1173,11 @@ export default function FridgeView({ insetsTop }: { insetsTop: number }) {
           <View style={[styles.matchTierBlock, { marginTop: 18 }]}>
             <View style={styles.tierHeader}>
               <View style={styles.tierBadgeOrange}>
-                <Ionicons name="alert-circle-outline" size={13} color="#D97706" />
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={13}
+                  color="#D97706"
+                />
                 <Text style={styles.tierBadgeOrangeText}>
                   CHỈ THIẾU 1 NGUYÊN LIỆU • CÓ THỂ BIẾN TẤU
                 </Text>
@@ -1144,7 +1186,12 @@ export default function FridgeView({ insetsTop }: { insetsTop: number }) {
 
             <View style={styles.recipesVerticalList}>
               {partialMatches.map(
-                ({ recipe, matchPercent, missingIngredients, matchedIngredients }) => (
+                ({
+                  recipe,
+                  matchPercent,
+                  missingIngredients,
+                  matchedIngredients,
+                }) => (
                   <TouchableOpacity
                     key={recipe.id}
                     style={styles.recipeCardFull}
@@ -1173,7 +1220,10 @@ export default function FridgeView({ insetsTop }: { insetsTop: number }) {
                       </Text>
 
                       {missingIngredients.length > 0 && (
-                        <Text style={styles.missingWarningText} numberOfLines={1}>
+                        <Text
+                          style={styles.missingWarningText}
+                          numberOfLines={1}
+                        >
                           ⚠️ Cần thêm: {missingIngredients[0]}
                         </Text>
                       )}
@@ -1193,7 +1243,7 @@ export default function FridgeView({ insetsTop }: { insetsTop: number }) {
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>
-                )
+                ),
               )}
             </View>
           </View>
@@ -1223,6 +1273,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 4,
+  },
+  headerLeftCol: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flex: 1,
+  },
+  exitBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   historyBtn: {
     flexDirection: "row",

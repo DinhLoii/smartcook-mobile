@@ -1,4 +1,5 @@
 import {
+  CommunityView,
   FridgeView,
   PlannerView,
   ProfileView,
@@ -7,6 +8,7 @@ import {
 import { BrandColors } from "@/constants/brandColors";
 import ShoppingNoteModal from "@/components/common/ShoppingNoteModal";
 import ShoppingReminderBanner from "@/components/common/ShoppingReminderBanner";
+import DraggableAIAssistant from "@/components/common/DraggableAIAssistant";
 import CreateRecipeModal from "@/components/recipe/CreateRecipeModal";
 import { CartService } from "@/services/cartService";
 import { PreferenceService, UserPreferences, CUISINE_OPTIONS } from "@/services/preferenceService";
@@ -37,7 +39,7 @@ export default function HomeScreen() {
   const { width } = useWindowDimensions();
 
   const [activeTab, setActiveTab] = useState<
-    "home" | "fridge" | "scan" | "planner" | "profile"
+    "home" | "fridge" | "scan" | "community" | "profile"
   >("home");
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showShoppingNote, setShowShoppingNote] = useState(false);
@@ -1917,7 +1919,7 @@ export default function HomeScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <ShoppingReminderBanner onPress={() => setShowShoppingNote(true)} />
-          <FridgeView insetsTop={0} />
+          <FridgeView insetsTop={0} onBack={() => setActiveTab("home")} />
         </ScrollView>
       )}
 
@@ -1933,16 +1935,12 @@ export default function HomeScreen() {
         </ScrollView>
       )}
 
-      {/* 4. Planner & Shopping Tab Content (Module 12 & 13) */}
-      {activeTab === "planner" && (
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 90, paddingTop: insets.top + 8 }}
-          showsVerticalScrollIndicator={false}
-        >
+      {/* 4. Community Tab Content */}
+      {activeTab === "community" && (
+        <View style={{ flex: 1, paddingBottom: insets.bottom + 90 }}>
           <ShoppingReminderBanner onPress={() => setShowShoppingNote(true)} />
-          <PlannerView insetsTop={0} />
-        </ScrollView>
+          <CommunityView insetsTop={insets.top} />
+        </View>
       )}
 
       {/* 5. Profile & Personalization Tab Content (Module 2 & 11) */}
@@ -1988,9 +1986,9 @@ export default function HomeScreen() {
             activeOpacity={0.8}
             onPress={() => setActiveTab("fridge")}
           >
-            <MaterialCommunityIcons
-              name={activeTab === "fridge" ? "fridge" : "fridge-outline"}
-              size={24}
+            <Ionicons
+              name={activeTab === "fridge" ? "restaurant" : "restaurant-outline"}
+              size={23}
               color={activeTab === "fridge" ? BrandColors.primary : "#94A3B8"}
             />
             <Text
@@ -1999,7 +1997,7 @@ export default function HomeScreen() {
                 activeTab === "fridge" && styles.tabLabelActive,
               ]}
             >
-              Nguyên Liệu
+              Bếp Của Tôi
             </Text>
           </TouchableOpacity>
 
@@ -2020,24 +2018,24 @@ export default function HomeScreen() {
             <Text style={[styles.tabLabel, { marginTop: 2 }]}>Scan AI</Text>
           </TouchableOpacity>
 
-          {/* Tab 4: Planner (Kế Hoạch Thực Đơn) */}
+          {/* Tab 4: Community (Cộng Đồng) */}
           <TouchableOpacity
             style={styles.tabItem}
             activeOpacity={0.8}
-            onPress={() => setActiveTab("planner")}
+            onPress={() => setActiveTab("community")}
           >
             <Ionicons
-              name={activeTab === "planner" ? "calendar" : "calendar-outline"}
+              name={activeTab === "community" ? "people" : "people-outline"}
               size={23}
-              color={activeTab === "planner" ? BrandColors.primary : "#94A3B8"}
+              color={activeTab === "community" ? BrandColors.primary : "#94A3B8"}
             />
             <Text
               style={[
                 styles.tabLabel,
-                activeTab === "planner" && styles.tabLabelActive,
+                activeTab === "community" && styles.tabLabelActive,
               ]}
             >
-              Thực Đơn
+              Cộng Đồng
             </Text>
           </TouchableOpacity>
 
@@ -2273,6 +2271,9 @@ export default function HomeScreen() {
         onClose={() => setShowCreateRecipeModal(false)}
         onRecipeCreated={handleRecipeCreated}
       />
+
+      {/* Floating Draggable AI Assistant Bubble */}
+      <DraggableAIAssistant />
     </View>
   );
 }
