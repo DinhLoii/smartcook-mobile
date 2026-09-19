@@ -1,0 +1,30 @@
+import { Platform } from "react-native";
+
+/**
+ * SmartCook Mobile Environment Configuration
+ * Provides fallback URLs for Android Emulator (10.0.2.2) and iOS/Web (localhost)
+ */
+const getDefaultApiUrl = (): string => {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+  return Platform.OS === "android"
+    ? "http://10.0.2.2:5000/api/v1"
+    : "http://localhost:5000/api/v1";
+};
+
+const getDefaultSocketUrl = (): string => {
+  if (process.env.EXPO_PUBLIC_SOCKET_URL) {
+    return process.env.EXPO_PUBLIC_SOCKET_URL;
+  }
+  return Platform.OS === "android"
+    ? "http://10.0.2.2:5000"
+    : "http://localhost:5000";
+};
+
+export const ENV = {
+  API_BASE_URL: getDefaultApiUrl(),
+  SOCKET_BASE_URL: getDefaultSocketUrl(),
+};
+
+export default ENV;
