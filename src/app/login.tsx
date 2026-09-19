@@ -21,31 +21,34 @@ import {
   SocialAuthButtons,
 } from "@/components/auth";
 import { BrandColors } from "@/constants/brandColors";
-import { PreferenceService } from "@/services/preferenceService";
+import { ActivityIndicator } from "react-native";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {},
   );
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
-      newErrors.email = "Please enter your email address";
+      newErrors.email = "Vui lòng nhập địa chỉ email";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Please enter a valid email";
+      newErrors.email = "Địa chỉ email không hợp lệ";
     }
 
     if (!password) {
-      newErrors.password = "Please enter your password";
+      newErrors.password = "Vui lòng nhập mật khẩu";
     } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -54,8 +57,28 @@ export default function LoginScreen() {
     }
 
     setErrors({});
-    // Login xong chuyển trực tiếp sang trang khảo sát khẩu vị & khẩu phần ăn
-    router.replace('/onboarding-survey');
+    setIsSubmitting(true);
+
+    try {
+      const user = await login({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      // Nếu người dùng đã hoàn thành khảo sát khẩu vị thì vào thẳng Home
+      if (user?.preferences?.hasCompletedSurvey) {
+        router.replace('/home');
+      } else {
+        router.replace('/onboarding-survey');
+      }
+    } catch (err: any) {
+      const serverMessage =
+        err.response?.data?.message ||
+        "Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.";
+      Alert.alert("Lỗi đăng nhập", serverMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -149,8 +172,9 @@ export default function LoginScreen() {
 
               <TouchableOpacity
                 activeOpacity={0.85}
-                style={styles.loginButtonWrapper}
+                style={[styles.loginButtonWrapper, isSubmitting && { opacity: 0.8 }]}
                 onPress={handleLogin}
+                disabled={isSubmitting}
               >
                 <LinearGradient
                   colors={BrandColors.buttonGradient}
@@ -158,13 +182,19 @@ export default function LoginScreen() {
                   end={{ x: 1, y: 0 }}
                   style={styles.loginButtonGradient}
                 >
-                  <Text style={styles.loginButtonText}>Login</Text>
-                  <Ionicons
-                    name="arrow-forward"
-                    size={16}
-                    color="#FFFFFF"
-                    style={{ marginLeft: 4 }}
-                  />
+                  {isSubmitting ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" style={{ paddingHorizontal: 12 }} />
+                  ) : (
+                    <>
+                      <Text style={styles.loginButtonText}>Login</Text>
+                      <Ionicons
+                        name="arrow-forward"
+                        size={16}
+                        color="#FFFFFF"
+                        style={{ marginLeft: 4 }}
+                      />
+                    </>
+                  )}
                 </LinearGradient>
               </TouchableOpacity>
             </View>

@@ -20,10 +20,13 @@ import {
   AuthWaveHeader,
   SuccessModal,
 } from '@/components/auth';
+import { ActivityIndicator } from 'react-native';
+import { useAuth } from '@/contexts/AuthContext';
 import { BrandColors } from '@/constants/brandColors';
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { register } = useAuth();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -31,6 +34,7 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [errors, setErrors] = useState<{
     firstName?: string;
@@ -42,49 +46,67 @@ export default function RegisterScreen() {
   }>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     const newErrors: typeof errors = {};
 
     if (!firstName.trim()) {
-      newErrors.firstName = 'Please enter your first name';
+      newErrors.firstName = 'Vui lòng nhập tên của bạn';
     }
 
     if (!lastName.trim()) {
-      newErrors.lastName = 'Please enter your last name';
+      newErrors.lastName = 'Vui lòng nhập họ của bạn';
     }
 
     if (!email.trim()) {
-      newErrors.email = 'Please enter your email address';
+      newErrors.email = 'Vui lòng nhập địa chỉ email';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = 'Địa chỉ email không hợp lệ';
     }
 
     if (!password) {
-      newErrors.password = 'Please enter a password';
+      newErrors.password = 'Vui lòng nhập mật khẩu';
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
     }
 
     if (!repeatPassword) {
-      newErrors.repeatPassword = 'Please confirm your password';
+      newErrors.repeatPassword = 'Vui lòng xác nhận mật khẩu';
     } else if (repeatPassword !== password) {
-      newErrors.repeatPassword = 'Passwords do not match';
+      newErrors.repeatPassword = 'Mật khẩu xác nhận không khớp';
     }
 
     if (!agreeTerms) {
-      newErrors.terms = 'Please accept Terms and Privacy policy';
+      newErrors.terms = 'Vui lòng đồng ý với Điều khoản dịch vụ và Chính sách bảo mật';
     }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       if (newErrors.terms) {
-        Alert.alert('Terms & Privacy', newErrors.terms);
+        Alert.alert('Điều khoản & Quyền riêng tư', newErrors.terms);
       }
       return;
     }
 
     setErrors({});
-    setShowSuccessModal(true);
+    setIsSubmitting(true);
+
+    try {
+      await register({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      setShowSuccessModal(true);
+    } catch (err: any) {
+      const serverMessage =
+        err.response?.data?.message ||
+        "Đăng ký thất bại. Email có thể đã được sử dụng.";
+      Alert.alert("Lỗi đăng ký", serverMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -178,15 +200,22 @@ export default function RegisterScreen() {
             {/* Create Account Primary Button */}
             <TouchableOpacity
               activeOpacity={0.85}
-              style={styles.createButtonWrapper}
-              onPress={handleRegister}>
+              style={[styles.createButtonWrapper, isSubmitting && { opacity: 0.8 }]}
+              onPress={handleRegister}
+              disabled={isSubmitting}>
               <LinearGradient
                 colors={BrandColors.buttonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.createButtonGradient}>
-                <Text style={styles.createButtonText}>Create account</Text>
-                <Ionicons name="arrow-forward" size={17} color="#FFFFFF" style={{ marginLeft: 6 }} />
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" style={{ paddingVertical: 1 }} />
+                ) : (
+                  <>
+                    <Text style={styles.createButtonText}>Create account</Text>
+                    <Ionicons name="arrow-forward" size={17} color="#FFFFFF" style={{ marginLeft: 6 }} />
+                  </>
+                )}
               </LinearGradient>
             </TouchableOpacity>
 

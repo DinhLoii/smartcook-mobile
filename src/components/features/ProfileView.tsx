@@ -19,20 +19,48 @@ import {
   View,
 } from "react-native";
 
+import { useAuth } from "@/contexts/AuthContext";
+
 export default function ProfileView({ insetsTop }: ProfileViewProps) {
   const router = useRouter();
+  const { user, logout } = useAuth();
 
-  // Personalization preferences from PreferenceService
-  const [preferences, setPreferences] = useState<UserPreferences>(() =>
-    PreferenceService.getPreferences()
-  );
+  // Personalization preferences from user in AuthContext or fallback to PreferenceService
+  const [preferences, setPreferences] = useState<UserPreferences>(() => {
+    if (user?.preferences) {
+      return {
+        hasCompletedSurvey: user.preferences.hasCompletedSurvey ?? true,
+        portion: (user.preferences.portion as any) || "3-4",
+        cuisines: user.preferences.cuisines || [],
+        healthGoal: (user.preferences.healthGoal as any) || "healthy",
+        restrictions: user.preferences.restrictions || [],
+        tasteProfile: user.preferences.tasteProfile || [],
+        cookingTime: (user.preferences.cookingTime as any) || "medium",
+        updatedAt: new Date().toISOString(),
+      };
+    }
+    return PreferenceService.getPreferences();
+  });
 
   useEffect(() => {
-    const unsub = PreferenceService.subscribe((prefs) => {
-      setPreferences(prefs);
-    });
-    return unsub;
-  }, []);
+    if (user?.preferences) {
+      setPreferences({
+        hasCompletedSurvey: user.preferences.hasCompletedSurvey ?? true,
+        portion: (user.preferences.portion as any) || "3-4",
+        cuisines: user.preferences.cuisines || [],
+        healthGoal: (user.preferences.healthGoal as any) || "healthy",
+        restrictions: user.preferences.restrictions || [],
+        tasteProfile: user.preferences.tasteProfile || [],
+        cookingTime: (user.preferences.cookingTime as any) || "medium",
+        updatedAt: new Date().toISOString(),
+      });
+    } else {
+      const unsub = PreferenceService.subscribe((prefs) => {
+        setPreferences(prefs);
+      });
+      return unsub;
+    }
+  }, [user]);
 
   // Safe Logout with Confirmation Dialog
   const handleConfirmLogout = () => {
@@ -44,7 +72,8 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
         {
           text: "Đăng xuất",
           style: "destructive",
-          onPress: () => {
+          onPress: async () => {
+            await logout();
             router.replace("/login");
           },
         },
@@ -100,15 +129,30 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
       <View style={styles.card}>
         <View style={styles.userRow}>
           <Image
-            source={require("@/assets/images/smartcook-auth-bg.jpg")}
+            source={
+              user?.avatar
+                ? { uri: user.avatar }
+                : require("@/assets/images/smartcook-auth-bg.jpg")
+            }
             style={styles.avatar}
             resizeMode="cover"
           />
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>Alex Cooker</Text>
-            <Text style={styles.userEmail}>alex.cooker@smartcook.ai</Text>
-            <View style={styles.tierBadge}>
-              <Text style={styles.tierText}>Thành viên Pro</Text>
+            <Text style={styles.userName}>
+              {user?.fullName ||
+                `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
+                "Đầu bếp SmartCook"}
+            </Text>
+            <Text style={styles.userEmail}>
+              {user?.email || "smartcook.user@gmail.com"}
+            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 }}>
+              <View style={styles.tierBadge}>
+                <Text style={styles.tierText}>{user?.level || "Tập sự"}</Text>
+              </View>
+              <View style={[styles.tierBadge, { backgroundColor: "#FFF7ED", borderColor: "#FFEDD5" }]}>
+                <Text style={[styles.tierText, { color: "#EA580C" }]}>⚡ {user?.chefExp ?? 0} XP</Text>
+              </View>
             </View>
           </View>
         </View>
