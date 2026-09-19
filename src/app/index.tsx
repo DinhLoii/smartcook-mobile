@@ -13,14 +13,26 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { BrandColors } from '@/constants/brandColors';
 
+import { useAuth } from '@/contexts/AuthContext';
+
 export default function WelcomeSplashScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const { isAuthenticated, isLoading } = useAuth();
 
   // Animation values
   const scaleAnim = useRef(new Animated.Value(0.7)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const dotsAnim = useRef(new Animated.Value(0)).current;
+
+  const navigateNext = () => {
+    if (isLoading) return;
+    if (isAuthenticated) {
+      router.replace('/home');
+    } else {
+      router.replace('/login');
+    }
+  };
 
   useEffect(() => {
     // Entrance animation: Pop up logo and fade in text
@@ -54,20 +66,20 @@ export default function WelcomeSplashScreen() {
       ])
     ).start();
 
-    // Auto transition to login screen after 2.3 seconds
+    // Auto transition to appropriate screen after 2.3 seconds
     const timer = setTimeout(() => {
-      goToLogin();
+      if (isAuthenticated) {
+        router.replace('/home');
+      } else {
+        router.replace('/login');
+      }
     }, 2300);
 
     return () => clearTimeout(timer);
-  }, []);
-
-  const goToLogin = () => {
-    router.replace('/login');
-  };
+  }, [isAuthenticated, isLoading]);
 
   return (
-    <Pressable style={styles.screen} onPress={goToLogin}>
+    <Pressable style={styles.screen} onPress={navigateNext}>
       <StatusBar style="dark" />
 
       {/* Decorative ambient background rings */}
