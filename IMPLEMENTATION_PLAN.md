@@ -49,22 +49,22 @@ Qua rà soát thực tế mã nguồn, Backend hiện đã hoàn thành xong **4
 > **Trạng thái Backend:** ĐÃ SẴN SÀNG 100% (`/api/v1/auth/*`)  
 > **Mục tiêu Mobile:** Thiết lập kết nối HTTP Axios với Backend, quản lý JWT token trong AsyncStorage, lưu phiên đăng nhập và đồng bộ khảo sát khẩu vị 6 tiêu chí vào MongoDB.
 
-- [ ] **1.1. Cài Đặt Thư Viện Thiết Yếu**:
+- [x] **1.1. Cài Đặt Thư Viện Thiết Yếu**:
   ```bash
   npx expo install @react-native-async-storage/async-storage
   npm install axios
   ```
-- [ ] **1.2. Cấu Hình Biến Môi Trường (`.env`)**:
+- [x] **1.2. Cấu Hình Biến Môi Trường (`.env`)**:
   - `EXPO_PUBLIC_API_URL=http://10.0.2.2:5000/api/v1` (cho Android Emulator) hoặc IP LAN máy tính cho thiết bị thật.
-- [ ] **1.3. Xây Dựng Tầng Mạng Chuẩn Hóa (`src/services/apiClient.ts`)**:
+- [x] **1.3. Xây Dựng Tầng Mạng Chuẩn Hóa (`src/services/apiClient.ts`)**:
   - Cấu hình Axios instance với `timeout: 15000`.
   - **Request Interceptor**: Tự động lấy JWT từ AsyncStorage và gắn header `Authorization: Bearer <token>`.
   - **Response Interceptor**: Bắt mã lỗi `401 Unauthorized`. Tự động dùng `refreshToken` gọi API `/auth/refresh-token` để lấy token mới mà không làm gián đoạn trải nghiệm người dùng (Silent Refresh).
-- [ ] **1.4. Xây Dựng `AuthContext.tsx` & Hook `useAuth()`**:
+- [x] **1.4. Xây Dựng `AuthContext.tsx` & Hook `useAuth()`**:
   - Quản lý trạng thái toàn cục: `user`, `accessToken`, `isAuthenticated`, `isLoading`.
   - Tại `src/app/index.tsx` (Splash Screen): Tự động kiểm tra token lưu trong AsyncStorage -> Nếu còn hạn vào thẳng `home`, nếu chưa hoặc hết hạn điều hướng về `login`.
   - Cung cấp các hàm: `login()`, `register()`, `logout()`, `updatePreferences()`.
-- [ ] **1.5. Đấu Nối Các Màn Hình**:
+- [x] **1.5. Đấu Nối Các Màn Hình**:
   - `src/app/login.tsx`: Gọi `useAuth().login()`, hiển thị thông báo lỗi từ Backend khi sai tài khoản/mật khẩu.
   - `src/app/register.tsx`: Gọi `useAuth().register()`, đăng ký thành công chuyển sang khảo sát khẩu vị.
   - `src/app/onboarding-survey.tsx`: Gọi API `POST /api/v1/auth/survey` lưu 6 tiêu chí khẩu vị (khẩu phần, món ăn yêu thích, dị ứng, mục tiêu sức khoẻ, vị yêu thích, thời gian nấu) trực tiếp vào MongoDB.
