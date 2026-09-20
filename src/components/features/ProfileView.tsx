@@ -20,10 +20,12 @@ import {
 } from "react-native";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { EditProfileModal } from "./EditProfileModal";
 
 export default function ProfileView({ insetsTop }: ProfileViewProps) {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, updateProfile } = useAuth();
+  const [isEditProfileVisible, setIsEditProfileVisible] = useState(false);
 
   // Local preferences state fallback when user has not synced preferences from server
   const [localPreferences, setLocalPreferences] = useState<UserPreferences>(() =>
@@ -150,6 +152,15 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
               </View>
             </View>
           </View>
+          <TouchableOpacity
+            style={styles.editProfileBtn}
+            onPress={() => setIsEditProfileVisible(true)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="pencil" size={13} color="#EA580C" />
+            <Text style={styles.editProfileBtnText}>Sửa</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -250,6 +261,16 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
 
       {/* 6. VERSION FOOTER */}
       <Text style={styles.versionText}>SmartCook • v2.4.0</Text>
+
+      {/* 7. EDIT PROFILE MODAL */}
+      <EditProfileModal
+        visible={isEditProfileVisible}
+        onClose={() => setIsEditProfileVisible(false)}
+        currentUser={user}
+        onSave={async (payload) => {
+          await updateProfile(payload);
+        }}
+      />
     </ScrollView>
   );
 }
@@ -411,5 +432,24 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#94A3B8",
     marginTop: 6,
+  },
+
+  /* Edit Profile Button in Card */
+  editProfileBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF7ED",
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#FFEDD5",
+    gap: 4,
+    alignSelf: "flex-start",
+  },
+  editProfileBtnText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#EA580C",
   },
 });
