@@ -6,10 +6,9 @@ import {
   ScanAIView,
 } from "@/components/features";
 import { BrandColors } from "@/constants/brandColors";
-import ShoppingNoteModal from "@/components/common/ShoppingNoteModal";
-import ShoppingReminderBanner from "@/components/common/ShoppingReminderBanner";
-import DraggableAIAssistant from "@/components/common/DraggableAIAssistant";
-import CreateRecipeModal from "@/components/recipe/CreateRecipeModal";
+import { ShoppingNoteModal, ShoppingReminderBanner } from "@/components/planner";
+import { DraggableAIAssistant } from "@/components/ai";
+import { CreateRecipeModal } from "@/components/recipe";
 import { CartService } from "@/services/cartService";
 import { PreferenceService, UserPreferences, CUISINE_OPTIONS } from "@/services/preferenceService";
 import { RecipeService } from "@/services/recipeService";
@@ -33,10 +32,13 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useAuth } from "@/contexts/AuthContext";
+
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<
     "home" | "fridge" | "scan" | "community" | "profile"
@@ -1261,10 +1263,18 @@ export default function HomeScreen() {
           {/* 1. Top Profile Header */}
           <View style={styles.headerRow}>
             {/* Left: User Avatar & Status */}
-            <View style={styles.userProfileLeft}>
+            <TouchableOpacity
+              style={styles.userProfileLeft}
+              activeOpacity={0.8}
+              onPress={() => setActiveTab("profile")}
+            >
               <View style={styles.avatarBorder}>
                 <Image
-                  source={require("@/assets/images/smartcook-auth-bg.jpg")}
+                  source={
+                    user?.avatar
+                      ? { uri: user.avatar }
+                      : require("@/assets/images/smartcook-auth-bg.jpg")
+                  }
                   style={styles.avatarImage}
                   resizeMode="cover"
                 />
@@ -1272,13 +1282,19 @@ export default function HomeScreen() {
               </View>
 
               <View style={styles.userInfoCol}>
-                <Text style={styles.userNameText}>Alex Cooker</Text>
+                <Text style={styles.userNameText}>
+                  {user?.fullName ||
+                    `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
+                    "Alex Cooker"}
+                </Text>
                 <View style={styles.premiumTag}>
                   <Ionicons name="sparkles" size={10} color="#E65100" />
-                  <Text style={styles.premiumText}>SmartCook Pro</Text>
+                  <Text style={styles.premiumText}>
+                    {user?.level || "Tập sự"} • {user?.chefExp ?? 0} XP
+                  </Text>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
 
             {/* Right: Floating Circular Action Buttons */}
             <View style={styles.headerRightActions}>

@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   LayoutAnimation,
   Platform,
   ScrollView,
@@ -23,6 +24,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Enable LayoutAnimation for Android
 if (
@@ -55,6 +57,7 @@ const TIME_OPTIONS = [
 export default function OnboardingSurveyScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { updateSurvey } = useAuth();
 
   // State for all 6 questions
   const [cuisines, setCuisines] = useState<string[]>(["vietnamese"]);
@@ -63,6 +66,7 @@ export default function OnboardingSurveyScreen() {
   const [portion, setPortion] = useState<UserPreferences["portion"]>("3-4");
   const [cookingTime, setCookingTime] = useState<string>("medium");
   const [goal, setGoal] = useState<UserPreferences["healthGoal"]>("healthy");
+  const [isSaving, setIsSaving] = useState(false);
 
   // Which question card is currently expanded inline (null if all collapsed, or number 1..6)
   const [expandedCard, setExpandedCard] = useState<number | null>(1);
@@ -99,24 +103,24 @@ export default function OnboardingSurveyScreen() {
   };
 
   const getPortionSubtitle = () => {
-    const found = PORTION_OPTIONS.find((p) => p.id === portion);
-    return found ? found.title : "Chọn số người";
+    return PORTION_OPTIONS.find((p) => p.id === portion)?.title || "Chọn khẩu phần";
   };
 
   const getTimeSubtitle = () => {
-    const found = TIME_OPTIONS.find((t) => t.id === cookingTime);
-    return found ? found.label : "Chọn thời gian";
+    return TIME_OPTIONS.find((t) => t.id === cookingTime)?.label || "Chọn thời gian";
   };
 
   const getGoalSubtitle = () => {
-    const found = GOAL_OPTIONS.find((g) => g.id === goal);
-    return found ? found.label : "Chọn mục tiêu";
+    return GOAL_OPTIONS.find((g) => g.id === goal)?.label || "Chọn mục tiêu";
   };
 
   // Multi-select toggle helper
-  const toggleMulti = (list: string[], setList: (val: string[]) => void, id: string) => {
+  const toggleMulti = (
+    list: string[],
+    setList: (val: string[]) => void,
+    id: string
+  ) => {
     if (list.includes(id)) {
-      if (list.length === 1) return; // keep at least 1
       setList(list.filter((x) => x !== id));
     } else {
       setList([...list, id]);
@@ -129,16 +133,34 @@ export default function OnboardingSurveyScreen() {
   };
 
   // Handle Complete & Save
-  const handleSave = () => {
-    PreferenceService.savePreferences({
-      portion,
-      cuisines,
-      healthGoal: goal,
-      restrictions,
-      tasteProfile: tastes,
-      cookingTime: cookingTime as any,
-    });
-    router.replace("/home");
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      // 1. Lưu local cache cho app
+      PreferenceService.savePreferences({
+        portion,
+        cuisines,
+        healthGoal: goal,
+        restrictions,
+        tasteProfile: tastes,
+        cookingTime: cookingTime as any,
+      });
+
+      // 2. Đồng bộ vào cơ sở dữ liệu MongoDB thông qua Backend API
+      await updateSurvey({
+        portion,
+        cuisines,
+        healthGoal: goal,
+        restrictions,
+        tasteProfile: tastes,
+        cookingTime: cookingTime as any,
+      });
+    } catch (e) {
+      console.error("Lỗi khi lưu khảo sát lên backend", e);
+    } finally {
+      setIsSaving(false);
+      router.replace("/home");
+    }
   };
 
   // Handle Skip
@@ -487,9 +509,10 @@ export default function OnboardingSurveyScreen() {
         ]}
       >
         <TouchableOpacity
-          style={styles.submitButton}
+          style={[styles.submitButton, isSaving && { opacity: 0.8 }]}
           onPress={handleSave}
           activeOpacity={0.88}
+          disabled={isSaving}
         >
           <LinearGradient
             colors={BrandColors.buttonGradient}
@@ -497,7 +520,11 @@ export default function OnboardingSurveyScreen() {
             end={{ x: 1, y: 0 }}
             style={styles.submitGradient}
           >
-            <Text style={styles.submitText}>Xác nhận & Khám phá món ✨</Text>
+            {isSaving ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.submitText}>Xác nhận & Khám phá món ✨</Text>
+            )}
           </LinearGradient>
         </TouchableOpacity>
 

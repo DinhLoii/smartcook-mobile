@@ -1,7 +1,5 @@
 import { BrandColors } from "@/constants/brandColors";
-import NearbyStoreCard from "@/components/common/NearbyStoreCard";
-import ShoppingNoteModal from "@/components/common/ShoppingNoteModal";
-import ShoppingReminderBanner from "@/components/common/ShoppingReminderBanner";
+import { NearbyStoreCard, ShoppingNoteModal, ShoppingReminderBanner } from "@/components/planner";
 import { CartService } from "@/services/cartService";
 import { getRecipeById, RECIPES_DATA } from "@/data/recipesData";
 import { Recipe } from "@/types";

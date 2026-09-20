@@ -11,6 +11,8 @@ LogBox.ignoreLogs([
 
 SplashScreen.preventAutoHideAsync();
 
+import { AuthProvider } from '@/contexts/AuthContext';
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
@@ -20,18 +22,15 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }} initialRouteName="index">
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen name="register" options={{ headerShown: false }} />
-          <Stack.Screen name="onboarding-survey" options={{ headerShown: false, animation: "slide_from_right" }} />
-          <Stack.Screen name="home" options={{ headerShown: false }} />
-          <Stack.Screen name="explore" options={{ headerShown: false }} />
-          <Stack.Screen name="recipe-detail" options={{ headerShown: false, animation: "slide_from_right" }} />
-          <Stack.Screen name="cooking-mode" options={{ headerShown: false, animation: "fade_from_bottom" }} />
-        </Stack>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack screenOptions={{ headerShown: false }} initialRouteName="index">
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="(main)" options={{ headerShown: false }} />
+          </Stack>
+        </ThemeProvider>
+      </AuthProvider>
     </GestureHandlerRootView>
   );
 }

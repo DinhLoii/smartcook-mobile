@@ -1,4 +1,4 @@
-import CookingHistoryModal from "@/components/common/CookingHistoryModal";
+import { CookingHistoryModal } from "@/components/recipe";
 import { RECIPES_DATA } from "@/data/recipesData";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";

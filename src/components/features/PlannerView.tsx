@@ -1,5 +1,5 @@
 import { BrandColors } from "@/constants/brandColors";
-import NearbyStoreCard from "@/components/common/NearbyStoreCard";
+import { NearbyStoreCard } from "@/components/planner";
 import { RECIPES_DATA } from "@/data/recipesData";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";

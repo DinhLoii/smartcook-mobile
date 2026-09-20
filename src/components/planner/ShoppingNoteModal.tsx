@@ -24,11 +24,12 @@ export default function ShoppingNoteModal({
   const [items, setItems] = useState<CartItem[]>(CartService.getItems());
 
   useEffect(() => {
-    setItems(CartService.getItems());
     const unsubscribe = CartService.subscribe(() => {
       setItems(CartService.getItems());
     });
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, [visible]);
 
   const totalCost = items.reduce((sum, item) => sum + (item.price || 0), 0);
@@ -104,7 +105,7 @@ export default function ShoppingNoteModal({
                 <Ionicons name="basket-outline" size={36} color="#CBD5E1" />
                 <Text style={styles.emptyTitle}>Giỏ hàng đi chợ trống</Text>
                 <Text style={styles.emptySub}>
-                  Hãy bấm "+ Thêm vào giỏ" ở từng nguyên liệu để ghi nhớ món cần mua nhé!
+                  Hãy bấm &quot;+ Thêm vào giỏ&quot; ở từng nguyên liệu để ghi nhớ món cần mua nhé!
                 </Text>
               </View>
             ) : (
