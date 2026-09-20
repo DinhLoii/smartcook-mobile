@@ -13,6 +13,7 @@ import {
   LoginPayload,
   RegisterPayload,
   SurveyPayload,
+  UpdateProfilePayload,
 } from "@/types";
 
 export type { User, StoredUser };
@@ -22,9 +23,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<StoredUser>;
+  loginWithGoogle: (idToken: string) => Promise<StoredUser>;
   register: (payload: RegisterPayload) => Promise<StoredUser>;
   logout: () => Promise<void>;
   updateSurvey: (payload: SurveyPayload) => Promise<StoredUser>;
+  updateProfile: (payload: UpdateProfilePayload) => Promise<StoredUser>;
   refreshUser: () => Promise<StoredUser | null>;
 }
 
@@ -96,6 +99,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return data.user;
   };
 
+  const loginWithGoogle = async (idToken: string): Promise<StoredUser> => {
+    const data = await authService.loginWithGoogle(idToken);
+    setUser(data.user);
+    return data.user;
+  };
+
   const register = async (payload: RegisterPayload): Promise<StoredUser> => {
     const data = await authService.register(payload);
     setUser(data.user);
@@ -112,6 +121,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const updateSurvey = async (payload: SurveyPayload): Promise<StoredUser> => {
     const updatedUser = await authService.updateSurvey(payload);
+    setUser(updatedUser);
+    return updatedUser;
+  };
+
+  const updateProfile = async (payload: UpdateProfilePayload): Promise<StoredUser> => {
+    const updatedUser = await authService.updateProfile(payload);
     setUser(updatedUser);
     return updatedUser;
   };
@@ -133,9 +148,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         isAuthenticated: !!user,
         isLoading,
         login,
+        loginWithGoogle,
         register,
         logout,
         updateSurvey,
+        updateProfile,
         refreshUser,
       }}
     >

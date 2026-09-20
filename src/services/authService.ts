@@ -62,6 +62,26 @@ export const authService = {
   },
 
   /**
+   * Đăng nhập / Đăng ký bằng Google ID Token
+   */
+  async loginWithGoogle(idToken: string): Promise<{ user: StoredUser; accessToken: string; refreshToken: string }> {
+    const response = await apiClient.post<ApiResponse<AuthResponseData>>(
+      "/auth/google",
+      { idToken }
+    );
+    const data = response.data.data;
+    const accessToken = data.tokens?.accessToken || data.accessToken || "";
+    const refreshToken = data.tokens?.refreshToken || data.refreshToken || "";
+
+    await tokenStorage.saveAuthSession(
+      accessToken,
+      refreshToken,
+      data.user
+    );
+    return { user: data.user, accessToken, refreshToken };
+  },
+
+  /**
    * Lấy thông tin user hiện tại
    */
   async getMe(): Promise<StoredUser> {
