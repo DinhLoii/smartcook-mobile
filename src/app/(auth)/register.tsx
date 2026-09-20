@@ -249,11 +249,11 @@ export default function RegisterScreen() {
       {/* Verification / Success Modal */}
       <SuccessModal
         visible={showSuccessModal}
-        title="Your identity has been verified"
-        message="Account created successfully! Welcome to SmartCook community."
+        title="Đăng ký thành công!"
+        message="Tài khoản của bạn đã sẵn sàng. Vui lòng đăng nhập bằng tài khoản vừa tạo để tiếp tục."
         onDone={() => {
           setShowSuccessModal(false);
-          router.replace('/onboarding-survey');
+          router.replace('/login');
         }}
       />
     </View>

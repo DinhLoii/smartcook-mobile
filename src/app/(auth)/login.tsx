@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -13,6 +13,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import * as WebBrowser from "expo-web-browser";
+import * as Google from "expo-auth-session/providers/google";
 
 import {
   AuthInput,
@@ -23,20 +25,74 @@ import {
 import { BrandColors } from "@/constants/brandColors";
 import { ActivityIndicator } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
+import { ENV } from "@/config/env";
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {},
   );
 
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId: ENV.GOOGLE_WEB_CLIENT_ID,
+    webClientId: ENV.GOOGLE_WEB_CLIENT_ID,
+    iosClientId: ENV.GOOGLE_IOS_CLIENT_ID || undefined,
+    androidClientId: ENV.GOOGLE_ANDROID_CLIENT_ID || undefined,
+  });
+
+  // Handle Google OAuth response
+  useEffect(() => {
+    const processGoogleResponse = async () => {
+      if (response?.type === "success") {
+        const idToken =
+          (response.params as any)?.id_token ||
+          (response as any)?.authentication?.idToken;
+
+        if (idToken) {
+          setIsGoogleSubmitting(true);
+          setServerError(null);
+          try {
+            const user = await loginWithGoogle(idToken);
+            if (user?.preferences?.hasCompletedSurvey) {
+              router.replace("/home");
+            } else {
+              router.replace("/onboarding-survey");
+            }
+          } catch (err: any) {
+            const serverMessage =
+              err.response?.data?.message ||
+              (err.message === "Network Error"
+                ? "Không thể kết nối đến máy chủ Backend (Port 5000). Vui lòng đảm bảo Backend đang chạy."
+                : err.message) ||
+              "Đăng nhập bằng Google thất bại. Vui lòng thử lại.";
+            setServerError(serverMessage);
+          } finally {
+            setIsGoogleSubmitting(false);
+          }
+        }
+      } else if (response?.type === "error") {
+        setServerError(
+          response.error?.message ||
+            "Xác thực Google bị từ chối hoặc gặp lỗi. Vui lòng thử lại.",
+        );
+      }
+    };
+
+    processGoogleResponse();
+  }, [response]);
+
   const handleLogin = async () => {
+    setServerError(null);
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
@@ -67,15 +123,20 @@ export default function LoginScreen() {
 
       // Nếu người dùng đã hoàn thành khảo sát khẩu vị thì vào thẳng Home
       if (user?.preferences?.hasCompletedSurvey) {
-        router.replace('/home');
+        router.replace("/home");
       } else {
-        router.replace('/onboarding-survey');
+        router.replace("/onboarding-survey");
       }
     } catch (err: any) {
-      const serverMessage =
-        err.response?.data?.message ||
-        "Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.";
-      Alert.alert("Lỗi đăng nhập", serverMessage);
+      const rawMessage = err.response?.data?.message;
+      const friendlyMessage =
+        rawMessage === "Invalid email or password"
+          ? "Email hoặc mật khẩu không chính xác"
+          : (rawMessage || "Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.");
+      
+      // Hiển thị lỗi màu đỏ rõ ràng ngay dưới ô mật khẩu và banner thông báo
+      setServerError(friendlyMessage);
+      setErrors((prev) => ({ ...prev, password: friendlyMessage }));
     } finally {
       setIsSubmitting(false);
     }
@@ -89,9 +150,19 @@ export default function LoginScreen() {
     );
   };
 
-  const handleSocialLogin = (provider: string) => {
-    // Login mạng xã hội cũng chuyển sang khảo sát khẩu vị & khẩu phần ăn
-    router.replace('/onboarding-survey');
+  const handleGoogleLogin = async () => {
+    setServerError(null);
+    if (!promptAsync) {
+      setServerError(
+        "Dịch vụ Google Sign-In đang khởi động. Vui lòng thử lại sau vài giây.",
+      );
+      return;
+    }
+    try {
+      await promptAsync();
+    } catch (err: any) {
+      setServerError(err?.message || "Không thể mở giao diện đăng nhập Google.");
+    }
   };
 
   return (
@@ -114,6 +185,19 @@ export default function LoginScreen() {
 
           {/* Form Card Content */}
           <View style={styles.formContainer}>
+            {/* Server Error Banner in Red */}
+            {serverError ? (
+              <View style={styles.serverErrorBanner}>
+                <Ionicons
+                  name="alert-circle"
+                  size={18}
+                  color="#DC2626"
+                  style={{ marginRight: 8 }}
+                />
+                <Text style={styles.serverErrorBannerText}>{serverError}</Text>
+              </View>
+            ) : null}
+
             <AuthInput
               label="Email"
               iconName="mail-outline"
@@ -121,6 +205,7 @@ export default function LoginScreen() {
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
+                if (serverError) setServerError(null);
                 if (errors.email)
                   setErrors((prev) => ({ ...prev, email: undefined }));
               }}
@@ -136,6 +221,7 @@ export default function LoginScreen() {
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
+                if (serverError) setServerError(null);
                 if (errors.password)
                   setErrors((prev) => ({ ...prev, password: undefined }));
               }}
@@ -201,8 +287,13 @@ export default function LoginScreen() {
 
             {/* Social Logins */}
             <SocialAuthButtons
-              onGooglePress={() => handleSocialLogin("Google")}
-              onFacebookPress={() => handleSocialLogin("Facebook")}
+              onGooglePress={handleGoogleLogin}
+              onFacebookPress={() =>
+                Alert.alert(
+                  "Thông báo",
+                  "Tính năng Facebook Login đang được phát triển.",
+                )
+              }
             />
           </View>
 
@@ -214,6 +305,14 @@ export default function LoginScreen() {
           />
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Google Auth Loading Overlay */}
+      {isGoogleSubmitting && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={BrandColors.primary} />
+          <Text style={styles.loadingOverlayText}>Đang xác thực tài khoản Google...</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -299,4 +398,40 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0.3,
   },
+  loadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+  },
+  loadingOverlayText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  serverErrorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1.5,
+    borderColor: "#FCA5A5",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 12,
+  },
+  serverErrorBannerText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#DC2626",
+    lineHeight: 18,
+  },
 });
+

@@ -69,6 +69,13 @@ Qua rà soát thực tế mã nguồn, Backend hiện đã hoàn thành xong **4
   - `src/app/register.tsx`: Gọi `useAuth().register()`, đăng ký thành công chuyển sang khảo sát khẩu vị.
   - `src/app/onboarding-survey.tsx`: Gọi API `POST /api/v1/auth/survey` lưu 6 tiêu chí khẩu vị (khẩu phần, món ăn yêu thích, dị ứng, mục tiêu sức khoẻ, vị yêu thích, thời gian nấu) trực tiếp vào MongoDB.
   - `src/components/features/ProfileView.tsx`: Gọi `GET /api/v1/auth/me` hiển thị tên thật, email, danh hiệu và sở thích ăn uống.
+- [x] **1.6. Tích Hợp Đăng Nhập Bằng Google (Google OAuth 2.0)**:
+  - Cài đặt `expo-auth-session` & `expo-crypto`, cấu hình `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`.
+  - Triển khai `authService.loginWithGoogle(idToken)` và `useAuth().loginWithGoogle(idToken)` đấu nối với `POST /api/v1/auth/google`.
+  - Đấu nối `useIdTokenAuthRequest` trong `src/app/(auth)/login.tsx` với overlay hiển thị trạng thái xác thực.
+- [x] **1.7. Hoàn Thiện Chỉnh Sửa Hồ Sơ Cá Nhân (Tên, Ảnh Đại Diện)**:
+  - Xây dựng `EditProfileModal.tsx` tích hợp `expo-image-picker` và danh sách ảnh đại diện mẫu.
+  - Đấu nối `updateProfile()` gọi `PUT /api/v1/auth/profile` cập nhật trực tiếp lên MongoDB và đồng bộ lại `AuthContext`.
 
 ---
 
