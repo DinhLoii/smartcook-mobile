@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -13,6 +13,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import * as WebBrowser from "expo-web-browser";
+import * as Google from "expo-auth-session/providers/google";
 
 import {
   AuthInput,
@@ -23,18 +25,61 @@ import {
 import { BrandColors } from "@/constants/brandColors";
 import { ActivityIndicator } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
+import { ENV } from "@/config/env";
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {},
   );
+
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId: ENV.GOOGLE_WEB_CLIENT_ID,
+    webClientId: ENV.GOOGLE_WEB_CLIENT_ID,
+    androidClientId: ENV.GOOGLE_WEB_CLIENT_ID,
+    iosClientId: ENV.GOOGLE_WEB_CLIENT_ID,
+  });
+
+  // Handle Google OAuth response
+  useEffect(() => {
+    const processGoogleResponse = async () => {
+      if (response?.type === "success") {
+        const idToken =
+          (response.params as any)?.id_token ||
+          (response as any)?.authentication?.idToken;
+
+        if (idToken) {
+          setIsGoogleSubmitting(true);
+          try {
+            const user = await loginWithGoogle(idToken);
+            if (user?.preferences?.hasCompletedSurvey) {
+              router.replace("/home");
+            } else {
+              router.replace("/onboarding-survey");
+            }
+          } catch (err: any) {
+            const serverMessage =
+              err.response?.data?.message ||
+              "Đăng nhập bằng Google thất bại. Vui lòng thử lại.";
+            Alert.alert("Lỗi đăng nhập Google", serverMessage);
+          } finally {
+            setIsGoogleSubmitting(false);
+          }
+        }
+      }
+    };
+
+    processGoogleResponse();
+  }, [response]);
 
   const handleLogin = async () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -67,9 +112,9 @@ export default function LoginScreen() {
 
       // Nếu người dùng đã hoàn thành khảo sát khẩu vị thì vào thẳng Home
       if (user?.preferences?.hasCompletedSurvey) {
-        router.replace('/home');
+        router.replace("/home");
       } else {
-        router.replace('/onboarding-survey');
+        router.replace("/onboarding-survey");
       }
     } catch (err: any) {
       const serverMessage =
@@ -89,9 +134,22 @@ export default function LoginScreen() {
     );
   };
 
-  const handleSocialLogin = (provider: string) => {
-    // Login mạng xã hội cũng chuyển sang khảo sát khẩu vị & khẩu phần ăn
-    router.replace('/onboarding-survey');
+  const handleGoogleLogin = async () => {
+    if (!promptAsync) {
+      Alert.alert(
+        "Google Sign-In",
+        "Dịch vụ Google Sign-In đang khởi động hoặc chưa sẵn sàng trên thiết bị này.",
+      );
+      return;
+    }
+    try {
+      await promptAsync();
+    } catch (err: any) {
+      Alert.alert(
+        "Lỗi xác thực",
+        err?.message || "Không thể mở giao diện đăng nhập Google.",
+      );
+    }
   };
 
   return (
@@ -201,8 +259,13 @@ export default function LoginScreen() {
 
             {/* Social Logins */}
             <SocialAuthButtons
-              onGooglePress={() => handleSocialLogin("Google")}
-              onFacebookPress={() => handleSocialLogin("Facebook")}
+              onGooglePress={handleGoogleLogin}
+              onFacebookPress={() =>
+                Alert.alert(
+                  "Thông báo",
+                  "Tính năng Facebook Login đang được phát triển.",
+                )
+              }
             />
           </View>
 
@@ -214,6 +277,14 @@ export default function LoginScreen() {
           />
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Google Auth Loading Overlay */}
+      {isGoogleSubmitting && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={BrandColors.primary} />
+          <Text style={styles.loadingOverlayText}>Đang xác thực tài khoản Google...</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -298,5 +369,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "800",
     letterSpacing: 0.3,
+  },
+  loadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+  },
+  loadingOverlayText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontWeight: "600",
   },
 });
