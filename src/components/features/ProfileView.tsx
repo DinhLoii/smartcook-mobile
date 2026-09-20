@@ -12,6 +12,7 @@ import React, { useEffect, useState } from "react";
 import {
   Alert,
   Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -59,8 +60,21 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
     }
   }, [user?.preferences]);
 
-  // Safe Logout with Confirmation Dialog
+  // Safe Logout with Confirmation Dialog (Works on Web, iOS & Android)
   const handleConfirmLogout = () => {
+    if (Platform.OS === "web") {
+      const confirmed =
+        typeof window !== "undefined"
+          ? window.confirm("Bạn có chắc chắn muốn đăng xuất khỏi tài khoản SmartCook không?")
+          : true;
+      if (confirmed) {
+        logout().then(() => {
+          router.replace("/login");
+        });
+      }
+      return;
+    }
+
     Alert.alert(
       "Xác nhận đăng xuất",
       "Bạn có chắc chắn muốn đăng xuất khỏi tài khoản SmartCook không?",
@@ -80,6 +94,10 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
   };
 
   const handleMenuClick = (title: string) => {
+    if (Platform.OS === "web") {
+      alert(`Bạn đã chọn "${title}".`);
+      return;
+    }
     Alert.alert(title, `Bạn đã chọn "${title}".`);
   };
 
