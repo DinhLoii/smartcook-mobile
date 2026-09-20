@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Modal,
   View,
@@ -41,18 +41,23 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   currentUser,
   onSave,
 }) => {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [avatar, setAvatar] = useState("");
+  const [firstName, setFirstName] = useState(currentUser?.firstName || "");
+  const [lastName, setLastName] = useState(currentUser?.lastName || "");
+  const [avatar, setAvatar] = useState(currentUser?.avatar || "");
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
+  const [prevVisible, setPrevVisible] = useState(visible);
+  const [prevUser, setPrevUser] = useState(currentUser);
+
+  if (visible !== prevVisible || currentUser !== prevUser) {
+    setPrevVisible(visible);
+    setPrevUser(currentUser);
     if (visible && currentUser) {
       setFirstName(currentUser.firstName || "");
       setLastName(currentUser.lastName || "");
       setAvatar(currentUser.avatar || "");
     }
-  }, [visible, currentUser]);
+  }
 
   const handlePickImage = async () => {
     try {
