@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -20,10 +20,10 @@ export default function WelcomeSplashScreen() {
   const { width } = useWindowDimensions();
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Animation values
-  const scaleAnim = useRef(new Animated.Value(0.7)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-  const dotsAnim = useRef(new Animated.Value(0)).current;
+  // Animation values (stable instance initialized once, satisfying React Compiler rules)
+  const [scaleAnim] = useState(() => new Animated.Value(0.7));
+  const [opacityAnim] = useState(() => new Animated.Value(0));
+  const [dotsAnim] = useState(() => new Animated.Value(0));
 
   const navigateNext = () => {
     if (isLoading) return;

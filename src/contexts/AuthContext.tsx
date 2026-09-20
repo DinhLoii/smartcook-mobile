@@ -1,6 +1,5 @@
 import React, {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useState,
@@ -38,44 +37,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Initialize Auth state from AsyncStorage on app launch
-  const checkAuth = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const [token, storedUser] = await Promise.all([
-        tokenStorage.getAccessToken(),
-        tokenStorage.getUser(),
-      ]);
-
-      if (token && storedUser) {
-        setUser(storedUser);
-        // Silently fetch fresh user profile from backend in background
-        authService
-          .getMe()
-          .then((freshUser) => setUser(freshUser))
-          .catch(() => {
-            // Keep storedUser if offline
-          });
-      } else {
-        setUser(null);
-      }
-    } catch (e) {
-      console.error("Error checking auth state", e);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    checkAuth();
+    let isMounted = true;
+
+    const loadAuth = async () => {
+      try {
+        const [token, storedUser] = await Promise.all([
+          tokenStorage.getAccessToken(),
+          tokenStorage.getUser(),
+        ]);
+
+        if (isMounted) {
+          if (token && storedUser) {
+            setUser(storedUser);
+            // Silently fetch fresh user profile from backend in background
+            authService
+              .getMe()
+              .then((freshUser) => {
+                if (isMounted && freshUser) setUser(freshUser);
+              })
+              .catch(() => {
+                // Keep storedUser if offline
+              });
+          } else {
+            setUser(null);
+          }
+        }
+      } catch (e) {
+        if (isMounted) {
+          console.error("Error checking auth state", e);
+          setUser(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadAuth();
 
     // Listen for session expiration from axios interceptor
     const unsubscribe = onSessionExpired(() => {
-      setUser(null);
+      if (isMounted) {
+        setUser(null);
+      }
     });
 
-    return unsubscribe;
-  }, [checkAuth]);
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   const login = async (payload: LoginPayload): Promise<StoredUser> => {
     const data = await authService.login(payload);
