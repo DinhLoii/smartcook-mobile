@@ -107,7 +107,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const register = async (payload: RegisterPayload): Promise<StoredUser> => {
     const data = await authService.register(payload);
-    setUser(data.user);
+    // User requested: After signup, do not keep logged in; redirect to login
+    await tokenStorage.clearAuthSession();
+    setUser(null);
     return data.user;
   };
 

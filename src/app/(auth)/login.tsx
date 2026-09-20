@@ -38,6 +38,7 @@ export default function LoginScreen() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {},
   );
@@ -59,6 +60,7 @@ export default function LoginScreen() {
 
         if (idToken) {
           setIsGoogleSubmitting(true);
+          setServerError(null);
           try {
             const user = await loginWithGoogle(idToken);
             if (user?.preferences?.hasCompletedSurvey) {
@@ -70,7 +72,7 @@ export default function LoginScreen() {
             const serverMessage =
               err.response?.data?.message ||
               "Đăng nhập bằng Google thất bại. Vui lòng thử lại.";
-            Alert.alert("Lỗi đăng nhập Google", serverMessage);
+            setServerError(serverMessage);
           } finally {
             setIsGoogleSubmitting(false);
           }
@@ -82,6 +84,7 @@ export default function LoginScreen() {
   }, [response]);
 
   const handleLogin = async () => {
+    setServerError(null);
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
@@ -117,10 +120,15 @@ export default function LoginScreen() {
         router.replace("/onboarding-survey");
       }
     } catch (err: any) {
-      const serverMessage =
-        err.response?.data?.message ||
-        "Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.";
-      Alert.alert("Lỗi đăng nhập", serverMessage);
+      const rawMessage = err.response?.data?.message;
+      const friendlyMessage =
+        rawMessage === "Invalid email or password"
+          ? "Email hoặc mật khẩu không chính xác"
+          : (rawMessage || "Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.");
+      
+      // Hiển thị lỗi màu đỏ rõ ràng ngay dưới ô mật khẩu và banner thông báo
+      setServerError(friendlyMessage);
+      setErrors((prev) => ({ ...prev, password: friendlyMessage }));
     } finally {
       setIsSubmitting(false);
     }
@@ -135,6 +143,63 @@ export default function LoginScreen() {
   };
 
   const handleGoogleLogin = async () => {
+    // Trong môi trường phát triển (Dev), cung cấp thêm tùy chọn Test Google tức thì
+    // giúp kiểm thử đầy đủ luồng MongoDB & Profile kể cả khi Google Console chưa cấp phép cho Android Emulator
+    if (__DEV__) {
+      Alert.alert(
+        "Google Sign-In",
+        "Chọn phương thức kiểm thử Google Sign-In:",
+        [
+          {
+            text: "Hủy",
+            style: "cancel",
+          },
+          {
+            text: "Tài khoản Google Test (Dev)",
+            onPress: async () => {
+              setIsGoogleSubmitting(true);
+              setServerError(null);
+              try {
+                const user = await loginWithGoogle("dev_mock_google_id_token");
+                if (user?.preferences?.hasCompletedSurvey) {
+                  router.replace("/home");
+                } else {
+                  router.replace("/onboarding-survey");
+                }
+              } catch (err: any) {
+                const msg =
+                  err.response?.data?.message || "Đăng nhập Google test thất bại";
+                setServerError(msg);
+              } finally {
+                setIsGoogleSubmitting(false);
+              }
+            },
+          },
+          {
+            text: "Google OAuth (Trình duyệt)",
+            onPress: async () => {
+              if (!promptAsync) {
+                Alert.alert(
+                  "Google Sign-In",
+                  "Dịch vụ Google Sign-In đang khởi động...",
+                );
+                return;
+              }
+              try {
+                await promptAsync();
+              } catch (err: any) {
+                Alert.alert(
+                  "Lỗi xác thực",
+                  err?.message || "Không thể mở giao diện đăng nhập Google.",
+                );
+              }
+            },
+          },
+        ],
+      );
+      return;
+    }
+
     if (!promptAsync) {
       Alert.alert(
         "Google Sign-In",
@@ -172,6 +237,19 @@ export default function LoginScreen() {
 
           {/* Form Card Content */}
           <View style={styles.formContainer}>
+            {/* Server Error Banner in Red */}
+            {serverError ? (
+              <View style={styles.serverErrorBanner}>
+                <Ionicons
+                  name="alert-circle"
+                  size={18}
+                  color="#DC2626"
+                  style={{ marginRight: 8 }}
+                />
+                <Text style={styles.serverErrorBannerText}>{serverError}</Text>
+              </View>
+            ) : null}
+
             <AuthInput
               label="Email"
               iconName="mail-outline"
@@ -179,6 +257,7 @@ export default function LoginScreen() {
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
+                if (serverError) setServerError(null);
                 if (errors.email)
                   setErrors((prev) => ({ ...prev, email: undefined }));
               }}
@@ -194,6 +273,7 @@ export default function LoginScreen() {
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
+                if (serverError) setServerError(null);
                 if (errors.password)
                   setErrors((prev) => ({ ...prev, password: undefined }));
               }}
@@ -386,5 +466,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#FFFFFF",
     fontWeight: "600",
+  },
+  serverErrorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1.5,
+    borderColor: "#FCA5A5",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 12,
+  },
+  serverErrorBannerText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#DC2626",
+    lineHeight: 18,
   },
 });
