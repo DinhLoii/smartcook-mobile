@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -21,7 +20,6 @@ import {
   AuthInput,
   AuthWaveFooter,
   AuthWaveHeader,
-  OfficialGoogleLogo,
   SocialAuthButtons,
 } from "@/components/auth";
 import { BrandColors } from "@/constants/brandColors";
@@ -144,38 +142,11 @@ export default function LoginScreen() {
     );
   };
 
-  const [isGoogleModalVisible, setIsGoogleModalVisible] = useState(false);
-
-  const handleOpenGoogleModal = () => {
+  const handleGoogleLogin = async () => {
     setServerError(null);
-    setIsGoogleModalVisible(true);
-  };
-
-  const handleDevGoogleLogin = async () => {
-    setIsGoogleModalVisible(false);
-    setIsGoogleSubmitting(true);
-    setServerError(null);
-    try {
-      const user = await loginWithGoogle("dev_mock_google_id_token");
-      if (user?.preferences?.hasCompletedSurvey) {
-        router.replace("/home");
-      } else {
-        router.replace("/onboarding-survey");
-      }
-    } catch (err: any) {
-      const msg =
-        err.response?.data?.message || "Đăng nhập Google test thất bại";
-      setServerError(msg);
-    } finally {
-      setIsGoogleSubmitting(false);
-    }
-  };
-
-  const handleRealGoogleOAuth = async () => {
-    setIsGoogleModalVisible(false);
     if (!promptAsync) {
       setServerError(
-        "Dịch vụ Google Sign-In đang khởi động hoặc chưa sẵn sàng trên trình duyệt này.",
+        "Dịch vụ Google Sign-In đang khởi động. Vui lòng thử lại sau vài giây.",
       );
       return;
     }
@@ -308,7 +279,7 @@ export default function LoginScreen() {
 
             {/* Social Logins */}
             <SocialAuthButtons
-              onGooglePress={handleOpenGoogleModal}
+              onGooglePress={handleGoogleLogin}
               onFacebookPress={() =>
                 Alert.alert(
                   "Thông báo",
@@ -334,73 +305,6 @@ export default function LoginScreen() {
           <Text style={styles.loadingOverlayText}>Đang xác thực tài khoản Google...</Text>
         </View>
       )}
-
-      {/* Google Sign-In In-App Modal (Works 100% on Web, Android & iOS) */}
-      <Modal
-        visible={isGoogleModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsGoogleModalVisible(false)}
-      >
-        <View style={styles.googleModalBackdrop}>
-          <View style={styles.googleModalCard}>
-            <View style={styles.googleModalHeader}>
-              <OfficialGoogleLogo size={26} />
-              <Text style={styles.googleModalTitle}>Đăng nhập với Google</Text>
-            </View>
-
-            <Text style={styles.googleModalSubtitle}>
-              Chọn phương thức để tiếp tục xác thực:
-            </Text>
-
-            {/* Option 1: Instant Dev Test Mode */}
-            <TouchableOpacity
-              style={styles.googleOptionBtn}
-              activeOpacity={0.8}
-              onPress={handleDevGoogleLogin}
-            >
-              <View style={[styles.googleOptionIcon, { backgroundColor: "#FFF7ED" }]}>
-                <Ionicons name="flash" size={20} color="#EA580C" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.googleOptionTitle}>
-                  Tài khoản Google Test (1-Click Dev)
-                </Text>
-                <Text style={styles.googleOptionDesc}>
-                  Đăng nhập tức thì không bị Google Console chặn, lưu tài khoản vào MongoDB Atlas.
-                </Text>
-              </View>
-            </TouchableOpacity>
-
-            {/* Option 2: Real Google OAuth Flow */}
-            <TouchableOpacity
-              style={styles.googleOptionBtn}
-              activeOpacity={0.8}
-              onPress={handleRealGoogleOAuth}
-            >
-              <View style={[styles.googleOptionIcon, { backgroundColor: "#EFF6FF" }]}>
-                <Ionicons name="globe-outline" size={20} color="#2563EB" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.googleOptionTitle}>
-                  Google OAuth (Mở trình duyệt)
-                </Text>
-                <Text style={styles.googleOptionDesc}>
-                  Xác thực bằng tài khoản Google cá nhân của bạn qua Google OAuth 2.0 SDK.
-                </Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.googleCloseBtn}
-              onPress={() => setIsGoogleModalVisible(false)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.googleCloseBtnText}>Đóng</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -521,81 +425,5 @@ const styles = StyleSheet.create({
     color: "#DC2626",
     lineHeight: 18,
   },
-
-  /* Google Auth In-App Modal */
-  googleModalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  googleModalCard: {
-    width: "100%",
-    maxWidth: 380,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 22,
-    padding: 22,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  googleModalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 8,
-  },
-  googleModalTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#0F172A",
-  },
-  googleModalSubtitle: {
-    fontSize: 13,
-    color: "#64748B",
-    lineHeight: 18,
-    marginBottom: 16,
-  },
-  googleOptionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F8FAFC",
-    borderWidth: 1.5,
-    borderColor: "#E2E8F0",
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 10,
-    gap: 12,
-  },
-  googleOptionIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  googleOptionTitle: {
-    fontSize: 13.5,
-    fontWeight: "700",
-    color: "#0F172A",
-    marginBottom: 2,
-  },
-  googleOptionDesc: {
-    fontSize: 11.5,
-    color: "#64748B",
-    lineHeight: 16,
-  },
-  googleCloseBtn: {
-    marginTop: 6,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  googleCloseBtnText: {
-    fontSize: 13.5,
-    fontWeight: "600",
-    color: "#64748B",
-  },
 });
+
