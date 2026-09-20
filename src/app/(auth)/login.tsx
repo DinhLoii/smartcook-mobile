@@ -46,8 +46,8 @@ export default function LoginScreen() {
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     clientId: ENV.GOOGLE_WEB_CLIENT_ID,
     webClientId: ENV.GOOGLE_WEB_CLIENT_ID,
-    androidClientId: ENV.GOOGLE_WEB_CLIENT_ID,
-    iosClientId: ENV.GOOGLE_WEB_CLIENT_ID,
+    iosClientId: ENV.GOOGLE_IOS_CLIENT_ID || undefined,
+    androidClientId: ENV.GOOGLE_ANDROID_CLIENT_ID || undefined,
   });
 
   // Handle Google OAuth response
