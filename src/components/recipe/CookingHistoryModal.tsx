@@ -1,4 +1,3 @@
-import { BrandColors } from "@/constants/brandColors";
 import {
   CookingHistoryItem,
   CookingHistoryService,
@@ -41,7 +40,9 @@ export default function CookingHistoryModal({
     const unsub = CookingHistoryService.subscribe((list) => {
       setHistory(list);
     });
-    return unsub;
+    return () => {
+      unsub();
+    };
   }, []);
 
   const handleClear = () => {

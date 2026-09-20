@@ -1,6 +1,5 @@
 import {
   ChatMessage,
-  ChatRoom,
   CommunityAuthor,
   CommunityComment,
   CommunityPost,

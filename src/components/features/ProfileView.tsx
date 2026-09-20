@@ -25,10 +25,15 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
 
-  // Personalization preferences from user in AuthContext or fallback to PreferenceService
-  const [preferences, setPreferences] = useState<UserPreferences>(() => {
-    if (user?.preferences) {
-      return {
+  // Local preferences state fallback when user has not synced preferences from server
+  const [localPreferences, setLocalPreferences] = useState<UserPreferences>(() =>
+    PreferenceService.getPreferences()
+  );
+
+  // Derived preferences: uses user.preferences from AuthContext as source of truth.
+  // Plain derivation allows React Compiler to auto-memoize with precise granular dependencies.
+  const preferences: UserPreferences = user?.preferences
+    ? {
         hasCompletedSurvey: user.preferences.hasCompletedSurvey ?? true,
         portion: (user.preferences.portion as any) || "3-4",
         cuisines: user.preferences.cuisines || [],
@@ -36,31 +41,21 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
         restrictions: user.preferences.restrictions || [],
         tasteProfile: user.preferences.tasteProfile || [],
         cookingTime: (user.preferences.cookingTime as any) || "medium",
-        updatedAt: new Date().toISOString(),
+        updatedAt: user.preferences.updatedAt || new Date().toISOString(),
+      }
+    : localPreferences;
+
+  // Subscribe to PreferenceService external updates only when user is not logged in
+  useEffect(() => {
+    if (!user?.preferences) {
+      const unsub = PreferenceService.subscribe((prefs) => {
+        setLocalPreferences(prefs);
+      });
+      return () => {
+        unsub();
       };
     }
-    return PreferenceService.getPreferences();
-  });
-
-  useEffect(() => {
-    if (user?.preferences) {
-      setPreferences({
-        hasCompletedSurvey: user.preferences.hasCompletedSurvey ?? true,
-        portion: (user.preferences.portion as any) || "3-4",
-        cuisines: user.preferences.cuisines || [],
-        healthGoal: (user.preferences.healthGoal as any) || "healthy",
-        restrictions: user.preferences.restrictions || [],
-        tasteProfile: user.preferences.tasteProfile || [],
-        cookingTime: (user.preferences.cookingTime as any) || "medium",
-        updatedAt: new Date().toISOString(),
-      });
-    } else {
-      const unsub = PreferenceService.subscribe((prefs) => {
-        setPreferences(prefs);
-      });
-      return unsub;
-    }
-  }, [user]);
+  }, [user?.preferences]);
 
   // Safe Logout with Confirmation Dialog
   const handleConfirmLogout = () => {
@@ -92,7 +87,7 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
     `${preferences.portion} người`;
 
   const cuisinesText =
-    preferences.cuisines.length > 0
+    (preferences.cuisines?.length ?? 0) > 0
       ? preferences.cuisines
           .map((id) => CUISINE_OPTIONS.find((c) => c.id === id)?.label)
           .filter(Boolean)
@@ -109,7 +104,7 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
       : "Ăn Healthy & Cân bằng";
 
   const restrictionsText =
-    preferences.restrictions.length > 0
+    (preferences.restrictions?.length ?? 0) > 0
       ? preferences.restrictions
           .map((id) => RESTRICTION_OPTIONS.find((r) => r.id === id)?.label)
           .filter(Boolean)
