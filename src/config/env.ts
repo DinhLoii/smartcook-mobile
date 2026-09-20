@@ -5,6 +5,9 @@ import { Platform } from "react-native";
  * Provides fallback URLs for Android Emulator (10.0.2.2) and iOS/Web (localhost)
  */
 const getDefaultApiUrl = (): string => {
+  if (Platform.OS === "web") {
+    return "http://localhost:5000/api/v1";
+  }
   if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL;
   }
@@ -14,6 +17,9 @@ const getDefaultApiUrl = (): string => {
 };
 
 const getDefaultSocketUrl = (): string => {
+  if (Platform.OS === "web") {
+    return "http://localhost:5000";
+  }
   if (process.env.EXPO_PUBLIC_SOCKET_URL) {
     return process.env.EXPO_PUBLIC_SOCKET_URL;
   }

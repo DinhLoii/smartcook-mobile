@@ -71,12 +71,20 @@ export default function LoginScreen() {
           } catch (err: any) {
             const serverMessage =
               err.response?.data?.message ||
+              (err.message === "Network Error"
+                ? "Không thể kết nối đến máy chủ Backend (Port 5000). Vui lòng đảm bảo Backend đang chạy."
+                : err.message) ||
               "Đăng nhập bằng Google thất bại. Vui lòng thử lại.";
             setServerError(serverMessage);
           } finally {
             setIsGoogleSubmitting(false);
           }
         }
+      } else if (response?.type === "error") {
+        setServerError(
+          response.error?.message ||
+            "Xác thực Google bị từ chối hoặc gặp lỗi. Vui lòng thử lại.",
+        );
       }
     };
 
