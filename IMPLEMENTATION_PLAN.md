@@ -1,193 +1,256 @@
 # Kế Hoạch Triển Khai Toàn Diện SmartCook Mobile - Đồng Bộ 100% Backend & AI
 
-> **Phiên bản:** 2.1 - Cập nhật thực tế theo tiến độ Backend (Phases 1-4 Backend Đã Sẵn Sàng)  
-> **Mobile Client (`smartcook-mobile`):** React Native (Expo SDK 57), TypeScript, Expo Router  
-> **Backend Service (`smartcook-backend`):** Node.js Express, TypeScript, MongoDB Atlas, Cloudinary, Gemini AI, Socket.io  
-> **Mục tiêu:** Chuyển đổi 100% dữ liệu giả lập (Mock / In-Memory State) trên Mobile thành dữ liệu thật kết nối với `smartcook-backend`, kích hoạt trí tuệ nhân tạo Gemini AI, chat thời gian thực và định vị GPS.
+> **Phiên bản:** 3.0 - Cập nhật đồng bộ toàn diện với `smartcook-backend` (Phases 1-6 Backend Đã Hoàn Thành)  
+> **Mobile Client (`smartcook-mobile`):** React Native (Expo SDK 57.0.24), TypeScript, Expo Router, NativeWind/Tailwind  
+> **Backend Service (`smartcook-backend`):** Node.js Express 5, TypeScript, MongoDB Atlas, Cloudinary, Gemini 1.5 Flash Vision, Socket.io Realtime Gateway  
+> **Mục tiêu:** Chuyển đổi 100% dữ liệu mock/in-memory trên Mobile thành dữ liệu thật kết nối với Backend, kích hoạt trí tuệ nhân tạo Gemini AI Vision & Chatbot, Socket.io Chat thời gian thực, Lịch sử nấu ăn & Gamification Chef XP, Lập thực đơn tuần 7 ngày và Định vị siêu thị GPS.
 
 ---
 
-## 1. Bản Đồ Trạng Thái Đồng Bộ Giữa Backend và Mobile
+## 1. Bản Đồ Trạng Thái Đồng Bộ Kiến Trúc (Backend vs Mobile)
 
-Qua rà soát thực tế mã nguồn, Backend hiện đã hoàn thành xong **4 giai đoạn cốt lõi**. Điều này cho phép **Mobile triển khai ngay lập tức 3 Phase đầu tiên** mà không phải chờ đợi:
+Qua rà soát chi tiết 100% source code của cả hai dự án `smartcook-backend` và `smartcook-mobile`:
+- **Backend hiện đã hoàn thành 6/7 Phases cốt lõi** (Bao gồm Auth, Categories, Ingredients 14 nhóm, Recipes, Cloudinary Media Upload, User Custom Recipe, Cooking History +50 XP Gamification, Gemini 1.5 Flash Vision + Pins + AI Chef Chat, Community Social Feed, Realtime Socket.io Chat Gateway).
+- **Mobile đã hoàn thành 100% Phase 1** (Auth, JWT Interceptor, Silent Refresh, Google Sign-In đa nền tảng iOS/Web, Onboarding Survey 6 tiêu chí, Profile & Edit Profile).
+- **Bước tiếp theo là tiến hành ngay Phase 2** (Khám phá công thức, Bộ lọc thông minh, Chi tiết món với Scaler định lượng và Đăng tải công thức cá nhân lên Cloudinary).
 
 ```
-[Backend] Phase 1: Auth & Survey -------------> [Mobile] Phase 1: Auth, Storage & Onboarding   (✅ SẴN SÀNG ĐẤU NỐI NGAY)
-[Backend] Phase 2: Categories, Fridge, Recipes -> [Mobile] Phase 2: Recipes Feed, Detail, Scaler (✅ SẴN SÀNG ĐẤU NỐI NGAY)
-[Backend] Phase 3: Cloudinary Media Upload ---> [Mobile] Phase 2: Create Custom Recipe Upload (✅ SẴN SÀNG ĐẤU NỐI NGAY)
-[Backend] Phase 4: Cooking History & +50 XP ---> [Mobile] Phase 3: Smart Fridge & Chef XP Level (✅ SẴN SÀNG ĐẤU NỐI NGAY)
----------------------------------------------------------------------------------------------------------------------
-[Backend] Phase 5: Gemini AI Vision & Chat ---> [Mobile] Phase 4: AI Scan & Draggable Assistant (⏳ Triển khai tiếp theo)
-[Backend] Phase 6: Community & Socket.io -----> [Mobile] Phase 5: Social Feed & Realtime Chat   (⏳ Triển khai tiếp theo)
-[Backend] Phase 7: Planner & GeoJSON Stores --> [Mobile] Phase 6: Meal Planner & GPS Stores     (⏳ Triển khai tiếp theo)
+====================================================================================================
+TIẾN ĐỘ ĐỒNG BỘ TOÀN DỰ ÁN (PROJECT SYNCHRONIZATION MATRIX)
+====================================================================================================
+[Phase 1] Xác thực & Khảo sát khẩu vị      | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
+[Phase 2] Công thức, Scaler & Đăng món      | Backend: [✅ 100%] ===> Mobile: [🚀 BẮT ĐẦU TRIỂN KHAI]
+[Phase 3] Bếp thông minh & Chef XP (+50XP)  | Backend: [✅ 100%] ===> Mobile: [⏳ Sẵn sàng đấu nối]
+[Phase 4] Gemini AI Vision & Chatbot Chef   | Backend: [✅ 100%] ===> Mobile: [⏳ Sẵn sàng đấu nối]
+[Phase 5] Mạng xã hội & Socket.io Realtime  | Backend: [✅ 100%] ===> Mobile: [⏳ Sẵn sàng đấu nối]
+[Phase 6] Thực đơn tuần & Siêu thị GPS      | Backend: [⏳ Phase 7] -> Mobile: [⏳ Sẵn sàng đấu nối]
+[Phase 7] Tối ưu hóa UX & Kiểm thử E2E      | Toàn bộ dự án         -> Mobile: [⏳ Bước cuối cùng]
+====================================================================================================
 ```
 
 ---
 
-## 2. Bảng Đối Chiếu Chi Tiết Từng Tính Năng
+## 2. Bảng Đối Chiếu Chi Tiết Endpoints Backend & Thành Phần Mobile
 
-| Phân Hệ Tính Năng | Trạng Thái Mobile Frontend | Trạng Thái Backend Hiện Tại | Đánh Giá Khả Năng Đấu Nối |
+| Phân Hệ Tính Năng | Thành Phần Giao Diện Mobile | API Endpoints Backend Tương Ứng | Trạng Thái Kỹ Thuật |
 | :--- | :--- | :--- | :--- |
-| **1. Xác thực & Khẩu vị** | Đã có màn `login`, `register`, `onboarding-survey` | Đã có `/auth/register`, `/login`, `/refresh-token`, `/survey`, `/me` | ✅ **Sẵn sàng 100%**. Mobile bắt đầu ngay ở Phase 1. |
-| **2. Danh mục & Khám phá món ăn** | Đã có `home.tsx`, bộ lọc thông minh, phân trang | Đã có `/categories`, `/recipes` (hỗ trợ filter calo, thời gian, search) | ✅ **Sẵn sàng 100%**. Mobile đấu nối ở Phase 2. |
-| **3. Chi tiết món & Yêu thích** | Đã có `recipe-detail.tsx`, dynamic Scaler khẩu phần | Đã có `/recipes/:id`, `/recipes/:id/favorite` | ✅ **Sẵn sàng 100%**. Mobile đấu nối ở Phase 2. |
-| **4. Tạo công thức cá nhân** | Đã có `CreateRecipeModal.tsx` chọn ảnh | `POST /recipes` đã mở quyền cho user đã đăng nhập, upload Cloudinary | ✅ **Sẵn sàng 100%**. Mobile đấu nối ở Phase 2. |
-| **5. Bếp của tôi & Tủ lạnh** | Đã có `FridgeView.tsx`, 14 nhóm nguyên liệu | Đã có `/ingredients` (58 nguyên liệu), `/fridge/my-fridge`, `/recipes/fridge-match` | ✅ **Sẵn sàng 100%**. Mobile đấu nối ở Phase 3. |
-| **6. Nấu ăn rảnh tay & Điểm XP** | Đã có `cooking-mode.tsx` (Voice TTS), `CookingHistoryModal` | Đã có `/cooking-history` (tự động cộng +50 XP và thăng cấp bậc đầu bếp) | ✅ **Sẵn sàng 100%**. Mobile đấu nối ở Phase 3. |
-| **7. AI Scan Nhận Diện Thực Phẩm** | Đã có `ScanAIView.tsx`, vẽ ghim pins trực quan | Backend đã cài `@google/genai`, đang chờ kích hoạt Route | ⏳ Triển khai song hành ở Phase 4. |
-| **8. Trợ Lý AI Kéo Thả** | Đã có `DraggableAIAssistant.tsx` kéo thả nổi, chat UI | Backend chuẩn bị Route chat có context tủ lạnh và khẩu vị | ⏳ Triển khai song hành ở Phase 4. |
-| **9. Mạng Xã Hội Ẩm Thực** | Đã có `CommunityView.tsx`, `PostCard`, modal tạo bài | Backend chuẩn bị Models `CommunityPost`, `CommunityComment` | ⏳ Triển khai song hành ở Phase 5. |
-| **10. Nhắn Tin Thời Gian Thực** | Đã có `DirectChatModal`, `MessengerConversationsModal` | Backend chuẩn bị cài `socket.io` và Gateway Chat | ⏳ Triển khai song hành ở Phase 5. |
-| **11. Kế Hoạch Bữa Ăn 7 Ngày** | Đã có `PlannerView.tsx` (lịch tuần, calo, giỏ hàng) | Backend chuẩn bị Model `MealPlan` và thuật toán sinh giỏ hàng | ⏳ Triển khai song hành ở Phase 6. |
-| **12. Định Vị Siêu Thị GPS** | Đã có `NearbyStoreCard.tsx`, tính khoảng cách GPS | Backend chuẩn bị Model `Store` với index GeoJSON `2dsphere` | ⏳ Triển khai song hành ở Phase 6. |
+| **1. Xác thực & Khẩu vị** | `login.tsx`, `register.tsx`, `onboarding-survey.tsx`, `ProfileView.tsx`, `EditProfileModal.tsx` | `POST /auth/register`<br>`POST /auth/login`<br>`POST /auth/google`<br>`POST /auth/refresh-token`<br>`POST /auth/survey`<br>`GET /auth/me`<br>`PUT /auth/profile` | ✅ **HOÀN THÀNH 100%**<br>(Token Interceptor, Silent Refresh, 13/13 test E2E passed) |
+| **2. Danh mục & Khám phá món ăn** | `(main)/home.tsx`<br>Smart Filter Modal<br>Category Tabs Carousel | `GET /categories`<br>`GET /recipes`<br>Query params: `category`, `search`, `difficulty`, `maxMinutes`, `maxCalories`, `page`, `limit` | 🚀 **TRIỂN KHAI NGAY (Phase 2)**<br>Thay thế `RECIPES_DATA` bằng API thật, có phân trang, skeleton, pull-to-refresh. |
+| **3. Chi tiết món & Scaler khẩu phần** | `(main)/recipe-detail.tsx`<br>Dynamic Portion Scaler<br>Favorite Heart Button | `GET /recipes/:id`<br>`POST /recipes/:id/favorite` (Toggle yêu thích lưu vào `user.favoriteRecipeIds`) | 🚀 **TRIỂN KHAI NGAY (Phase 2)**<br>Giữ nguyên bộ Scaler co giãn nguyên liệu, tích hợp API thật. |
+| **4. Tạo công thức cá nhân** | `CreateRecipeModal.tsx`<br>Chọn ảnh `expo-image-picker`<br>Các bước sơ chế & nấu | `POST /recipes`<br>Multipart `FormData` tải ảnh lên Cloudinary `smartcook/recipes`, gán `authorId` chính chủ. | 🚀 **TRIỂN KHAI NGAY (Phase 2)**<br>Chuyển đổi từ `RecipeService.addRecipe` in-memory sang API thật. |
+| **5. Bếp của tôi & Tủ lạnh** | `FridgeView.tsx`<br>14 nhóm nguyên liệu chuẩn<br>Bộ gợi ý món nấu được ngay | `GET /ingredients` (58 master items)<br>`GET /fridge/my-fridge`<br>`POST /fridge/items`<br>`PUT /fridge/items/:id`<br>`DELETE /fridge/items/:id`<br>`GET /recipes/fridge-match` (xếp hạng món theo % khớp) | ⏳ **Phase 3**<br>Backend đã sẵn sàng 100%. |
+| **6. Nấu ăn rảnh tay & Điểm XP** | `(main)/cooking-mode.tsx` (TTS tiếng Việt)<br>`CookingHistoryModal.tsx` | `POST /cooking-history` (Tự động cộng **+50 XP** và thăng hạng cấp bậc đầu bếp)<br>`GET /cooking-history` | ⏳ **Phase 3**<br>Backend đã sẵn sàng 100%. |
+| **7. AI Vision Scan Thực Phẩm** | `ScanAIView.tsx`<br>Laser Scan Animation<br>Thẻ ghim toạ độ Pins trực quan | `POST /ai/scan-ingredients` (Upload ảnh -> Gemini 1.5 Flash Vision -> Trả về `ingredients`, `pins` toạ độ %, `suggestedRecipe`)<br>`GET /ai/scan-history` | ⏳ **Phase 4**<br>Backend đã sẵn sàng 100%. |
+| **8. Trợ Lý AI Kéo Thả** | `DraggableAIAssistant.tsx`<br>Bóng nổi kéo thả, chatbox gợi ý | `POST /ai/assistant-chat` (Gemini Chef tiếp nhận câu hỏi kèm context Tủ lạnh & Khẩu vị, trả về `replyText`, `suggestedDishes`, `quickPrompts`) | ⏳ **Phase 4**<br>Backend đã sẵn sàng 100%. |
+| **9. Mạng Xã Hội Ẩm Thực** | `CommunityView.tsx`<br>`PostCard.tsx`<br>`CreatePostModal.tsx`<br>`CommentsModal.tsx` | `GET /community/posts`<br>`POST /community/posts` (ảnh Cloudinary, +20 XP)<br>`POST /community/posts/:id/like`<br>`GET/POST /community/posts/:id/comments` (+5 XP) | ⏳ **Phase 5**<br>Backend đã sẵn sàng 100%. |
+| **10. Nhắn Tin Thời Gian Thực** | `DirectChatModal.tsx`<br>`MessengerConversationsModal.tsx`<br>`ChatRoomModal.tsx` | Socket.io Server `ws://localhost:5000`<br>JWT Handshake, Events: `join_room`, `send_message`, `typing`, `online_status`<br>REST API: `/api/v1/chat/*` | ⏳ **Phase 5**<br>Backend đã sẵn sàng 100%. |
+| **11. Thực Đơn Tuần & Giỏ Đi Chợ** | `PlannerView.tsx`<br>`ShoppingNoteModal.tsx`<br>Đồng bộ giỏ vào tủ lạnh | `GET /planner/current-week`<br>`PUT /planner/meals`<br>`GET /planner/shopping-list` (Thuật toán trừ nguyên liệu có trong tủ lạnh)<br>`POST /planner/sync-to-fridge` | ⏳ **Phase 6**<br>Đang xây dựng song song với Backend Phase 7. |
+| **12. Định Vị Siêu Thị GPS** | `NearbyStoreCard.tsx`<br>Tính khoảng cách & thời gian đi xe/đi bộ | `GET /stores/nearby?lat=...&lng=...` (MongoDB `$geoNear` 2dsphere index) | ⏳ **Phase 6**<br>Đang xây dựng song song với Backend Phase 7. |
 
 ---
 
 ## 3. Lộ Trình Triển Khai Chi Tiết Cho `smartcook-mobile` (7 Phases)
 
+---
+
 ### 📌 GIAI ĐOẠN 1: Hạ Tầng Mạng, Xác Thực Người Dùng & Quản Lý Phiên (Auth & Storage)
-> **Trạng thái Backend:** ĐÃ SẴN SÀNG 100% (`/api/v1/auth/*`)  
-> **Mục tiêu Mobile:** Thiết lập kết nối HTTP Axios với Backend, quản lý JWT token trong AsyncStorage, lưu phiên đăng nhập và đồng bộ khảo sát khẩu vị 6 tiêu chí vào MongoDB.
+> **Trạng thái:** ✅ **ĐÃ HOÀN THÀNH 100% (VERIFIED & TESTED)**  
+> **Cam kết:** Không còn lỗi TypeScript, kiểm thử E2E đạt 13/13 test passed, code đã đồng bộ trên branch `develop`.
 
-- [x] **1.1. Cài Đặt Thư Viện Thiết Yếu**:
-  ```bash
-  npx expo install @react-native-async-storage/async-storage
-  npm install axios
-  ```
-- [x] **1.2. Cấu Hình Biến Môi Trường (`.env`)**:
-  - `EXPO_PUBLIC_API_URL=http://10.0.2.2:5000/api/v1` (cho Android Emulator) hoặc IP LAN máy tính cho thiết bị thật.
-- [x] **1.3. Xây Dựng Tầng Mạng Chuẩn Hóa (`src/services/apiClient.ts`)**:
-  - Cấu hình Axios instance với `timeout: 15000`.
-  - **Request Interceptor**: Tự động lấy JWT từ AsyncStorage và gắn header `Authorization: Bearer <token>`.
-  - **Response Interceptor**: Bắt mã lỗi `401 Unauthorized`. Tự động dùng `refreshToken` gọi API `/auth/refresh-token` để lấy token mới mà không làm gián đoạn trải nghiệm người dùng (Silent Refresh).
-- [x] **1.4. Xây Dựng `AuthContext.tsx` & Hook `useAuth()`**:
-  - Quản lý trạng thái toàn cục: `user`, `accessToken`, `isAuthenticated`, `isLoading`.
-  - Tại `src/app/index.tsx` (Splash Screen): Tự động kiểm tra token lưu trong AsyncStorage -> Nếu còn hạn vào thẳng `home`, nếu chưa hoặc hết hạn điều hướng về `login`.
-  - Cung cấp các hàm: `login()`, `register()`, `logout()`, `updatePreferences()`.
-- [x] **1.5. Đấu Nối Các Màn Hình**:
-  - `src/app/login.tsx`: Gọi `useAuth().login()`, hiển thị thông báo lỗi từ Backend khi sai tài khoản/mật khẩu.
-  - `src/app/register.tsx`: Gọi `useAuth().register()`, đăng ký thành công chuyển sang khảo sát khẩu vị.
-  - `src/app/onboarding-survey.tsx`: Gọi API `POST /api/v1/auth/survey` lưu 6 tiêu chí khẩu vị (khẩu phần, món ăn yêu thích, dị ứng, mục tiêu sức khoẻ, vị yêu thích, thời gian nấu) trực tiếp vào MongoDB.
-  - `src/components/features/ProfileView.tsx`: Gọi `GET /api/v1/auth/me` hiển thị tên thật, email, danh hiệu và sở thích ăn uống.
-- [x] **1.6. Tích Hợp Đăng Nhập Bằng Google (Google OAuth 2.0)**:
-  - Cài đặt `expo-auth-session` & `expo-crypto`, cấu hình `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`.
-  - Triển khai `authService.loginWithGoogle(idToken)` và `useAuth().loginWithGoogle(idToken)` đấu nối với `POST /api/v1/auth/google`.
-  - Đấu nối `useIdTokenAuthRequest` trong `src/app/(auth)/login.tsx` với overlay hiển thị trạng thái xác thực.
-- [x] **1.7. Hoàn Thiện Chỉnh Sửa Hồ Sơ Cá Nhân (Tên, Ảnh Đại Diện)**:
-  - Xây dựng `EditProfileModal.tsx` tích hợp `expo-image-picker` và danh sách ảnh đại diện mẫu.
-  - Đấu nối `updateProfile()` gọi `PUT /api/v1/auth/profile` cập nhật trực tiếp lên MongoDB và đồng bộ lại `AuthContext`.
+- [x] **1.1. Cài Đặt & Cấu Hình Thư Viện Cốt Lõi**:
+  - `axios`, `@react-native-async-storage/async-storage`, `expo-crypto`, `expo-auth-session`, `expo-image-picker`.
+  - Cập nhật Expo SDK 57.0.24 tương thích React 19 và React Native 0.76.
+  - Cấu hình file `tsconfig.json` chuẩn ESNext, khắc phục triệt để lỗi đỏ thư mục `node_modules`.
+- [x] **1.2. Chuẩn Hóa Tầng Mạng (`src/services/apiClient.ts`)**:
+  - Cấu hình Axios Base URL từ `EXPO_PUBLIC_API_URL`.
+  - **Request Interceptor**: Tự động đính kèm `Authorization: Bearer <accessToken>` từ AsyncStorage.
+  - **Response Interceptor & Silent Refresh**: Bắt mã `401 Unauthorized`, gọi `/api/v1/auth/refresh-token` cấp lại Access Token mới tự động và gửi lại request cũ mà người dùng không bị văng ra khỏi app.
+- [x] **1.3. Quản Lý Trạng Thái Toàn Cục (`src/contexts/AuthContext.tsx`)**:
+  - Quản lý `user`, `accessToken`, `isAuthenticated`, `isLoading`.
+  - Splash Router (`src/app/index.tsx`): Kiểm tra token, điều hướng tự động vào `home` hoặc `login`.
+- [x] **1.4. Đấu Nối Các Màn Hình Xác Thực & Khẩu Vị**:
+  - `src/app/(auth)/login.tsx`: Banner báo lỗi viền đỏ nổi bật khi sai thông tin; Nút Đăng nhập Google kích hoạt trực tiếp `WebBrowser.openAuthSessionAsync` với Web Client ID & iOS Client ID (`315474311920-9kt3qadvei4mrdncf7h8ot8hj5fkjuv5.apps.googleusercontent.com`).
+  - `src/app/(auth)/register.tsx`: Đăng ký tài khoản mới và điều hướng chuẩn xác sang `login`.
+  - `src/app/(auth)/onboarding-survey.tsx`: Lưu 6 chiều dữ liệu khẩu vị (`portion`, `cuisines`, `healthGoal`, `restrictions`, `tasteProfile`, `cookingTime`) trực tiếp vào MongoDB qua `POST /api/v1/auth/survey`.
+  - `src/components/features/ProfileView.tsx`: Hiển thị thông tin người dùng từ `GET /api/v1/auth/me`.
+  - `src/components/features/EditProfileModal.tsx`: Chỉnh sửa họ tên, avatar qua `PUT /api/v1/auth/profile`, tuân thủ 100% React Compiler Rules (không render lặp, không lỗi ESLint).
 
 ---
 
-### 📌 GIAI ĐOẠN 2: Khám Phá Công Thức, Bộ Lọc Món Ăn & Tạo Món Cá Nhân (Recipes Feed)
-> **Trạng thái Backend:** ĐÃ SẴN SÀNG 100% (`/api/v1/recipes`, `/api/v1/categories`)  
-> **Mục tiêu Mobile:** Thay thế dữ liệu cứng `RECIPES_DATA` trên Mobile bằng API thật; hỗ trợ tìm kiếm, lọc calo, thời gian nấu và đăng công thức món ăn mới kèm ảnh lên Cloudinary.
+### 📌 GIAI ĐOẠN 2: Khám Phá Công Thức, Bộ Lọc Món Ăn & Tạo Món Cá Nhân (Recipes Feed & Scaler)
+> **Trọng tâm hiện tại:** 🚀 **BẮT ĐẦU TRIỂN KHAI NGAY**  
+> **Trạng thái Backend:** ĐÃ SẴN SÀNG 100% (`GET /categories`, `GET /recipes`, `GET /recipes/:id`, `POST /recipes/:id/favorite`, `POST /recipes`)  
+> **Mục tiêu Mobile:** Thay thế toàn bộ dữ liệu tĩnh `RECIPES_DATA` bằng API thật; hỗ trợ tìm kiếm theo từ khóa, lọc theo calo và thời gian chế biến, phân trang; giữ trọn vẹn bộ Scaler tự động co giãn nguyên liệu; cho phép người dùng đăng công thức kèm ảnh tải trực tiếp lên Cloudinary.
 
-- [ ] **2.1. Xây Dựng `src/services/recipeService.ts`**:
-  - `getRecipes(params)`: Tải danh sách món ăn phân trang kèm query (danh mục, tìm kiếm, thời gian, calo).
-  - `getRecipeById(id)`: Lấy chi tiết món ăn thật.
-  - `toggleFavorite(id)`: Gọi `POST /api/v1/recipes/:id/favorite` đồng bộ danh sách yêu thích vào MongoDB.
-  - `createRecipe(formData)`: Gửi multipart `FormData` lên Backend để upload ảnh lên Cloudinary và lưu công thức vào MongoDB.
-- [ ] **2.2. Đấu Nối Trang Khám Phá (`src/app/home.tsx`)**:
-  - Gọi API `/api/v1/categories` hiển thị thanh danh mục động.
-  - Tích hợp `RefreshControl` (Pull-to-refresh) tải lại danh sách món ăn mới nhất.
-  - Đấu nối Bộ Lọc Thông Minh (Smart Filter Modal): Áp dụng các tiêu chí thời gian (<15p, <30p), calo (<400kcal, <600kcal) vào API Query.
-  - Xử lý trạng thái Skeleton Loading và Empty State khi không tìm thấy món.
-- [ ] **2.3. Đấu Nối Chi Tiết Món Ăn (`src/app/recipe-detail.tsx`)**:
-  - Lấy dữ liệu công thức thật theo ID từ URL params.
-  - Đồng bộ trạng thái yêu thích với MongoDB.
-  - Giữ nguyên bộ Scaler tự động co giãn định lượng nguyên liệu theo số người ăn.
-- [ ] **2.4. Đấu Nối Tạo Món Mới (`src/components/recipe/CreateRecipeModal.tsx`)**:
-  - Chọn ảnh món ăn từ thư viện qua `expo-image-picker`.
-  - Gửi `FormData` lên `POST /api/v1/recipes` để lưu món ăn do chính người dùng sáng tạo.
+#### Nhiệm vụ cụ thể:
+- [ ] **2.1. Nâng cấp `src/services/recipeService.ts` & tạo `src/services/categoryService.ts`**:
+  - `categoryService.getCategories()`: Gọi `GET /api/v1/categories`, trả về danh sách danh mục động (Gia đình, Nấu nhanh, Healthy, Tiết kiệm...).
+  - `recipeService.getRecipes(params)`:
+    - Query parameters: `{ category?: string, search?: string, difficulty?: string, maxMinutes?: number, maxCalories?: number, page?: number, limit?: number }`.
+    - Trả về danh sách món ăn từ MongoDB kèm metadata phân trang (`total`, `totalPages`, `currentPage`).
+  - `recipeService.getRecipeById(id)`: Gọi `GET /api/v1/recipes/:id` lấy dữ liệu chi tiết một món ăn.
+  - `recipeService.toggleFavorite(id)`: Gọi `POST /api/v1/recipes/:id/favorite`, cập nhật trạng thái yêu thích hai chiều (giữa Recipe Card và User Profile).
+  - `recipeService.createRecipe(formData: FormData)`: Gửi multipart `FormData` lên `POST /api/v1/recipes` để upload ảnh lên Cloudinary và lưu công thức vào MongoDB.
+- [ ] **2.2. Đấu nối Màn Hình Trang Chủ Khám Phá (`src/app/(main)/home.tsx`)**:
+  - Thay thế danh sách danh mục cứng bằng dữ liệu từ `categoryService.getCategories()`.
+  - Thay thế `RECIPES_DATA` bằng hook lấy dữ liệu từ `recipeService.getRecipes(...)`.
+  - **Pull-to-refresh (`RefreshControl`)**: Vuốt xuống để làm mới danh sách công thức.
+  - **Phân trang (Infinite Scroll / Load More)**: Khi cuộn đến cuối danh sách, tự động tải thêm trang tiếp theo.
+  - **Bộ Lọc Thông Minh (Smart Filter Modal)**:
+    - Lọc thời gian chế biến: `< 15 phút`, `< 30 phút`, `< 60 phút`.
+    - Lọc lượng calo: `< 400 kcal`, `< 600 kcal`, `< 800 kcal`.
+    - Lọc độ khó: `Dễ`, `Trung bình`, `Nâng cao`.
+    - Đấu nối trực tiếp các filter này vào API query của Backend.
+  - **Trạng Thái Tải Dữ Liệu**:
+    - Hiển thị Skeleton Loading dạng thẻ card khi đang fetch API.
+    - Hiển thị Empty State thân thiện ("Không tìm thấy món ăn phù hợp") khi kết quả tìm kiếm rỗng kèm nút "Đặt lại bộ lọc".
+- [ ] **2.3. Đấu nối Màn Hình Chi Tiết Món Ăn (`src/app/(main)/recipe-detail.tsx`)**:
+  - Đọc `id` từ Expo Router params (`useLocalSearchParams`).
+  - Gọi `recipeService.getRecipeById(id)` hiển thị dữ liệu chi tiết thật từ Backend.
+  - Nút Trái tim Yêu thích: Gọi `toggleFavorite(id)`, xử lý Optimistic Update đổi màu tim đỏ ngay lập tức và revert nếu gặp lỗi mạng.
+  - **Bảo toàn Bộ Scaler Khẩu Phần (Dynamic Portion Scaler)**:
+    - Giữ nguyên công thức tính toán: Khi người dùng đổi từ 2 người lên 4 người ăn, toàn bộ khối lượng định lượng nguyên liệu (`amount`) tự động nhân hệ số tỉ lệ tương ứng.
+  - Chuyển tiếp danh sách các bước nấu và thời gian timer sang `cooking-mode.tsx`.
+- [ ] **2.4. Đấu nối Tạo Công Thức Mới (`src/components/recipe/CreateRecipeModal.tsx`)**:
+  - Chọn ảnh món ăn thực tế qua `expo-image-picker` (chụp từ camera hoặc chọn từ album ảnh).
+  - Thu thập đầy đủ 4 bước tạo món: Thông tin cơ bản, Danh sách nguyên liệu, Các bước chế biến, Dinh dưỡng & Lời khuyên.
+  - Đóng gói dữ liệu thành `FormData`:
+    - File ảnh: `{ uri, name: 'recipe.jpg', type: 'image/jpeg' }`.
+    - Các trường chuỗi: `title`, `categoryCode`, `difficulty`, `minutes`, `calories`, `servings`, `description`.
+    - Các trường mảng dạng JSON string: `ingredients`, `steps`, `nutrition`, `tags`.
+  - Gọi `recipeService.createRecipe(formData)`.
+  - Khi Backend trả về công thức mới (kèm link ảnh Cloudinary), tự động chèn món mới vào đầu danh sách món ăn trên Home và thông báo thành công.
 
 ---
 
-### 📌 GIAI ĐOẠN 3: Bếp Của Tôi (`FridgeView`), Gợi Ý Món Ăn & Điểm Kinh Nghiệm (Chef XP)
-> **Trạng thái Backend:** ĐÃ SẴN SÀNG 100% (`/api/v1/fridge`, `/api/v1/ingredients`, `/api/v1/cooking-history`)  
-> **Mục tiêu Mobile:** Quản lý kho thực phẩm tủ lạnh thực tế của người dùng; gợi ý món nấu được ngay theo % khớp nguyên liệu; ghi nhận lịch sử và thăng cấp bậc đầu bếp sau khi nấu.
+### 📌 GIAI ĐOẠN 3: Bếp Của Tôi (`FridgeView`), Xếp Hạng Món Khớp Tủ Lạnh & Điểm Thưởng Đầu Bếp (+50 XP)
+> **Trạng thái Backend:** ĐÃ SẴN SÀNG 100% (`/api/v1/ingredients`, `/api/v1/fridge/*`, `/api/v1/cooking-history`)  
+> **Mục tiêu Mobile:** Quản lý kho thực phẩm tủ lạnh thực tế của người dùng; xếp hạng món ăn nấu được ngay theo % khớp nguyên liệu; ghi nhận lịch sử nấu ăn và thăng cấp bậc đầu bếp.
 
-- [ ] **3.1. Đấu Nối `src/components/features/FridgeView.tsx`**:
-  - Gọi `GET /api/v1/ingredients` lấy danh mục 58 nguyên liệu chuẩn thuộc 14 nhóm.
-  - Gọi `GET /api/v1/fridge/my-fridge` lấy nguyên liệu đang có trong tủ của người dùng.
-  - Đấu nối thêm/xoá nguyên liệu vào tủ qua `/api/v1/fridge/items`.
-  - Gọi API `/api/v1/recipes/fridge-match` để hiển thị danh sách các món nấu được ngay với tỷ lệ khớp nguyên liệu cao nhất (>80%).
-- [ ] **3.2. Đấu Nối Chế Độ Nấu Ăn & Lịch Sử (`cooking-mode.tsx` & `CookingHistoryModal.tsx`)**:
-  - Khi hoàn thành bước nấu ăn cuối cùng trong `cooking-mode.tsx`, màn hình Celebration gửi API `POST /api/v1/cooking-history` ghi nhận món đã nấu.
-  - Backend tự động cộng **+50 XP** vào tài khoản và kiểm tra thăng cấp bậc ("Tập sự" $\rightarrow$ "Bếp gia đình" $\rightarrow$ "Đầu bếp tài ba" $\rightarrow$ "Bếp trưởng").
-  - Cập nhật số điểm XP tích luỹ tức thì trên giao diện `ProfileView.tsx`.
+#### Nhiệm vụ cụ thể:
+- [ ] **3.1. Xây dựng `src/services/fridgeService.ts`**:
+  - `getMasterIngredients()`: Gọi `GET /api/v1/ingredients` lấy 58 nguyên liệu chuẩn thuộc 14 nhóm.
+  - `getMyFridge()`: Gọi `GET /api/v1/fridge/my-fridge` lấy kho thực phẩm của người dùng đăng nhập.
+  - `addFridgeItem(item)`: Gọi `POST /api/v1/fridge/items` thêm nguyên liệu kèm hạn sử dụng và số lượng.
+  - `updateFridgeItem(id, data)`: Gọi `PUT /api/v1/fridge/items/:id`.
+  - `removeFridgeItem(id)`: Gọi `DELETE /api/v1/fridge/items/:id`.
+  - `getFridgeMatchedRecipes(limit)`: Gọi `GET /api/v1/recipes/fridge-match` lấy danh sách món ăn xếp theo tỷ lệ khớp nguyên liệu giảm dần.
+- [ ] **3.2. Đấu nối Màn Hình Tủ Lạnh (`src/components/features/FridgeView.tsx`)**:
+  - Hiển thị danh mục 14 nhóm nguyên liệu từ API Backend (Thịt, Hải sản, Rau xanh, Củ quả, Trứng & Đậu, Gia vị...).
+  - Thêm/Xoá nguyên liệu khỏi tủ lạnh với hiệu ứng mượt mà và lưu trực tiếp vào MongoDB.
+  - Hiển thị mục "Gợi ý nấu ngay từ tủ lạnh" với các món có `% khớp > 70%`.
+- [ ] **3.3. Xây dựng `src/services/cookingHistoryService.ts` & Đấu nối Chế Độ Nấu Rảnh Tay**:
+  - `recordCooking(data)`: Gửi `POST /api/v1/cooking-history` gồm `{ recipeId, durationMinutes, rating, notes }`.
+  - Tại bước cuối cùng của `src/app/(main)/cooking-mode.tsx` (Màn hình Chúc mừng / Celebration):
+    - Tự động gọi `recordCooking()`.
+    - Backend tự động cộng **+50 XP** vào `chefExp` của user và cập nhật cấp bậc (`level`: "Tập sự" $\rightarrow$ "Bếp gia đình" $\rightarrow$ "Đầu bếp tài ba" $\rightarrow$ "Bếp trưởng").
+    - Hiển thị popup vinh danh huy hiệu mới và cập nhật tức thì điểm XP trên `ProfileView.tsx`.
+  - `CookingHistoryModal.tsx`: Đấu nối API `GET /api/v1/cooking-history` hiển thị danh sách các món người dùng đã hoàn thành trong quá khứ.
 
 ---
 
-### 📌 GIAI ĐOẠN 4: Trí Tuệ Nhân Tạo Thông Minh (Gemini AI Vision Scan & Chat Assistant)
-> **Trạng thái Backend:** Kích hoạt Backend Phase 5 (`/api/v1/ai/*`)  
-> **Mục tiêu Mobile:** Chụp ảnh thực phẩm thật qua camera -> Gemini Vision nhận diện và vẽ các ghim pin trực quan trên ảnh; tư vấn thực đơn qua Trợ lý ảo AI bóng nổi.
+### 📌 GIAI ĐOẠN 4: Trí Tuệ Nhân Tạo Thông Minh (Gemini 1.5 Flash Vision & AI Chef Assistant)
+> **Trạng thái Backend:** ĐÃ SẴN SÀNG 100% (`/api/v1/ai/scan-ingredients`, `/api/v1/ai/scan-history`, `/api/v1/ai/assistant-chat`)  
+> **Mục tiêu Mobile:** Chụp ảnh thực phẩm trong tủ lạnh -> Gemini Vision nhận diện và vẽ thẻ ghim pins trực quan trên ảnh; Trợ lý ảo AI bóng nổi tư vấn thực đơn thông minh theo ngữ cảnh tủ lạnh và khẩu vị.
 
-- [ ] **4.1. Kích hoạt Backend Phase 5 (`src/services/ai.service.ts` & `ai.route.ts`)**:
-  - `POST /api/v1/ai/scan-ingredients`: Nhận ảnh từ mobile -> Gemini 1.5 Flash Vision nhận diện thực phẩm, trả về danh sách nguyên liệu, toạ độ thẻ ghim pin (`pins`) và gợi ý món ăn tối ưu.
-  - `POST /api/v1/ai/assistant-chat`: Nhận câu hỏi kèm context tủ lạnh và khẩu vị người dùng để trả lời cá nhân hoá.
-  - Model `ScanHistory` lưu lại các lần quét.
-- [ ] **4.2. Đấu Nối Mobile `src/components/features/ScanAIView.tsx`**:
-  - Chụp ảnh từ Camera hoặc chọn từ thư viện ảnh (`expo-image-picker`).
-  - Gửi `FormData` lên `/api/v1/ai/scan-ingredients`.
+#### Nhiệm vụ cụ thể:
+- [ ] **4.1. Xây dựng `src/services/aiService.ts`**:
+  - `scanIngredients(imageUri)`: Đóng gói ảnh vào `FormData` gửi lên `POST /api/v1/ai/scan-ingredients`.
+  - `getScanHistory()`: Gọi `GET /api/v1/ai/scan-history`.
+  - `deleteScanHistory(id)`: Gọi `DELETE /api/v1/ai/scan-history/:id`.
+  - `chatWithChef(message, conversationHistory)`: Gọi `POST /api/v1/ai/assistant-chat`.
+- [ ] **4.2. Đấu nối Màn Hình Quét AI (`src/components/features/ScanAIView.tsx`)**:
+  - Chụp ảnh từ camera hoặc chọn ảnh từ thư viện.
   - Hiển thị hiệu ứng Laser Scanning trong thời gian chờ AI xử lý.
-  - Vẽ động các thẻ ghim pin nhận diện lên ảnh theo tọa độ trả về từ Gemini.
-  - Thêm nút "Lưu tất cả vào tủ lạnh": Tự động thêm toàn bộ nguyên liệu vừa nhận diện vào `user_fridges`.
-- [ ] **4.3. Đấu Nối Mobile `src/components/common/DraggableAIAssistant.tsx`**:
-  - Đấu nối chat box với endpoint `/api/v1/ai/assistant-chat`.
-  - Hiển thị trạng thái typing indicator sinh động.
+  - **Vẽ Ghim Toạ Độ (Visual Bounding Pins)**:
+    - Sử dụng mảng `pins: [{ text, top, left, bottom, right }]` từ Gemini để render các thẻ ghim động trực quan đè lên ảnh gốc.
+  - Hiển thị danh sách nguyên liệu nhận diện kèm độ tin cậy %.
+  - Nút **"Lưu tất cả vào tủ lạnh"**: Gọi `POST /api/v1/fridge/items` lưu đồng loạt toàn bộ nguyên liệu vừa nhận diện vào tủ lạnh người dùng.
+  - Hiển thị thẻ món ăn sáng tạo gợi ý (`suggestedRecipe`), cho phép bấm vào để xem chi tiết công thức ngay.
+- [ ] **4.3. Đấu nối Trợ Lý Ảo Kéo Thả (`src/components/ai/DraggableAIAssistant.tsx`)**:
+  - Kết nối chatbox với API `POST /api/v1/ai/assistant-chat`.
+  - Backend tự động trích xuất nguyên liệu trong tủ lạnh và khảo sát khẩu vị của user để prompt cho Gemini đóng vai Bếp trưởng tư vấn cá nhân hóa.
+  - Hiển thị tin nhắn dạng Markdown thân thiện, danh sách món ăn gợi ý (`suggestedDishes`) có thể click để mở công thức, và các thẻ câu hỏi gợi ý nhanh (`quickPrompts`).
 
 ---
 
-### 📌 GIAI ĐOẠN 5: Mạng Xã Hội Cộng Đồng & Nhắn Tin Thời Gian Thực (Community & Socket.io)
-> **Trạng thái Backend:** Kích hoạt Backend Phase 6 (`/api/v1/community/*` & Socket.io Gateway)  
-> **Mục tiêu Mobile:** Chia sẻ công thức và hình ảnh món ăn lên bảng tin; nhắn tin trực tiếp 1-1 và phòng chat ẩm thực thời gian thực qua WebSocket.
+### 📌 GIAI ĐOẠN 5: Mạng Xã Hội Ẩm Thực & Chat Thời Gian Thực (Community & Realtime Socket.io)
+> **Trạng thái Backend:** ĐÃ SẴN SÀNG 100% (`/api/v1/community/posts`, `/api/v1/chat/*`, `chat.gateway.ts`)  
+> **Mục tiêu Mobile:** Bảng tin chia sẻ hình ảnh và công thức món ăn; tương tác like/bình luận; chat 1-1 trực tiếp và tham gia 3 phòng chat cộng đồng thời gian thực qua WebSocket.
 
-- [ ] **5.1. Kích hoạt Backend Phase 6**:
-  - Cài đặt `socket.io` và cấu hình HTTP Server wrapper trong `src/server.ts`.
-  - Tạo Models `CommunityPost`, `CommunityComment`, `Conversation`, `Message`.
-  - Tạo Socket Handler: Xác thực JWT handshake, xử lý gửi/nhận tin nhắn 1-1 tức thời (`send_message`, `receive_message`), phòng chat chung, trạng thái online/typing.
-  - Routes CRUD bài viết, like/unlike, bình luận.
-- [ ] **5.2. Đấu Nối Mobile `SocketContext.tsx` & `CommunityView.tsx`**:
-  - Cài đặt `socket.io-client`.
-  - Quản lý kết nối Socket.io toàn cục sau khi user đăng nhập.
-  - Bảng tin bài viết thật từ Backend, tương tác like tức thời (Optimistic Update).
-  - Đăng bài mới kèm ảnh tải lên Cloudinary qua `CreatePostModal.tsx`.
-  - Bình luận thời gian thực qua `CommentsModal.tsx`.
-  - `DirectChatModal.tsx`: Nhắn tin 1-1 không độ trễ.
-  - `MessengerConversationsModal.tsx`: Cập nhật số tin chưa đọc (`unreadCount`).
-
----
-
-### 📌 GIAI ĐOẠN 6: Kế Hoạch Bữa Ăn (`PlannerView`), Giỏ Đi Chợ & Định Vị Siêu Thị GPS
-> **Trạng thái Backend:** Kích hoạt Backend Phase 7 (`/api/v1/planner/*`, `/api/v1/stores/*`)  
-> **Mục tiêu Mobile:** Đưa tính năng Meal Planner vào luồng trải nghiệm người dùng; tự động sinh danh mục đi chợ và tìm siêu thị thật gần toạ độ GPS.
-
-- [ ] **6.1. Kích hoạt Backend Phase 7**:
-  - Model `MealPlan`: Lưu thực đơn tuần 7 ngày (Sáng, Trưa, Tối).
-  - Model `Store` với index GeoJSON `2dsphere`: Lưu siêu thị tại Việt Nam.
-  - API `/api/v1/planner/shopping-list`: Thuật toán tự động sinh danh mục đi chợ:
-    $$\text{Danh mục đi chợ} = \text{Tổng nguyên liệu cần nấu 7 ngày} - \text{Nguyên liệu đang có trong tủ lạnh}$$
-  - API `/api/v1/stores/nearby?lat=...&lng=...`: Tìm siêu thị lân cận toạ độ GPS của user.
-- [ ] **6.2. Đấu Nối Mobile**:
-  - Thêm nút truy cập nhanh "Kế Hoạch Bữa Ăn" trên Header trang Khám Phá hoặc Profile.
-  - Hiển thị thực đơn 7 ngày từ Backend, tính tổng calo mỗi ngày so với mục tiêu sức khoẻ.
-  - Đấu nối danh mục đi chợ tự động trong `PlannerView.tsx` và `ShoppingNoteModal.tsx`.
-  - Đấu nối `NearbyStoreCard.tsx`: Lấy GPS thật qua `expo-location`, hiển thị siêu thị lân cận và mở bản đồ Google/Apple Maps chỉ đường.
+#### Nhiệm vụ cụ thể:
+- [ ] **5.1. Thiết lập Kết Nối Socket.io (`src/services/socketService.ts` & `src/contexts/SocketContext.tsx`)**:
+  - Cài đặt thư viện: `npm install socket.io-client`.
+  - Khởi tạo kết nối Socket.io với server: `io(API_URL, { auth: { token: accessToken } })`.
+  - Lắng nghe các sự kiện: `receive_message`, `user_typing`, `user_stop_typing`, `online_users`.
+  - Cung cấp các phương thức: `joinRoom(roomId)`, `leaveRoom(roomId)`, `sendMessage(payload)`, `emitTyping(roomId, isTyping)`.
+- [ ] **5.2. Đấu nối Mạng Xã Hội (`src/components/features/CommunityView.tsx` & `PostCard.tsx`)**:
+  - Gọi `GET /api/v1/community/posts` hiển thị bảng tin món ăn.
+  - Thả tim bài viết: Gọi `POST /api/v1/community/posts/:id/like` với Optimistic Update (tăng ngay số like trên UI).
+  - Đăng bài mới qua `CreatePostModal.tsx`: Chọn ảnh món ăn, nhập tiêu đề, hashtag và nội dung chia sẻ -> Gửi multipart `FormData` lên `POST /api/v1/community/posts` (Người dùng nhận **+20 XP**).
+  - Bình luận qua `CommentsModal.tsx`: Gọi `POST /api/v1/community/posts/:id/comments` (Người dùng nhận **+5 XP**).
+- [ ] **5.3. Đấu nối Nhắn Tin 1-1 & Phòng Chat Cộng Đồng**:
+  - `DirectChatModal.tsx`: Gửi và nhận tin nhắn trực tiếp không độ trễ qua Socket.io.
+  - `MessengerConversationsModal.tsx`: Danh sách hội thoại kèm avatar người chat và đếm số tin chưa đọc.
+  - `ChatRoomModal.tsx`: Tham gia 3 phòng chat ẩm thực mặc định ("Góc Chia Sẻ Mẹo Nấu Nhanh", "Hội Ăn Chay & Eat Clean", "Hỏi Đáp Cùng Bếp Trưởng").
 
 ---
 
-### 📌 GIAI ĐOẠN 7: Tối Ưu UX, Bàn Phím Di Động & Kiểm Thử Toàn Diện (Final Polish)
-> **Mục tiêu:** Rà soát toàn diện trải nghiệm người dùng, đảm bảo hiệu năng tối ưu trên thiết bị di động thật và kiểm thử end-to-end không phát sinh lỗi.
+### 📌 GIAI ĐOẠN 6: Kế Hoạch Bữa Ăn (`PlannerView`), Giỏ Đi Chợ Thông Minh & Định Vị Siêu Thị GPS
+> **Trạng thái Backend:** Đang triển khai song hành (Backend Phase 7: `/api/v1/planner/*`, `/api/v1/stores/*`)  
+> **Mục tiêu Mobile:** Lập thực đơn 7 ngày trong tuần; tự động tính danh mục đi chợ thông minh (trừ nguyên liệu đã có sẵn trong tủ lạnh); định vị siêu thị gần nhất qua toạ độ GPS.
 
-- [ ] Áp dụng `KeyboardAvoidingView` và `TouchableWithoutFeedback` trên tất cả Modal và Form.
-- [ ] Sử dụng cache hình ảnh của `expo-image` tiết kiệm băng thông.
-- [ ] Chạy kiểm thử TypeScript `npx tsc --noEmit` trên cả Backend và Mobile đạt **0 lỗi**.
-- [ ] Kiểm thử luồng người dùng khép kín (Đăng ký $\rightarrow$ Khảo sát $\rightarrow$ Quét AI $\rightarrow$ Nấu ăn rảnh tay $\rightarrow$ Nhận XP $\rightarrow$ Đăng bài cộng đồng $\rightarrow$ Lập thực đơn tuần $\rightarrow$ Đi chợ).
+#### Nhiệm vụ cụ thể:
+- [ ] **6.1. Xây dựng `src/services/plannerService.ts`**:
+  - `getCurrentWeekPlan()`: Lấy thực đơn tuần 7 ngày (Bữa sáng, Bữa trưa, Bữa tối).
+  - `assignMealToSlot(day, slot, recipeId)`: Thêm/đổi món ăn cho một bữa.
+  - `getShoppingList()`: Lấy danh mục đi chợ thông minh:
+    $$\text{Danh mục đi chợ} = \sum \text{Nguyên liệu 7 ngày} - \text{Nguyên liệu có trong Tủ lạnh}$$
+  - `syncCartToFridge()`: Đồng bộ các nguyên liệu đã mua trong giỏ hàng vào thẳng Tủ lạnh.
+- [ ] **6.2. Đấu nối Màn Hình Kế Hoạch Bữa Ăn (`src/components/features/PlannerView.tsx`)**:
+  - Lịch tuần trực quan, hiển thị tổng calo của từng ngày so sánh với mục tiêu sức khỏe người dùng.
+  - `ShoppingNoteModal.tsx`: Checklist đi chợ thông minh, đánh dấu đã mua và bấm nút "Đồng bộ vào tủ lạnh".
+- [ ] **6.3. Đấu nối Định Vị Siêu Thị GPS (`src/components/planner/NearbyStoreCard.tsx`)**:
+  - Sử dụng thư viện `expo-location` lấy toạ độ GPS hiện tại (`latitude`, `longitude`).
+  - Gọi API `GET /api/v1/stores/nearby?lat=...&lng=...`.
+  - Hiển thị danh sách các siêu thị lân cận (WinMart+, Co.opmart, Tops Market, Bách Hóa Xanh...) xếp theo khoảng cách tăng dần.
+  - Hiển thị thời gian di chuyển ước tính (xe máy và đi bộ) và nút bấm mở ứng dụng Google Maps / Apple Maps chỉ đường trực tiếp.
 
 ---
 
-## 4. Bắt Đầu Ngay
+### 📌 GIAI ĐOẠN 7: Tối Ưu UX, Tương Thích Thiết Bị & Kiểm Thử Toàn Diện (Final Polish & E2E)
+> **Mục tiêu:** Rà soát 100% trải nghiệm người dùng, đảm bảo hiệu năng mượt mà trên cả iOS và Android thật, không có giật lag hay crash.
 
-Vì **Backend Phase 1, 2, 3, 4 đã hoàn thành và sẵn sàng 100%**, chúng ta sẽ tiến hành ngay:
-👉 **BƯỚC ĐẦU TIÊN:** Bắt tay vào **Phase 1 của Mobile** (Cài thư viện, tạo `apiClient.ts`, `AuthContext.tsx` và đấu nối màn Đăng nhập, Đăng ký, Khảo sát khẩu vị và Profile).
+#### Nhiệm vụ cụ thể:
+- [ ] **7.1. Tối ưu Giao Diện & Bàn Phím**:
+  - Áp dụng `KeyboardAvoidingView` và `TouchableWithoutFeedback` trên toàn bộ các modal nhập liệu để bàn phím không che khuất ô input.
+  - Sử dụng `expo-image` hỗ trợ caching ảnh giúp ứng dụng load nhanh và tiết kiệm băng thông.
+  - Thêm hiệu ứng rung phản hồi nhẹ (`Haptics`) khi người dùng like, bấm hoàn thành bước nấu hoặc lưu nguyên liệu.
+- [ ] **7.2. Kiểm Thử Hệ Thống (End-to-End Test Suite)**:
+  - Chạy `npx tsc --noEmit` trên cả `smartcook-mobile` và `smartcook-backend` đảm bảo **0 lỗi TypeScript**.
+  - Kiểm thử luồng khép kín (End-to-End User Journey):
+    $$\text{Đăng ký} \rightarrow \text{Khảo sát} \rightarrow \text{Tủ lạnh} \rightarrow \text{AI Scan} \rightarrow \text{Nấu ăn} \rightarrow \text{Nhận +50 XP} \rightarrow \text{Đăng bài cộng đồng} \rightarrow \text{Chat Realtime} \rightarrow \text{Thực đơn tuần} \rightarrow \text{Siêu thị GPS}$$
+
+---
+
+## 4. Chi Tiết Thực Hiện Ngay: Giai Đoạn 2 (Phase 2 Action Plan)
+
+Để bắt đầu ngay lập tức, đây là danh sách các tệp tin sẽ được tạo và cập nhật trong **Phase 2**:
+
+| Hành Động | Đường Dẫn Tệp Tin | Mục Đích Kỹ Thuật |
+| :--- | :--- | :--- |
+| **[MỚI]** | `src/services/categoryService.ts` | Lấy danh sách danh mục món ăn động từ `GET /api/v1/categories`. |
+| **[CẬP NHẬT]** | `src/services/recipeService.ts` | Chuyển từ mock in-memory sang gọi API `GET /api/v1/recipes`, `GET /api/v1/recipes/:id`, `POST /api/v1/recipes/:id/favorite`, `POST /api/v1/recipes`. |
+| **[CẬP NHẬT]** | `src/app/(main)/home.tsx` | Kết nối API danh mục & công thức, tích hợp tìm kiếm, bộ lọc calo/thời gian, phân trang, skeleton loader và pull-to-refresh. |
+| **[CẬP NHẬT]** | `src/app/(main)/recipe-detail.tsx` | Kết nối API chi tiết món ăn theo ID, nút thả tim yêu thích đồng bộ MongoDB, bảo toàn bộ Scaler co giãn nguyên liệu. |
+| **[CẬP NHẬT]** | `src/components/recipe/CreateRecipeModal.tsx` | Tải ảnh thật qua `expo-image-picker`, gửi `FormData` lên `POST /api/v1/recipes` để upload Cloudinary và lưu công thức cá nhân. |
+
+---
+
+## 5. Quy Trình Kiểm Thử & Tiêu Chí Nghiệm Thu (Acceptance Criteria)
+
+Mỗi Phase hoàn thành phải đáp ứng đầy đủ các tiêu chí:
+1. **TypeScript Clean**: Không có bất kỳ lỗi biên dịch nào khi chạy `npx tsc --noEmit`.
+2. **ESLint / React Compiler Clean**: Không vi phạm quy tắc Hook của React Compiler (không gọi state update trong render body).
+3. **Data Integrity**: Dữ liệu lưu thành công vào MongoDB Atlas và hiển thị tức thì trên giao diện ứng dụng.
+4. **Git Discipline**: Mọi thay đổi đều được commit rõ ràng và push lên nhánh `develop` của remote repository.
