@@ -4,6 +4,7 @@ export interface RecipeStep {
   description: string;
   timerMinutes?: number;
   tip?: string;
+  instruction?: string;
 }
 
 export interface RecipeIngredient {
@@ -11,6 +12,8 @@ export interface RecipeIngredient {
   amount: string;
   inFridge: boolean; // SmartCook tủ lạnh: có sẵn hay cần mua
   icon?: string;
+  unit?: string;
+  isOptional?: boolean;
 }
 
 export interface RecipeNutrition {
@@ -25,17 +28,21 @@ export interface RecipeNutrition {
 
 export interface Recipe {
   id: string;
+  _id?: string;
   title: string;
   author: string;
+  authorId?: string;
   calories: number;
   minutes: number;
   stepsCount: number;
   servings: string;
+  servingsCount?: number;
   difficulty: "Dễ" | "Trung bình" | "Nâng cao";
   price: string;
   rating: number;
   reviewCount: number;
   category: string;
+  categoryCode?: string;
   badge: string;
   sub: string;
   tags: string[];
@@ -45,4 +52,26 @@ export interface Recipe {
   ingredients: RecipeIngredient[];
   steps: RecipeStep[];
   nutrition: RecipeNutrition;
+  isFavorite?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface RecipeListResponse {
+  recipes: Recipe[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface RecipeFilterParams {
+  category?: string;
+  search?: string;
+  difficulty?: string;
+  maxMinutes?: number;
+  maxCalories?: number;
+  page?: number;
+  limit?: number;
+  sortField?: string;
+  sortOrder?: "asc" | "desc";
 }
