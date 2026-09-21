@@ -11,17 +11,20 @@ import { DraggableAIAssistant } from "@/components/ai";
 import { CreateRecipeModal } from "@/components/recipe";
 import { CartService } from "@/services/cartService";
 import { PreferenceService, UserPreferences, CUISINE_OPTIONS } from "@/services/preferenceService";
+import { CategoryService } from "@/services/categoryService";
 import { RecipeService } from "@/services/recipeService";
-import { Recipe } from "@/types";
+import { CategoryItem, Recipe } from "@/types";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   Modal,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -99,6 +102,59 @@ export default function HomeScreen() {
     }))
   );
 
+  const ITEMS_PER_PAGE = 10;
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [serverDishes, setServerDishes] = useState<any[]>([]);
+  const [isLoadingDishes, setIsLoadingDishes] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [serverTotalPages, setServerTotalPages] = useState<number>(1);
+  const [serverTotalCount, setServerTotalCount] = useState<number>(0);
+
+  const fetchRecipes = async (showLoading = true) => {
+    if (showLoading) setIsLoadingDishes(true);
+    try {
+      const res = await RecipeService.getRecipes({
+        category: selectedCategory === "all" ? undefined : selectedCategory,
+        search: searchQuery.trim() || undefined,
+        maxMinutes: filterTime === "15" ? 15 : filterTime === "30" ? 30 : undefined,
+        maxCalories: filterCalo === "400" ? 400 : filterCalo === "600" ? 600 : undefined,
+        page: currentPage,
+        limit: ITEMS_PER_PAGE,
+      });
+
+      if (res && res.recipes) {
+        const mapped = res.recipes.map((r) => ({
+          id: r.id,
+          title: r.title,
+          badge: r.badge,
+          price: r.price,
+          image: r.image,
+          sub: r.sub,
+          fridge: `${r.fridgeMatchPercent}%`,
+          isFavorite: r.isFavorite,
+        }));
+        setServerDishes(mapped);
+        setServerTotalPages(res.totalPages);
+        setServerTotalCount(res.total);
+
+        const favs: Record<string, boolean> = {};
+        res.recipes.forEach((r) => {
+          if (r.isFavorite) favs[r.id] = true;
+        });
+        setFavoriteIds((prev) => ({ ...prev, ...favs }));
+      }
+    } catch (e) {
+      console.warn("Lỗi fetch recipes:", e);
+    } finally {
+      setIsLoadingDishes(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecipes();
+  }, [selectedCategory, searchQuery, filterTime, filterCalo, currentPage]);
+
   const handleRecipeCreated = (newRecipe: Recipe) => {
     const formattedDish = {
       id: newRecipe.id,
@@ -112,14 +168,19 @@ export default function HomeScreen() {
     setCustomDishes((prev) => [formattedDish, ...prev]);
     setSelectedCategory("all");
     setCurrentPage(1);
-  };
-  const ITEMS_PER_PAGE = 10;
-
-  const toggleFavorite = (id: string) => {
-    setFavoriteIds((prev) => ({ ...prev, [id]: !prev[id] }));
+    fetchRecipes(false);
   };
 
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const toggleFavorite = async (id: string) => {
+    const nextVal = !favoriteIds[id];
+    setFavoriteIds((prev) => ({ ...prev, [id]: nextVal }));
+    try {
+      const res = await RecipeService.toggleFavorite(id);
+      setFavoriteIds((prev) => ({ ...prev, [id]: res.isFavorite }));
+    } catch {
+      setFavoriteIds((prev) => ({ ...prev, [id]: !nextVal }));
+    }
+  };
 
   const handleOpenRecipe = (recipeId: string) => {
     router.push({
@@ -284,8 +345,8 @@ export default function HomeScreen() {
     resumeAutoScrollAfterDelay(4000);
   };
 
-  // Categories from SRS Module 4 (Tất cả, Gia đình, Sức khỏe, Nhanh gọn, Tiết kiệm, Trẻ em, Ăn chay...)
-  const categories = [
+  // Categories from SRS Module 4 with live sync from Backend
+  const [categories, setCategories] = useState([
     {
       id: "all",
       label: "Tất cả",
@@ -340,7 +401,26 @@ export default function HomeScreen() {
       iconName: "ice-cream-outline" as const,
       color: "#8B5CF6",
     },
-  ];
+  ]);
+
+  useEffect(() => {
+    let isMounted = true;
+    CategoryService.getCategories().then((cats) => {
+      if (isMounted && cats && cats.length > 0) {
+        setCategories(
+          cats.map((c) => ({
+            id: c.code || c.id,
+            label: c.name,
+            iconName: (c.icon || "restaurant-outline") as any,
+            color: c.color || "#FF6B35",
+          }))
+        );
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Dishes categorized by SRS Category (8+ dishes per category for smooth pagination)
   const popularDishesByCategory: Record<
@@ -1229,11 +1309,18 @@ export default function HomeScreen() {
   ]);
 
   const totalPages = Math.max(1, Math.ceil(filteredDishes.length / ITEMS_PER_PAGE));
-  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const safeCurrentPage = Math.min(
+    currentPage,
+    serverDishes.length > 0 ? serverTotalPages : totalPages
+  );
   const paginatedDishes = filteredDishes.slice(
     (safeCurrentPage - 1) * ITEMS_PER_PAGE,
     safeCurrentPage * ITEMS_PER_PAGE
   );
+
+  const displayDishes = serverDishes.length > 0 ? serverDishes : paginatedDishes;
+  const displayTotalPages = serverDishes.length > 0 ? serverTotalPages : totalPages;
+  const displayCount = serverDishes.length > 0 ? serverTotalCount : filteredDishes.length;
 
   return (
     <View style={styles.screen}>
@@ -1251,6 +1338,17 @@ export default function HomeScreen() {
             },
           ]}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={() => {
+                setIsRefreshing(true);
+                fetchRecipes(false);
+              }}
+              colors={["#FF5722"]}
+              tintColor="#FF5722"
+            />
+          }
         >
           {/* Soft Sunset Pastel Gradient Top Backdrop */}
           <LinearGradient
@@ -1736,15 +1834,22 @@ export default function HomeScreen() {
                     style={styles.cleanCountBtn}
                   >
                     <Text style={styles.cleanCountText}>
-                      {filteredDishes.length} món
+                      {displayCount} món
                     </Text>
                   </TouchableOpacity>
                 )}
               </View>
             </View>
 
-            {/* Empty State when no dishes match filters/search */}
-            {filteredDishes.length === 0 ? (
+            {/* Empty or Loading State */}
+            {isLoadingDishes && displayDishes.length === 0 ? (
+              <View style={{ paddingVertical: 40, alignItems: "center" }}>
+                <ActivityIndicator size="large" color="#FF5722" />
+                <Text style={{ marginTop: 12, color: "#64748B", fontSize: 13, fontWeight: "500" }}>
+                  Đang tải danh sách công thức...
+                </Text>
+              </View>
+            ) : displayDishes.length === 0 ? (
               <View style={styles.emptyDishesState}>
                 <Ionicons name="restaurant-outline" size={38} color="#CBD5E1" />
                 <Text style={styles.emptyDishesTitle}>Không tìm thấy món ăn phù hợp</Text>
@@ -1769,7 +1874,7 @@ export default function HomeScreen() {
             ) : (
               /* 2-Column Paginated Dish Cards */
               <View style={styles.popularGrid}>
-                {paginatedDishes.map((dish) => {
+                {displayDishes.map((dish) => {
                   const isFav = Boolean(favoriteIds[dish.id]);
                   return (
                     <TouchableOpacity
@@ -1794,7 +1899,11 @@ export default function HomeScreen() {
                       {/* Centered Food Image */}
                       <View style={styles.dishImageContainer}>
                         <Image
-                          source={dish.image}
+                          source={
+                            typeof dish.image === "string"
+                              ? { uri: dish.image }
+                              : dish.image
+                          }
                           style={styles.dishImage}
                           resizeMode="cover"
                         />
@@ -1848,7 +1957,7 @@ export default function HomeScreen() {
             )}
 
             {/* Compact Minimal Pagination Controls */}
-            {totalPages > 1 && (
+            {displayTotalPages > 1 && (
               <View style={styles.compactPaginationRow}>
                 {/* Previous Button */}
                 <TouchableOpacity
@@ -1870,7 +1979,7 @@ export default function HomeScreen() {
 
                 {/* Numbered Page Buttons */}
                 <View style={styles.compactPageList}>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  {Array.from({ length: displayTotalPages }, (_, i) => i + 1).map(
                     (pageNum) => {
                       const isActive = pageNum === safeCurrentPage;
                       return (
@@ -1901,23 +2010,23 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   style={[
                     styles.compactPageArrow,
-                    safeCurrentPage >= totalPages && styles.compactPageArrowDisabled,
+                    safeCurrentPage >= displayTotalPages && styles.compactPageArrowDisabled,
                   ]}
-                  disabled={safeCurrentPage >= totalPages}
+                  disabled={safeCurrentPage >= displayTotalPages}
                   activeOpacity={0.7}
-                  onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  onPress={() => setCurrentPage((p) => Math.min(displayTotalPages, p + 1))}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
                   <Ionicons
                     name="chevron-forward"
                     size={14}
-                    color={safeCurrentPage >= totalPages ? "#CBD5E1" : "#475569"}
+                    color={safeCurrentPage >= displayTotalPages ? "#CBD5E1" : "#475569"}
                   />
                 </TouchableOpacity>
 
                 {/* Subtle compact counter text */}
                 <Text style={styles.compactCounterText}>
-                  {safeCurrentPage}/{totalPages}
+                  {safeCurrentPage}/{displayTotalPages}
                 </Text>
               </View>
             )}

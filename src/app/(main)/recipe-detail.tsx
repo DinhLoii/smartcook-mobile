@@ -2,6 +2,7 @@ import { BrandColors } from "@/constants/brandColors";
 import { NearbyStoreCard, ShoppingNoteModal, ShoppingReminderBanner } from "@/components/planner";
 import { CartService } from "@/services/cartService";
 import { getRecipeById, RECIPES_DATA } from "@/data/recipesData";
+import { RecipeService } from "@/services/recipeService";
 import { Recipe } from "@/types";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -28,16 +29,53 @@ export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   // Fetch recipe or fallback to first recipe
-  const recipe: Recipe = getRecipeById(id as string) ?? RECIPES_DATA[0];
+  const fallbackRecipe = useMemo(
+    () => getRecipeById(id as string) ?? RECIPES_DATA[0],
+    [id]
+  );
+  const [recipe, setRecipe] = useState<Recipe>(fallbackRecipe);
+  const [isFavorite, setIsFavorite] = useState<boolean>(false);
 
   // Active Tab state: 'ingredients' | 'steps' | 'nutrition'
   const [activeTab, setActiveTab] = useState<"ingredients" | "steps" | "nutrition">("ingredients");
-  const [isFavorite, setIsFavorite] = useState<boolean>(false);
   const [checkedIngredients, setCheckedIngredients] = useState<Record<number, boolean>>({});
 
   // Dynamic Servings Scaler
   const defaultServings = parseInt(recipe.servings) || 4;
   const [servingsCount, setServingsCount] = useState<number>(defaultServings);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchRecipeDetail() {
+      if (!id) return;
+      try {
+        const fetched = await RecipeService.getRecipeById(id);
+        if (isMounted && fetched) {
+          setRecipe(fetched);
+          setIsFavorite(!!fetched.isFavorite);
+          const count = fetched.servingsCount || parseInt(fetched.servings) || 4;
+          setServingsCount(count);
+        }
+      } catch (e) {
+        console.warn("Lỗi load recipe detail:", e);
+      }
+    }
+    fetchRecipeDetail();
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  const handleToggleFavorite = async () => {
+    const nextVal = !isFavorite;
+    setIsFavorite(nextVal);
+    try {
+      const res = await RecipeService.toggleFavorite(recipe.id);
+      setIsFavorite(res.isFavorite);
+    } catch {
+      setIsFavorite(!nextVal);
+    }
+  };
 
   // Active Timer step notification tracker
   const [activeTimerStep, setActiveTimerStep] = useState<number | null>(null);
@@ -281,7 +319,11 @@ export default function RecipeDetailScreen() {
         {/* 1. TOP HERO IMAGE HEADER */}
         <View style={[styles.heroImageContainer, { width, height: 360 }]}>
           <Image
-            source={recipe.image}
+            source={
+              typeof recipe.image === "string"
+                ? { uri: recipe.image }
+                : recipe.image
+            }
             style={styles.heroImage}
             resizeMode="cover"
           />
@@ -337,7 +379,7 @@ export default function RecipeDetailScreen() {
               <TouchableOpacity
                 style={styles.circleButton}
                 activeOpacity={0.7}
-                onPress={() => setIsFavorite(!isFavorite)}
+                onPress={handleToggleFavorite}
               >
                 <Ionicons
                   name={isFavorite ? "heart" : "heart-outline"}

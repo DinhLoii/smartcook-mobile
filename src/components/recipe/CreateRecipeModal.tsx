@@ -6,6 +6,7 @@ import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   KeyboardAvoidingView,
@@ -301,7 +302,11 @@ export default function CreateRecipeModal({
     setFiber("6g");
   };
 
-  const handleFinish = () => {
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const handleFinish = async () => {
+    if (isSubmitting) return;
+
     const cleanIngredients = ingredients.filter((i) => i.name.trim() !== "");
     const cleanSteps = steps
       .filter((s) => s.description.trim() !== "")
@@ -316,52 +321,141 @@ export default function CreateRecipeModal({
       advice: advice || "Món ăn cân bằng dinh dưỡng, tốt cho sức khỏe.",
     };
 
-    const newRecipe: Recipe = {
-      id: `dish-custom-${Date.now()}`,
-      title: title.trim(),
-      author: "@alex.cooker",
-      calories: parseInt(calories) || 450,
-      minutes: parseInt(minutes) || 25,
-      stepsCount: cleanSteps.length,
-      servings: "2 phần", // Mặc định 2 phần, co giãn động theo nguyên liệu trọng lượng
-      difficulty: difficulty,
-      price: "~50.000đ",
-      rating: 5.0,
-      reviewCount: 1,
-      category: category,
-      badge: selectedHotTag === "hot" ? "🔥 Hot" : selectedHotTag === "popular" ? "⭐ Popular" : "✨ Mới",
-      sub: description.slice(0, 28) + (description.length > 28 ? "..." : ""),
-      tags: [selectedHotTag === "hot" ? "Hot" : selectedHotTag === "popular" ? "Popular" : "Mới", "Tự tạo"],
-      fridgeMatchPercent: Math.round(
-        (cleanIngredients.filter((i) => i.inFridge).length /
-          Math.max(cleanIngredients.length, 1)) *
-          100
-      ),
-      image: selectedImage || require("@/assets/images/hero-teriyaki-bowl.jpg"),
-      description: description.trim(),
-      ingredients: cleanIngredients,
-      steps: cleanSteps,
-      nutrition: nutritionData,
-    };
+    setIsSubmitting(true);
 
-    RecipeService.addRecipe(newRecipe);
-    if (onRecipeCreated) {
-      onRecipeCreated(newRecipe);
-    }
+    try {
+      const formData = new FormData();
+      formData.append("title", title.trim());
+      formData.append("categoryCode", category);
+      formData.append("category", category);
+      formData.append("difficulty", difficulty);
+      formData.append("minutes", String(parseInt(minutes) || 25));
+      formData.append("cookingTimeMinutes", String(parseInt(minutes) || 25));
+      formData.append("calories", String(parseInt(calories) || 450));
+      formData.append("servings", "2 phần");
+      formData.append("servingsCount", "2");
+      formData.append("description", description.trim() || `Công thức món ${title.trim()}`);
+      formData.append(
+        "badge",
+        selectedHotTag === "hot"
+          ? "🔥 Hot"
+          : selectedHotTag === "popular"
+          ? "⭐ Popular"
+          : "✨ Mới"
+      );
+      formData.append(
+        "sub",
+        description.slice(0, 28) + (description.length > 28 ? "..." : "")
+      );
+      formData.append(
+        "tags",
+        JSON.stringify([
+          selectedHotTag === "hot"
+            ? "Hot"
+            : selectedHotTag === "popular"
+            ? "Popular"
+            : "Mới",
+          "Tự tạo",
+        ])
+      );
+      formData.append("ingredients", JSON.stringify(cleanIngredients));
+      formData.append("steps", JSON.stringify(cleanSteps));
+      formData.append("nutrition", JSON.stringify(nutritionData));
 
-    Alert.alert(
-      "Thành công!",
-      `Món "${newRecipe.title}" đã được tạo thành công và xuất hiện trong danh sách món ăn.`,
-      [
-        {
-          text: "Xem ngay",
-          onPress: () => {
-            resetForm();
-            onClose();
+      if (selectedImage?.uri) {
+        const uri = selectedImage.uri;
+        const filename = uri.split("/").pop() || "recipe.jpg";
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : "image/jpeg";
+        formData.append("image", {
+          uri: Platform.OS === "android" ? uri : uri.replace("file://", ""),
+          name: filename,
+          type,
+        } as any);
+      }
+
+      const createdRecipe = await RecipeService.createRecipe(formData);
+      if (onRecipeCreated) {
+        onRecipeCreated(createdRecipe);
+      }
+
+      Alert.alert(
+        "Thành công! 🎉",
+        `Món "${createdRecipe.title}" đã được tạo thành công và đồng bộ lên hệ thống.`,
+        [
+          {
+            text: "Xem ngay",
+            onPress: () => {
+              resetForm();
+              onClose();
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    } catch (error: any) {
+      console.warn("Lỗi upload Backend, lưu công thức cục bộ:", error);
+
+      const localRecipe: Recipe = {
+        id: `dish-custom-${Date.now()}`,
+        title: title.trim(),
+        author: "@alex.cooker",
+        calories: parseInt(calories) || 450,
+        minutes: parseInt(minutes) || 25,
+        stepsCount: cleanSteps.length,
+        servings: "2 phần",
+        difficulty: difficulty,
+        price: "~50.000đ",
+        rating: 5.0,
+        reviewCount: 1,
+        category: category,
+        badge:
+          selectedHotTag === "hot"
+            ? "🔥 Hot"
+            : selectedHotTag === "popular"
+            ? "⭐ Popular"
+            : "✨ Mới",
+        sub: description.slice(0, 28) + (description.length > 28 ? "..." : ""),
+        tags: [
+          selectedHotTag === "hot"
+            ? "Hot"
+            : selectedHotTag === "popular"
+            ? "Popular"
+            : "Mới",
+          "Tự tạo",
+        ],
+        fridgeMatchPercent: Math.round(
+          (cleanIngredients.filter((i) => i.inFridge).length /
+            Math.max(cleanIngredients.length, 1)) *
+            100
+        ),
+        image: selectedImage || require("@/assets/images/hero-teriyaki-bowl.jpg"),
+        description: description.trim(),
+        ingredients: cleanIngredients,
+        steps: cleanSteps,
+        nutrition: nutritionData,
+      };
+
+      RecipeService.addRecipe(localRecipe);
+      if (onRecipeCreated) {
+        onRecipeCreated(localRecipe);
+      }
+
+      Alert.alert(
+        "Thành công!",
+        `Món "${localRecipe.title}" đã được lưu vào danh sách món ăn.`,
+        [
+          {
+            text: "Xem ngay",
+            onPress: () => {
+              resetForm();
+              onClose();
+            },
+          },
+        ]
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -1060,16 +1154,26 @@ export default function CreateRecipeModal({
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
-              style={styles.btnPrimaryWrap}
+              style={[styles.btnPrimaryWrap, isSubmitting && { opacity: 0.7 }]}
               onPress={handleFinish}
               activeOpacity={0.85}
+              disabled={isSubmitting}
             >
               <LinearGradient
                 colors={["#EA580C", "#FF5722"]}
                 style={styles.btnGradient}
               >
-                <Ionicons name="checkmark-circle-outline" size={16} color="#FFFFFF" />
-                <Text style={styles.btnPrimaryText}>Hoàn tất & Đăng món</Text>
+                {isSubmitting ? (
+                  <>
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <Text style={styles.btnPrimaryText}>Đang tải lên...</Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="checkmark-circle-outline" size={16} color="#FFFFFF" />
+                    <Text style={styles.btnPrimaryText}>Hoàn tất & Đăng món</Text>
+                  </>
+                )}
               </LinearGradient>
             </TouchableOpacity>
           )}
