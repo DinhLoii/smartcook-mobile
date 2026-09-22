@@ -27,12 +27,15 @@ class FridgeServiceClass {
     try {
       const response = await apiClient.get<{
         success: boolean;
-        data: MasterIngredient[];
+        data: any;
         message: string;
       }>("/ingredients");
 
-      if (response.data?.success && Array.isArray(response.data.data)) {
-        this.masterIngredients = response.data.data;
+      if (response.data?.success && response.data.data) {
+        const raw = response.data.data;
+        this.masterIngredients = Array.isArray(raw)
+          ? raw
+          : raw.ingredients || [];
         return this.masterIngredients;
       }
     } catch (error) {
@@ -77,21 +80,19 @@ class FridgeServiceClass {
     try {
       const response = await apiClient.post<{
         success: boolean;
-        data: { item: FridgeItem; fridge: UserFridge };
+        data: UserFridge;
         message: string;
       }>("/fridge/items", payload);
 
       if (response.data?.success && response.data.data) {
-        const item = response.data.data.item;
-        // Update local cache
-        const exists = this.currentItems.some(
-          (it) => it._id === item._id || it.name.toLowerCase() === item.name.toLowerCase()
-        );
-        if (!exists) {
-          this.currentItems = [item, ...this.currentItems];
-        }
+        const fridge = response.data.data;
+        this.currentItems = fridge.items || [];
         this.notify();
-        return item;
+        const item =
+          this.currentItems.find(
+            (it) => it.name.toLowerCase() === payload.name.toLowerCase()
+          ) || this.currentItems[this.currentItems.length - 1];
+        return item || null;
       }
     } catch (error) {
       console.error("Lỗi khi thêm nguyên liệu vào tủ lạnh:", error);
@@ -110,17 +111,16 @@ class FridgeServiceClass {
     try {
       const response = await apiClient.put<{
         success: boolean;
-        data: FridgeItem;
+        data: UserFridge;
         message: string;
       }>(`/fridge/items/${itemId}`, payload);
 
       if (response.data?.success && response.data.data) {
-        const updated = response.data.data;
-        this.currentItems = this.currentItems.map((it) =>
-          it._id === itemId ? updated : it
-        );
+        const fridge = response.data.data;
+        this.currentItems = fridge.items || [];
         this.notify();
-        return updated;
+        const updated = this.currentItems.find((it) => it._id === itemId);
+        return updated || null;
       }
     } catch (error) {
       console.error(`Lỗi khi cập nhật nguyên liệu ${itemId}:`, error);
@@ -136,11 +136,16 @@ class FridgeServiceClass {
     try {
       const response = await apiClient.delete<{
         success: boolean;
+        data: UserFridge;
         message: string;
       }>(`/fridge/items/${itemId}`);
 
       if (response.data?.success) {
-        this.currentItems = this.currentItems.filter((it) => it._id !== itemId);
+        if (response.data.data?.items) {
+          this.currentItems = response.data.data.items;
+        } else {
+          this.currentItems = this.currentItems.filter((it) => it._id !== itemId);
+        }
         this.notify();
         return true;
       }
