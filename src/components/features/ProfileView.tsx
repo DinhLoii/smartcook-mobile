@@ -180,6 +180,52 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
             <Text style={styles.editProfileBtnText}>Sửa</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Chef Rank Progress Bar */}
+        {(() => {
+          const chefExp = user?.chefExp ?? 0;
+          const nextMilestone =
+            chefExp >= 801 ? 801 : chefExp >= 401 ? 801 : chefExp >= 151 ? 401 : 151;
+          const currentBase =
+            chefExp >= 801 ? 801 : chefExp >= 401 ? 401 : chefExp >= 151 ? 151 : 0;
+          const progressPercent =
+            chefExp >= 801
+              ? 100
+              : Math.min(
+                  100,
+                  Math.max(
+                    6,
+                    Math.round(
+                      ((chefExp - currentBase) / (nextMilestone - currentBase)) * 100
+                    )
+                  )
+                );
+
+          return (
+            <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: "#F1F5F9" }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <Text style={{ fontSize: 11, fontWeight: "600", color: "#64748B" }}>
+                  Tiến trình thăng cấp
+                </Text>
+                <Text style={{ fontSize: 11, fontWeight: "700", color: "#EA580C" }}>
+                  {chefExp >= 801
+                    ? "Đỉnh cao Bếp trưởng 👑"
+                    : `${chefExp} / ${nextMilestone} XP`}
+                </Text>
+              </View>
+              <View style={{ height: 6, backgroundColor: "#E2E8F0", borderRadius: 3, overflow: "hidden" }}>
+                <View
+                  style={{
+                    height: "100%",
+                    width: `${progressPercent}%`,
+                    backgroundColor: "#EA580C",
+                    borderRadius: 3,
+                  }}
+                />
+              </View>
+            </View>
+          );
+        })()}
       </View>
 
       {/* 2. TASTE & DIETARY SURVEY PREFERENCES CARD */}
