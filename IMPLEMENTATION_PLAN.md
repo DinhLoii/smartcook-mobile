@@ -127,18 +127,18 @@ TIẾN ĐỘ ĐỒNG BỘ TOÀN DỰ ÁN (PROJECT SYNCHRONIZATION MATRIX)
 > **Mục tiêu Mobile:** Quản lý kho thực phẩm tủ lạnh thực tế của người dùng; xếp hạng món ăn nấu được ngay theo % khớp nguyên liệu; ghi nhận lịch sử nấu ăn và thăng cấp bậc đầu bếp.
 
 #### Nhiệm vụ cụ thể:
-- [ ] **3.1. Xây dựng `src/services/fridgeService.ts`**:
+- [x] **3.1. Xây dựng `src/services/fridgeService.ts`**:
   - `getMasterIngredients()`: Gọi `GET /api/v1/ingredients` lấy 58 nguyên liệu chuẩn thuộc 14 nhóm.
   - `getMyFridge()`: Gọi `GET /api/v1/fridge/my-fridge` lấy kho thực phẩm của người dùng đăng nhập.
   - `addFridgeItem(item)`: Gọi `POST /api/v1/fridge/items` thêm nguyên liệu kèm hạn sử dụng và số lượng.
   - `updateFridgeItem(id, data)`: Gọi `PUT /api/v1/fridge/items/:id`.
   - `removeFridgeItem(id)`: Gọi `DELETE /api/v1/fridge/items/:id`.
   - `getFridgeMatchedRecipes(limit)`: Gọi `GET /api/v1/recipes/fridge-match` lấy danh sách món ăn xếp theo tỷ lệ khớp nguyên liệu giảm dần.
-- [ ] **3.2. Đấu nối Màn Hình Tủ Lạnh (`src/components/features/FridgeView.tsx`)**:
+- [x] **3.2. Đấu nối Màn Hình Tủ Lạnh (`src/components/features/FridgeView.tsx`)**:
   - Hiển thị danh mục 14 nhóm nguyên liệu từ API Backend (Thịt, Hải sản, Rau xanh, Củ quả, Trứng & Đậu, Gia vị...).
   - Thêm/Xoá nguyên liệu khỏi tủ lạnh với hiệu ứng mượt mà và lưu trực tiếp vào MongoDB.
   - Hiển thị mục "Gợi ý nấu ngay từ tủ lạnh" với các món có `% khớp > 70%`.
-- [ ] **3.3. Xây dựng `src/services/cookingHistoryService.ts` & Đấu nối Chế Độ Nấu Rảnh Tay**:
+- [x] **3.3. Xây dựng `src/services/cookingHistoryService.ts` & Đấu nối Chế Độ Nấu Rảnh Tay**:
   - `recordCooking(data)`: Gửi `POST /api/v1/cooking-history` gồm `{ recipeId, durationMinutes, rating, notes }`.
   - Tại bước cuối cùng của `src/app/(main)/cooking-mode.tsx` (Màn hình Chúc mừng / Celebration):
     - Tự động gọi `recordCooking()`.
