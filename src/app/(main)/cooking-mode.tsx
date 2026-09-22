@@ -1,5 +1,7 @@
 import { BrandColors } from "@/constants/brandColors";
+import { useAuth } from "@/contexts/AuthContext";
 import { getRecipeById, RECIPES_DATA } from "@/data/recipesData";
+import { CookingHistoryService } from "@/services/cookingHistoryService";
 import { Recipe } from "@/types";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -33,11 +35,14 @@ export default function CookingModeScreen() {
   const recipe: Recipe = getRecipeById(id as string) ?? RECIPES_DATA[0];
   const steps = recipe.steps;
 
+  const { updateChefXP } = useAuth();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isVoiceActive, setIsVoiceActive] = useState(false); // Opt-in: do not speak automatically
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showIngredientsModal, setShowIngredientsModal] = useState(false);
+  const [leveledUp, setLeveledUp] = useState(false);
+  const [newLevel, setNewLevel] = useState("");
 
   // Auto-advance setup state (OFF by default until user activates)
   const [isAutoAdvance, setIsAutoAdvance] = useState(false);
@@ -465,6 +470,32 @@ export default function CookingModeScreen() {
         speakText("Chúc mừng bạn đã hoàn thành xuất sắc món ăn! Bữa cơm đã sẵn sàng!");
       }
       setShowCelebration(true);
+
+      // Ghi nhận lịch sử nấu ăn và nhận +50 XP
+      const recipeImageUri =
+        typeof recipe.image === "string"
+          ? recipe.image
+          : (recipe.image as any)?.uri || undefined;
+
+      CookingHistoryService.recordCooking({
+        recipeId: recipe.id || (recipe as any)._id || "1",
+        recipeName: recipe.title,
+        image: recipeImageUri,
+        durationMinutes: recipe.minutes || 25,
+        servings: typeof recipe.servings === "number" ? recipe.servings : 2,
+        calories: recipe.calories || 450,
+        usedIngredients: recipe.ingredients.map((ing) => ing.name),
+      })
+        .then((result) => {
+          if (result) {
+            setLeveledUp(result.leveledUp);
+            setNewLevel(result.level);
+            updateChefXP(result.chefExp, result.level);
+          }
+        })
+        .catch((err) => {
+          console.warn("Lỗi ghi nhận hoàn thành món:", err);
+        });
     }
   };
 
@@ -1309,6 +1340,33 @@ export default function CookingModeScreen() {
                 <Text style={styles.celebStatLbl}>Đầu bếp</Text>
               </View>
             </View>
+
+            {leveledUp && (
+              <View
+                style={{
+                  backgroundColor: "#FEF3C7",
+                  borderWidth: 1,
+                  borderColor: "#FCD34D",
+                  borderRadius: 12,
+                  paddingVertical: 10,
+                  paddingHorizontal: 14,
+                  marginBottom: 14,
+                  alignItems: "center",
+                  width: "100%",
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#B45309",
+                    fontWeight: "700",
+                    fontSize: 13,
+                    textAlign: "center",
+                  }}
+                >
+                  🎖️ THĂNG HẠNG: Chúc mừng bạn đã lên cấp "{newLevel}"!
+                </Text>
+              </View>
+            )}
 
             <TouchableOpacity
               style={styles.celebShareBtn}

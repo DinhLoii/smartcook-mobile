@@ -1,15 +1,19 @@
 import { CookingHistoryModal } from "@/components/recipe";
 import { RECIPES_DATA } from "@/data/recipesData";
+import { FridgeService } from "@/services/fridgeService";
+import { FridgeItem, MatchedRecipeItem } from "@/types";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   LayoutAnimation,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -665,7 +669,7 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
   const router = useRouter();
   const { width } = useWindowDimensions();
 
-  // Selected ingredients state (defaults to an attractive set matching Teriyaki chicken!)
+  // Selected ingredients state (defaults to common kitchen items)
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([
     "Thịt gà",
     "Nước tương",
@@ -675,20 +679,61 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
     "Hành lá",
   ]);
 
+  // Backend fridge items & state
+  const [fridgeItems, setFridgeItems] = useState<FridgeItem[]>([]);
+  const [isLoadingFridge, setIsLoadingFridge] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [backendMatchedRecipes, setBackendMatchedRecipes] = useState<MatchedRecipeItem[]>([]);
+
   // Active Category Tab
   const [activeMainCat, setActiveMainCat] = useState<string>("meat");
 
   // Accordion expanded state map (stores groupId -> boolean)
-  // By default, ALL groups are CLOSED until user taps the arrow
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
-    {},
-  );
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   // Custom User Input text state
   const [customInput, setCustomInput] = useState<string>("");
 
   // Cooking history modal state
   const [showHistoryModal, setShowHistoryModal] = useState<boolean>(false);
+
+  const currentCategoryData =
+    INGREDIENT_CATEGORIES.find((c) => c.id === activeMainCat) ??
+    INGREDIENT_CATEGORIES[0];
+
+  // Load fridge and matched recipes from backend
+  const loadFridgeData = useCallback(async (isPullRefresh = false) => {
+    if (isPullRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoadingFridge(true);
+    }
+
+    try {
+      const [fridgeRes, matchedRes] = await Promise.all([
+        FridgeService.getMyFridge(),
+        FridgeService.getFridgeMatchedRecipes(15),
+      ]);
+
+      if (fridgeRes?.items && fridgeRes.items.length > 0) {
+        setFridgeItems(fridgeRes.items);
+        setSelectedIngredients(fridgeRes.items.map((i) => i.name));
+      }
+
+      if (matchedRes && matchedRes.length > 0) {
+        setBackendMatchedRecipes(matchedRes);
+      }
+    } catch (e) {
+      console.warn("Lỗi khi tải dữ liệu tủ lạnh:", e);
+    } finally {
+      setIsLoadingFridge(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadFridgeData();
+  }, [loadFridgeData]);
 
   // Toggle Accordion Group with smooth animation
   const toggleAccordion = (groupId: string) => {
@@ -701,17 +746,66 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
     }));
   };
 
-  // Toggle ingredient selection
-  const toggleIngredient = (name: string) => {
-    setSelectedIngredients((prev) =>
-      prev.includes(name)
-        ? prev.filter((item) => item !== name)
-        : [...prev, name],
-    );
+  // Toggle ingredient selection with real Backend synchronization
+  const toggleIngredient = async (name: string) => {
+    const isCurrentlySelected = selectedIngredients.includes(name);
+
+    if (isCurrentlySelected) {
+      // Optimistic remove
+      setSelectedIngredients((prev) => prev.filter((item) => item !== name));
+      const existingItem = fridgeItems.find(
+        (it) => it.name.toLowerCase() === name.toLowerCase()
+      );
+      if (existingItem?._id) {
+        setFridgeItems((prev) => prev.filter((it) => it._id !== existingItem._id));
+        try {
+          await FridgeService.removeItem(existingItem._id);
+          FridgeService.getFridgeMatchedRecipes(15).then((res) => {
+            if (res && res.length > 0) setBackendMatchedRecipes(res);
+          });
+        } catch (e) {
+          console.error("Lỗi khi xóa khỏi tủ lạnh:", e);
+        }
+      }
+      // Optimistic add
+      setSelectedIngredients((prev) => [...prev, name]);
+      try {
+        const catCodeMap: Record<string, string> = {
+          meat: "meat",
+          seafood: "seafood",
+          veggie: "greens",
+          tuber: "veggies",
+          aromatic_herb: "herbs",
+          fruit: "fruits",
+          egg_tofu: "egg_tofu",
+          dairy: "dairy",
+          carb: "carbs",
+          grain: "grain",
+          spice: "seasoning",
+          aromatic: "spice",
+          oil_sauce: "sauces",
+          dry: "dry",
+        };
+        const backendCategory = catCodeMap[activeMainCat] || undefined;
+
+        const addedItem = await FridgeService.addItem({
+          name,
+          category: backendCategory,
+        });
+        if (addedItem) {
+          setFridgeItems((prev) => [addedItem, ...prev]);
+        }
+        FridgeService.getFridgeMatchedRecipes(15).then((res) => {
+          if (res && res.length > 0) setBackendMatchedRecipes(res);
+        });
+      } catch (e) {
+        console.error("Lỗi khi thêm vào tủ lạnh:", e);
+      }
+    }
   };
 
   // Add custom ingredient from input
-  const handleAddCustom = () => {
+  const handleAddCustom = async () => {
     const trimmed = customInput.trim();
     if (!trimmed) {
       Alert.alert("Lưu ý", "Vui lòng nhập tên nguyên liệu");
@@ -719,13 +813,44 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
     }
     if (!selectedIngredients.includes(trimmed)) {
       setSelectedIngredients([trimmed, ...selectedIngredients]);
+      try {
+        const added = await FridgeService.addItem({ name: trimmed });
+        if (added) {
+          setFridgeItems((prev) => [added, ...prev]);
+        }
+        FridgeService.getFridgeMatchedRecipes(15).then((res) => {
+          if (res && res.length > 0) setBackendMatchedRecipes(res);
+        });
+      } catch (e) {
+        console.error("Lỗi thêm nguyên liệu tùy chỉnh:", e);
+      }
     }
     setCustomInput("");
   };
 
   // Clear all selections
   const handleClearAll = () => {
-    setSelectedIngredients([]);
+    Alert.alert(
+      "Dọn sạch tủ lạnh",
+      "Bạn có chắc muốn xóa toàn bộ nguyên liệu khỏi tủ lạnh không?",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Xóa tất cả",
+          style: "destructive",
+          onPress: async () => {
+            setSelectedIngredients([]);
+            setFridgeItems([]);
+            setBackendMatchedRecipes([]);
+            try {
+              await FridgeService.clearFridge();
+            } catch (e) {
+              console.error("Lỗi khi làm sạch tủ lạnh:", e);
+            }
+          },
+        },
+      ]
+    );
   };
 
   // Switch Main Category (groups stay closed by default)
@@ -749,8 +874,19 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
     return count;
   };
 
-  // Compute matched recipes with dynamic ranking
+  // Compute matched recipes with dynamic ranking (Backend first, then local fallback)
   const rankedRecipes = useMemo(() => {
+    if (backendMatchedRecipes.length > 0) {
+      return backendMatchedRecipes.map((item) => ({
+        recipe: item.recipe,
+        matchPercent: item.fridgeMatchPercent,
+        matchedCount: item.matchedCount,
+        totalRequired: item.totalIngredients,
+        matchedIngredients: item.availableIngredients,
+        missingIngredients: item.missingIngredients,
+      }));
+    }
+
     if (selectedIngredients.length === 0) return [];
 
     return RECIPES_DATA.map((recipe) => {
@@ -784,17 +920,13 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
     })
       .filter((item) => item.matchPercent >= 30) // Show recipes with at least 30% match
       .sort((a, b) => b.matchPercent - a.matchPercent);
-  }, [selectedIngredients]);
+  }, [backendMatchedRecipes, selectedIngredients]);
 
   // Split into 100% ready vs partially ready
   const perfectMatches = rankedRecipes.filter((r) => r.matchPercent === 100);
   const partialMatches = rankedRecipes.filter(
     (r) => r.matchPercent >= 50 && r.matchPercent < 100,
   );
-
-  const currentCategoryData =
-    INGREDIENT_CATEGORIES.find((c) => c.id === activeMainCat) ??
-    INGREDIENT_CATEGORIES[0];
 
   return (
     <View style={styles.container}>
@@ -826,8 +958,22 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
         </View>
       </View>
 
-      {/* 2. Custom Text Input Row (User tìm kiếm hoặc thêm nguyên liệu) */}
-      <View style={styles.customInputRow}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 60 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={() => loadFridgeData(true)}
+            colors={["#EA580C"]}
+            tintColor="#EA580C"
+          />
+        }
+      >
+        {/* 2. Custom Text Input Row (User tìm kiếm hoặc thêm nguyên liệu) */}
+        <View style={styles.customInputRow}>
         <View style={styles.inputWrapper}>
           <Ionicons name="search-outline" size={17} color="#94A3B8" />
           <TextInput
@@ -1249,6 +1395,7 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
           </View>
         )}
       </View>
+      </ScrollView>
 
       {/* Cooking History Modal */}
       <CookingHistoryModal

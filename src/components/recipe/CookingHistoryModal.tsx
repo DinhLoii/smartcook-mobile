@@ -45,6 +45,29 @@ export default function CookingHistoryModal({
     };
   }, []);
 
+  useEffect(() => {
+    if (visible) {
+      CookingHistoryService.fetchHistory().catch(() => {});
+    }
+  }, [visible]);
+
+  const handleDeleteItem = (item: CookingHistoryItem) => {
+    Alert.alert(
+      "Xóa món",
+      `Bạn có chắc muốn xóa "${item.recipeName}" khỏi lịch sử không?`,
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Xóa",
+          style: "destructive",
+          onPress: () => {
+            CookingHistoryService.deleteHistoryItem(item._id || item.id);
+          },
+        },
+      ]
+    );
+  };
+
   const handleClear = () => {
     Alert.alert(
       "Xóa lịch sử",
@@ -251,14 +274,24 @@ export default function CookingHistoryModal({
                           </View>
                         </View>
 
-                        {/* Right: Cook Again Button */}
-                        <TouchableOpacity
-                          style={styles.cookAgainBtn}
-                          onPress={() => handleCookAgain(item)}
-                          activeOpacity={0.75}
-                        >
-                          <Text style={styles.cookAgainText}>Nấu lại</Text>
-                        </TouchableOpacity>
+                        {/* Right: Actions */}
+                        <View style={{ alignItems: "center", gap: 6 }}>
+                          <TouchableOpacity
+                            style={styles.cookAgainBtn}
+                            onPress={() => handleCookAgain(item)}
+                            activeOpacity={0.75}
+                          >
+                            <Text style={styles.cookAgainText}>Nấu lại</Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            onPress={() => handleDeleteItem(item)}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            activeOpacity={0.7}
+                          >
+                            <Ionicons name="trash-outline" size={16} color="#94A3B8" />
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     ))}
                   </View>

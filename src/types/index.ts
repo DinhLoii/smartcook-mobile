@@ -3,3 +3,5 @@ export * from "./recipe";
 export * from "./community";
 export * from "./auth";
 export * from "./category";
+export * from "./fridge";
+export * from "./cookingHistory";

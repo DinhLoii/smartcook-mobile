@@ -177,7 +177,7 @@ class RecipeServiceClass {
   /**
    * Chuẩn hóa Recipe DTO từ Backend về Interface Recipe của Mobile
    */
-  private normalizeRecipe(raw: any): Recipe {
+  public normalizeRecipe(raw: any): Recipe {
     const id = raw._id?.toString() || raw.id || `dish-${Date.now()}`;
     const category = raw.categoryCode || raw.category || "family";
 
