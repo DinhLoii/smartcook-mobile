@@ -1,6 +1,6 @@
 # Kế Hoạch Triển Khai Toàn Diện SmartCook Mobile - Đồng Bộ 100% Backend & AI
 
-> **Phiên bản:** 3.0 - Cập nhật đồng bộ toàn diện với `smartcook-backend` (Phases 1-6 Backend Đã Hoàn Thành)  
+> **Phiên bản:** 4.0 - Cập nhật đồng bộ toàn diện với `smartcook-backend` (Phases 1, 2, 3 Đã Hoàn Thành 100%)  
 > **Mobile Client (`smartcook-mobile`):** React Native (Expo SDK 57.0.24), TypeScript, Expo Router, NativeWind/Tailwind  
 > **Backend Service (`smartcook-backend`):** Node.js Express 5, TypeScript, MongoDB Atlas, Cloudinary, Gemini 1.5 Flash Vision, Socket.io Realtime Gateway  
 > **Mục tiêu:** Chuyển đổi 100% dữ liệu mock/in-memory trên Mobile thành dữ liệu thật kết nối với Backend, kích hoạt trí tuệ nhân tạo Gemini AI Vision & Chatbot, Socket.io Chat thời gian thực, Lịch sử nấu ăn & Gamification Chef XP, Lập thực đơn tuần 7 ngày và Định vị siêu thị GPS.
@@ -11,8 +11,8 @@
 
 Qua rà soát chi tiết 100% source code của cả hai dự án `smartcook-backend` và `smartcook-mobile`:
 - **Backend hiện đã hoàn thành 6/7 Phases cốt lõi** (Bao gồm Auth, Categories, Ingredients 14 nhóm, Recipes, Cloudinary Media Upload, User Custom Recipe, Cooking History +50 XP Gamification, Gemini 1.5 Flash Vision + Pins + AI Chef Chat, Community Social Feed, Realtime Socket.io Chat Gateway).
-- **Mobile đã hoàn thành 100% Phase 1** (Auth, JWT Interceptor, Silent Refresh, Google Sign-In đa nền tảng iOS/Web, Onboarding Survey 6 tiêu chí, Profile & Edit Profile).
-- **Bước tiếp theo là tiến hành ngay Phase 2** (Khám phá công thức, Bộ lọc thông minh, Chi tiết món với Scaler định lượng và Đăng tải công thức cá nhân lên Cloudinary).
+- **Mobile đã hoàn thành 100% Phase 1, Phase 2 và Phase 3** (Auth, JWT Interceptor, Silent Refresh, Khảo sát khẩu vị, Profile, Món ăn MongoDB, Dynamic Portion Scaler, Upload Cloudinary, Bếp của tôi `FridgeView`, 14 nhóm nguyên liệu, Xếp hạng món khớp tủ lạnh `fridge-match`, Nấu ăn rảnh tay +50 XP Gamification và Lịch sử nấu ăn).
+- **Bước tiếp theo là tiến hành ngay Phase 4** (Trí tuệ nhân tạo Gemini 1.5 Flash Vision quét thực phẩm vẽ Pins toạ độ + Trợ lý ảo AI Bếp trưởng bóng nổi).
 
 ```
 ====================================================================================================
@@ -20,8 +20,8 @@ TIẾN ĐỘ ĐỒNG BỘ TOÀN DỰ ÁN (PROJECT SYNCHRONIZATION MATRIX)
 ====================================================================================================
 [Phase 1] Xác thực & Khảo sát khẩu vị      | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
 [Phase 2] Công thức, Scaler & Đăng món      | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
-[Phase 3] Bếp thông minh & Chef XP (+50XP)  | Backend: [✅ 100%] ===> Mobile: [🚀 BẮT ĐẦU TRIỂN KHAI]
-[Phase 4] Gemini AI Vision & Chatbot Chef   | Backend: [✅ 100%] ===> Mobile: [⏳ Sẵn sàng đấu nối]
+[Phase 3] Bếp thông minh & Chef XP (+50XP)  | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
+[Phase 4] Gemini AI Vision & Chatbot Chef   | Backend: [✅ 100%] ===> Mobile: [🚀 BẮT ĐẦU TRIỂN KHAI]
 [Phase 5] Mạng xã hội & Socket.io Realtime  | Backend: [✅ 100%] ===> Mobile: [⏳ Sẵn sàng đấu nối]
 [Phase 6] Thực đơn tuần & Siêu thị GPS      | Backend: [⏳ Phase 7] -> Mobile: [⏳ Sẵn sàng đấu nối]
 [Phase 7] Tối ưu hóa UX & Kiểm thử E2E      | Toàn bộ dự án         -> Mobile: [⏳ Bước cuối cùng]
@@ -38,8 +38,8 @@ TIẾN ĐỘ ĐỒNG BỘ TOÀN DỰ ÁN (PROJECT SYNCHRONIZATION MATRIX)
 | **2. Danh mục & Khám phá món ăn** | `(main)/home.tsx`<br>Smart Filter Modal<br>Category Tabs Carousel | `GET /categories`<br>`GET /recipes`<br>Query params: `category`, `search`, `difficulty`, `maxMinutes`, `maxCalories`, `page`, `limit` | ✅ **HOÀN THÀNH 100%**<br>(Tải động từ MongoDB, phân trang, skeleton, pull-to-refresh) |
 | **3. Chi tiết món & Scaler khẩu phần** | `(main)/recipe-detail.tsx`<br>Dynamic Portion Scaler<br>Favorite Heart Button | `GET /recipes/:id`<br>`POST /recipes/:id/favorite` (Toggle yêu thích lưu vào `user.favoriteRecipeIds`) | ✅ **HOÀN THÀNH 100%**<br>(Chi tiết thật từ MongoDB, bộ Scaler co giãn nguyên liệu, tim yêu thích) |
 | **4. Tạo công thức cá nhân** | `CreateRecipeModal.tsx`<br>Chọn ảnh `expo-image-picker`<br>Các bước sơ chế & nấu | `POST /recipes`<br>Multipart `FormData` tải ảnh lên Cloudinary `smartcook/recipes`, gán `authorId` chính chủ. | ✅ **HOÀN THÀNH 100%**<br>(Upload Cloudinary, tạo công thức cá nhân, lưu MongoDB) |
-| **5. Bếp của tôi & Tủ lạnh** | `FridgeView.tsx`<br>14 nhóm nguyên liệu chuẩn<br>Bộ gợi ý món nấu được ngay | `GET /ingredients` (58 master items)<br>`GET /fridge/my-fridge`<br>`POST /fridge/items`<br>`PUT /fridge/items/:id`<br>`DELETE /fridge/items/:id`<br>`GET /recipes/fridge-match` (xếp hạng món theo % khớp) | ⏳ **Phase 3**<br>Backend đã sẵn sàng 100%. |
-| **6. Nấu ăn rảnh tay & Điểm XP** | `(main)/cooking-mode.tsx` (TTS tiếng Việt)<br>`CookingHistoryModal.tsx` | `POST /cooking-history` (Tự động cộng **+50 XP** và thăng hạng cấp bậc đầu bếp)<br>`GET /cooking-history` | ⏳ **Phase 3**<br>Backend đã sẵn sàng 100%. |
+| **5. Bếp của tôi & Tủ lạnh** | `FridgeView.tsx`<br>14 nhóm nguyên liệu chuẩn<br>Bộ gợi ý món nấu được ngay | `GET /ingredients` (58 master items)<br>`GET /fridge/my-fridge`<br>`POST /fridge/items`<br>`PUT /fridge/items/:id`<br>`DELETE /fridge/items/:id`<br>`GET /recipes/fridge-match` (xếp hạng món theo % khớp) | ✅ **HOÀN THÀNH 100%**<br>(Kho nguyên liệu MongoDB, phân loại vị trí bảo quản, gợi ý món theo % khớp) |
+| **6. Nấu ăn rảnh tay & Điểm XP** | `(main)/cooking-mode.tsx` (TTS tiếng Việt)<br>`CookingHistoryModal.tsx` | `POST /cooking-history` (Tự động cộng **+50 XP** và thăng hạng cấp bậc đầu bếp)<br>`GET /cooking-history` | ✅ **HOÀN THÀNH 100%**<br>(Tự động ghi nhận lịch sử, +50 XP Gamification, modal lịch sử) |
 | **7. AI Vision Scan Thực Phẩm** | `ScanAIView.tsx`<br>Laser Scan Animation<br>Thẻ ghim toạ độ Pins trực quan | `POST /ai/scan-ingredients` (Upload ảnh -> Gemini 1.5 Flash Vision -> Trả về `ingredients`, `pins` toạ độ %, `suggestedRecipe`)<br>`GET /ai/scan-history` | ⏳ **Phase 4**<br>Backend đã sẵn sàng 100%. |
 | **8. Trợ Lý AI Kéo Thả** | `DraggableAIAssistant.tsx`<br>Bóng nổi kéo thả, chatbox gợi ý | `POST /ai/assistant-chat` (Gemini Chef tiếp nhận câu hỏi kèm context Tủ lạnh & Khẩu vị, trả về `replyText`, `suggestedDishes`, `quickPrompts`) | ⏳ **Phase 4**<br>Backend đã sẵn sàng 100%. |
 | **9. Mạng Xã Hội Ẩm Thực** | `CommunityView.tsx`<br>`PostCard.tsx`<br>`CreatePostModal.tsx`<br>`CommentsModal.tsx` | `GET /community/posts`<br>`POST /community/posts` (ảnh Cloudinary, +20 XP)<br>`POST /community/posts/:id/like`<br>`GET/POST /community/posts/:id/comments` (+5 XP) | ⏳ **Phase 5**<br>Backend đã sẵn sàng 100%. |
@@ -123,7 +123,8 @@ TIẾN ĐỘ ĐỒNG BỘ TOÀN DỰ ÁN (PROJECT SYNCHRONIZATION MATRIX)
 ---
 
 ### 📌 GIAI ĐOẠN 3: Bếp Của Tôi (`FridgeView`), Xếp Hạng Món Khớp Tủ Lạnh & Điểm Thưởng Đầu Bếp (+50 XP)
-> **Trạng thái Backend:** ĐÃ SẴN SÀNG 100% (`/api/v1/ingredients`, `/api/v1/fridge/*`, `/api/v1/cooking-history`)  
+> **Trạng thái:** ✅ **ĐÃ HOÀN THÀNH 100% (VERIFIED & TESTED)**  
+> **Cam kết:** 10/10 test E2E passed, TypeScript 0 lỗi, xử lý triệt để race condition tạo tủ lạnh song song (`E11000`) và lỗi CastError ObjectId. Đã commit và push toàn bộ lên nhánh `develop`.  
 > **Mục tiêu Mobile:** Quản lý kho thực phẩm tủ lạnh thực tế của người dùng; xếp hạng món ăn nấu được ngay theo % khớp nguyên liệu; ghi nhận lịch sử nấu ăn và thăng cấp bậc đầu bếp.
 
 #### Nhiệm vụ cụ thể:
@@ -232,17 +233,16 @@ TIẾN ĐỘ ĐỒNG BỘ TOÀN DỰ ÁN (PROJECT SYNCHRONIZATION MATRIX)
 
 ---
 
-## 4. Chi Tiết Thực Hiện Ngay: Giai Đoạn 2 (Phase 2 Action Plan)
+## 4. Chi Tiết Kế Hoạch Triển Khai Tiếp Theo: Giai Đoạn 4 (Phase 4 Action Plan - Gemini 1.5 Flash AI Vision & Trợ Lý Bếp Trưởng AI)
 
-Để bắt đầu ngay lập tức, đây là danh sách các tệp tin sẽ được tạo và cập nhật trong **Phase 2**:
+Để tiến hành Giai đoạn 4, danh sách các tệp tin sẽ được tạo và cập nhật bao gồm:
 
 | Hành Động | Đường Dẫn Tệp Tin | Mục Đích Kỹ Thuật |
 | :--- | :--- | :--- |
-| **[MỚI]** | `src/services/categoryService.ts` | Lấy danh sách danh mục món ăn động từ `GET /api/v1/categories`. |
-| **[CẬP NHẬT]** | `src/services/recipeService.ts` | Chuyển từ mock in-memory sang gọi API `GET /api/v1/recipes`, `GET /api/v1/recipes/:id`, `POST /api/v1/recipes/:id/favorite`, `POST /api/v1/recipes`. |
-| **[CẬP NHẬT]** | `src/app/(main)/home.tsx` | Kết nối API danh mục & công thức, tích hợp tìm kiếm, bộ lọc calo/thời gian, phân trang, skeleton loader và pull-to-refresh. |
-| **[CẬP NHẬT]** | `src/app/(main)/recipe-detail.tsx` | Kết nối API chi tiết món ăn theo ID, nút thả tim yêu thích đồng bộ MongoDB, bảo toàn bộ Scaler co giãn nguyên liệu. |
-| **[CẬP NHẬT]** | `src/components/recipe/CreateRecipeModal.tsx` | Tải ảnh thật qua `expo-image-picker`, gửi `FormData` lên `POST /api/v1/recipes` để upload Cloudinary và lưu công thức cá nhân. |
+| **[MỚI]** | `src/services/aiService.ts` | Gửi ảnh phân tích Gemini Vision (`POST /api/v1/ai/scan-ingredients`), lấy lịch sử scan (`GET /api/v1/ai/scan-history`), xóa lịch sử scan (`DELETE /api/v1/ai/scan-history/:id`), và chat với AI Chef (`POST /api/v1/ai/assistant-chat`). |
+| **[CẬP NHẬT]** | `src/components/features/ScanAIView.tsx` | Kết nối camera/gallery thật, hiệu ứng laser scanning khi phân tích, vẽ thẻ ghim toạ độ thực phẩm (Visual Bounding Pins) đè lên ảnh gốc, nút "Lưu tất cả vào tủ lạnh", gợi ý món ăn nấu ngay `suggestedRecipe`. |
+| **[CẬP NHẬT]** | `src/components/ai/DraggableAIAssistant.tsx` | Kết nối chatbox trợ lý nổi với Gemini 1.5 Flash Chef, đưa ngữ cảnh tủ lạnh và khẩu vị cá nhân vào prompt, hiển thị markdown và gợi ý món ăn click mở ngay. |
+| **[MỚI]** | `scripts/testE2EPhase4.mjs` | Bộ kịch bản kiểm thử tự động toàn diện cho phân hệ AI Vision & AI Chef Assistant (Mock upload ảnh, Gemini Vision detection, Bounding Pins, Chatbot response). |
 
 ---
 
