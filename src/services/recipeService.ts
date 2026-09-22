@@ -73,6 +73,17 @@ class RecipeServiceClass {
    * Lấy chi tiết một món ăn theo ID (từ MongoDB hoặc Fallback)
    */
   async getRecipeById(id: string): Promise<Recipe | undefined> {
+    // Nếu là ID mock / local (không phải ObjectId 24 ký tự hex hợp lệ),
+    // ưu tiên tìm trong customRecipes và RECIPES_DATA trước để tránh gọi API vô nghĩa và log lỗi
+    const isMongoId = /^[0-9a-fA-F]{24}$/.test(id);
+    if (!isMongoId) {
+      const local =
+        this.customRecipes.find((r) => r.id === id) ||
+        getLocalRecipeById(id) ||
+        RECIPES_DATA.find((r) => r.id === id);
+      if (local) return local;
+    }
+
     try {
       const response = await apiClient.get<{
         success: boolean;
