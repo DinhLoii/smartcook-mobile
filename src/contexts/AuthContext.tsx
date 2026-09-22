@@ -29,6 +29,7 @@ interface AuthContextType {
   updateSurvey: (payload: SurveyPayload) => Promise<StoredUser>;
   updateProfile: (payload: UpdateProfilePayload) => Promise<StoredUser>;
   refreshUser: () => Promise<StoredUser | null>;
+  updateChefXP: (chefExp: number, level: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -143,6 +144,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const updateChefXP = (chefExp: number, level: string): void => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, chefExp, level };
+      tokenStorage.setUser(updated).catch(() => {});
+      return updated;
+    });
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -156,6 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         updateSurvey,
         updateProfile,
         refreshUser,
+        updateChefXP,
       }}
     >
       {children}
