@@ -1,7 +1,9 @@
 import { BrandColors } from "@/constants/brandColors";
 import { RECIPES_DATA } from "@/data/recipesData";
+import { aiService } from "@/services/aiService";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
   Animated,
@@ -50,9 +52,11 @@ const QUICK_PROMPTS = [
 ];
 
 export default function DraggableAIAssistant() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [modalVisible, setModalVisible] = useState(false);
   const [messages, setMessages] = useState<AIMessage[]>(INITIAL_AI_MESSAGES);
+  const [quickPrompts, setQuickPrompts] = useState<string[]>(QUICK_PROMPTS);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const flatListRef = useRef<FlatList>(null);
@@ -128,7 +132,25 @@ export default function DraggableAIAssistant() {
     setModalVisible(true);
   };
 
-  const handleSendMessage = (textToSend?: string) => {
+  const handleDishClick = (dish: string) => {
+    const foundRecipe = RECIPES_DATA.find(
+      (r) =>
+        r.title.toLowerCase().includes(dish.toLowerCase()) ||
+        dish.toLowerCase().includes(r.title.toLowerCase())
+    );
+
+    if (foundRecipe) {
+      setModalVisible(false);
+      router.push({
+        pathname: "/recipe-detail",
+        params: { id: foundRecipe.id },
+      });
+    } else {
+      handleSendMessage(`Hãy hướng dẫn cách nấu món ${dish} chi tiết nhé!`);
+    }
+  };
+
+  const handleSendMessage = async (textToSend?: string) => {
     const query = (textToSend || inputText).trim();
     if (!query) return;
 
@@ -143,7 +165,40 @@ export default function DraggableAIAssistant() {
     setInputText("");
     setIsTyping(true);
 
-    // AI intelligent answer generation
+    try {
+      // Prepare history format for Gemini API
+      const history = messages.slice(-6).map((m) => ({
+        role: (m.sender === "ai" ? "model" : "user") as "model" | "user",
+        parts: [{ text: m.text }] as [{ text: string }],
+      }));
+
+      const apiReply = await aiService.askChefAssistant(query, history);
+
+      if (apiReply && apiReply.replyText) {
+        if (apiReply.quickPrompts && apiReply.quickPrompts.length > 0) {
+          setQuickPrompts(apiReply.quickPrompts);
+        }
+
+        const aiReply: AIMessage = {
+          id: `ai-${Date.now()}`,
+          sender: "ai",
+          text: apiReply.replyText,
+          time: "Vừa xong",
+          suggestedDishes: apiReply.suggestedDishes?.length ? apiReply.suggestedDishes : undefined,
+        };
+
+        setMessages((prev) => [...prev, aiReply]);
+        setIsTyping(false);
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+        return;
+      }
+    } catch (e) {
+      console.warn("AI Assistant chat API failed, using fallback:", e);
+    }
+
+    // AI intelligent answer generation fallback
     setTimeout(() => {
       let replyText = "";
       let suggested: string[] = [];
@@ -309,7 +364,7 @@ export default function DraggableAIAssistant() {
                             <TouchableOpacity
                               key={dish}
                               style={styles.suggestedPill}
-                              onPress={() => handleSendMessage(dish)}
+                              onPress={() => handleDishClick(dish)}
                               activeOpacity={0.75}
                             >
                               <Ionicons name="restaurant-outline" size={12} color={BrandColors.primary} />
@@ -351,8 +406,8 @@ export default function DraggableAIAssistant() {
             <View style={styles.quickPromptsSection}>
               <FlatList
                 horizontal
-                data={QUICK_PROMPTS}
-                keyExtractor={(item) => item}
+                data={quickPrompts}
+                keyExtractor={(item, index) => `${item}-${index}`}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.quickPromptsScroll}
                 renderItem={({ item }) => (
