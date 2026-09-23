@@ -1,5 +1,6 @@
 import { BrandColors } from "@/constants/brandColors";
 import { RECIPES_DATA } from "@/data/recipesData";
+import { aiService } from "@/services/aiService";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useRef, useState } from "react";
@@ -128,7 +129,7 @@ export default function DraggableAIAssistant() {
     setModalVisible(true);
   };
 
-  const handleSendMessage = (textToSend?: string) => {
+  const handleSendMessage = async (textToSend?: string) => {
     const query = (textToSend || inputText).trim();
     if (!query) return;
 
@@ -143,7 +144,36 @@ export default function DraggableAIAssistant() {
     setInputText("");
     setIsTyping(true);
 
-    // AI intelligent answer generation
+    try {
+      // Prepare history format for Gemini API
+      const history = messages.slice(-6).map((m) => ({
+        role: (m.sender === "ai" ? "model" : "user") as "model" | "user",
+        parts: [{ text: m.text }] as [{ text: string }],
+      }));
+
+      const apiReply = await aiService.askChefAssistant(query, history);
+
+      if (apiReply && apiReply.replyText) {
+        const aiReply: AIMessage = {
+          id: `ai-${Date.now()}`,
+          sender: "ai",
+          text: apiReply.replyText,
+          time: "Vừa xong",
+          suggestedDishes: apiReply.suggestedDishes?.length ? apiReply.suggestedDishes : undefined,
+        };
+
+        setMessages((prev) => [...prev, aiReply]);
+        setIsTyping(false);
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+        return;
+      }
+    } catch (e) {
+      console.warn("AI Assistant chat API failed, using fallback:", e);
+    }
+
+    // AI intelligent answer generation fallback
     setTimeout(() => {
       let replyText = "";
       let suggested: string[] = [];
