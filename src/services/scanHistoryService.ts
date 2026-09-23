@@ -1,3 +1,5 @@
+import { aiService } from "./aiService";
+
 export interface ScanDetectedIngredient {
   name: string;
   confidence: string;
@@ -161,19 +163,73 @@ export const ScanHistoryService = {
     return scanHistoryList.find((item) => item.id === id);
   },
 
-  addHistory: (item: Omit<ScanHistoryItem, "id">): ScanHistoryItem => {
+  /**
+   * Fetch scan history from backend MongoDB and update list
+   */
+  fetchBackendHistory: async (limit: number = 30): Promise<ScanHistoryItem[]> => {
+    try {
+      const backendItems = await aiService.getScanHistory(limit);
+      if (backendItems && backendItems.length > 0) {
+        const mapped: ScanHistoryItem[] = backendItems.map((item) => ({
+          id: item.id || `scan-${Date.now()}-${Math.random()}`,
+          title: (item as any).title || "Ảnh quét thực phẩm",
+          scannedAt: (item as any).scannedAt || "Vừa xong",
+          image: item.imageUrl ? { uri: item.imageUrl } : ((item as any).image ? { uri: (item as any).image } : require("@/assets/images/smartcook-auth-bg.jpg")),
+          accuracy: item.accuracy || 95,
+          ingredients: (item.ingredients || []).map((ing) => ({
+            name: ing.name,
+            confidence: ing.confidence || "95%",
+            icon: ing.icon || "food-apple",
+          })),
+          pins: (item.pins || []).map((pin) => ({
+            text: pin.text,
+            top: pin.top,
+            bottom: pin.bottom,
+            left: pin.left,
+            right: pin.right,
+          })),
+          suggestedRecipe: {
+            id: item.suggestedRecipe?.id || `recipe-${Date.now()}`,
+            title: item.suggestedRecipe?.title || "Món ăn từ nguyên liệu quét được",
+            desc: item.suggestedRecipe?.desc || "Gợi ý công thức từ AI",
+            calories: item.suggestedRecipe?.calories || 450,
+            durationMinutes: item.suggestedRecipe?.durationMinutes || 25,
+            matchPercent: item.suggestedRecipe?.matchPercent || 95,
+          },
+        }));
+
+        scanHistoryList = mapped;
+        notify();
+        return mapped;
+      }
+    } catch (e) {
+      console.warn("ScanHistoryService.fetchBackendHistory failed:", e);
+    }
+    return [...scanHistoryList];
+  },
+
+  addHistory: (item: Omit<ScanHistoryItem, "id"> & { id?: string }): ScanHistoryItem => {
     const newItem: ScanHistoryItem = {
       ...item,
-      id: `scan-${Date.now()}`,
+      id: item.id || `scan-${Date.now()}`,
     };
     scanHistoryList = [newItem, ...scanHistoryList];
     notify();
     return newItem;
   },
 
-  deleteHistoryItem: (id: string) => {
+  deleteHistoryItem: async (id: string): Promise<void> => {
     scanHistoryList = scanHistoryList.filter((item) => item.id !== id);
     notify();
+
+    // If id is a 24-character hex MongoDB ObjectId, delete on backend too
+    if (/^[0-9a-fA-F]{24}$/.test(id)) {
+      try {
+        await aiService.deleteScanHistory(id);
+      } catch (e) {
+        console.warn(`Failed to delete scan ${id} on backend:`, e);
+      }
+    }
   },
 
   clearHistory: () => {

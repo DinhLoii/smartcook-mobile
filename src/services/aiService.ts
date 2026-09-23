@@ -83,6 +83,45 @@ export const aiService = {
   },
 
   /**
+   * Get user's past AI scan history from MongoDB
+   * GET /api/v1/ai/scan-history
+   */
+  getScanHistory: async (limit: number = 30): Promise<ScanIngredientResponse[]> => {
+    try {
+      const response = await apiClient.get<{
+        success: boolean;
+        data: ScanIngredientResponse[];
+      }>(`/ai/scan-history?limit=${limit}`);
+
+      if (response.data?.success && response.data.data) {
+        return response.data.data;
+      }
+      return (response.data as any) || [];
+    } catch (error: any) {
+      console.warn("⚠️ [aiService.getScanHistory] Failed to fetch scan history:", error?.message || error);
+      return [];
+    }
+  },
+
+  /**
+   * Delete an AI scan history entry
+   * DELETE /api/v1/ai/scan-history/:id
+   */
+  deleteScanHistory: async (id: string): Promise<boolean> => {
+    try {
+      const response = await apiClient.delete<{
+        success: boolean;
+        message: string;
+      }>(`/ai/scan-history/${id}`);
+
+      return !!response.data?.success;
+    } catch (error: any) {
+      console.warn(`⚠️ [aiService.deleteScanHistory] Failed to delete scan ${id}:`, error?.message || error);
+      return false;
+    }
+  },
+
+  /**
    * Chat with AI Chef Assistant (injected with user's fridge and taste context)
    * POST /api/v1/ai/assistant-chat
    */
