@@ -23,7 +23,7 @@ Qua rà soát chi tiết 100% mã nguồn của cả hai dự án `smartcook-bac
   - **Phase 1**: ✅ **100% HOÀN TẤT** (Auth, JWT Interceptor, Silent Refresh, Khảo sát, Profile).
   - **Phase 2**: ✅ **100% HOÀN TẤT** (Danh mục MongoDB, Phân trang, Bộ lọc thông minh, Chi tiết món Scaler, Đăng món Cloudinary).
   - **Phase 3**: ✅ **100% HOÀN TẤT** (Bếp của tôi `FridgeView`, 14 nhóm nguyên liệu, Xếp hạng món khớp tủ lạnh, Nấu rảnh tay TTS, +50 XP Gamification, Lịch sử nấu ăn).
-  - **Phase 4**: 🚀 **BẮT ĐẦU TRIỂN KHAI** (Đấu nối Gemini Vision quét thực phẩm thật + Trợ lý ảo AI Bếp trưởng bóng nổi).
+  - **Phase 4**: ✅ **100% HOÀN TẤT** (Gemini 1.5 Flash Vision quét thực phẩm, Bounding Pins, Lưu tủ lạnh 1 chạm, Lịch sử MongoDB, Trợ lý ảo AI Bếp trưởng bóng nổi).
   - **Phase 5**: ⏳ **Sẵn sàng đấu nối** (Mạng xã hội & Chat Socket.io Realtime).
   - **Phase 6**: ⏳ **Sẵn sàng đấu nối** (Thực đơn tuần 7 ngày, Giỏ đi chợ & Siêu thị GPS).
   - **Phase 7**: ⏳ **Bước cuối cùng** (Tối ưu UX, Animation, Haptics & Full E2E Test Suite).
@@ -35,7 +35,7 @@ TIẾN ĐỘ ĐỒNG BỘ TOÀN DỰ ÁN (PROJECT SYNCHRONIZATION MATRIX)
 [Phase 1] Xác thực & Khảo sát khẩu vị      | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
 [Phase 2] Công thức, Scaler & Đăng món      | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
 [Phase 3] Bếp thông minh & Chef XP (+50XP)  | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
-[Phase 4] Gemini AI Vision & Chatbot Chef   | Backend: [✅ 100%] ===> Mobile: [🚀 BẮT ĐẦU TRIỂN KHAI]
+[Phase 4] Gemini AI Vision & Chatbot Chef   | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
 [Phase 5] Mạng xã hội & Socket.io Realtime  | Backend: [✅ 100%] ===> Mobile: [⏳ Sẵn sàng đấu nối]
 [Phase 6] Thực đơn tuần & Siêu thị GPS      | Backend: [✅ 100%] ===> Mobile: [⏳ Sẵn sàng đấu nối]
 [Phase 7] Tối ưu hóa UX & Kiểm thử E2E      | Backend: [✅ 100%] ===> Mobile: [⏳ Bước cuối cùng]
@@ -54,8 +54,8 @@ TIẾN ĐỘ ĐỒNG BỘ TOÀN DỰ ÁN (PROJECT SYNCHRONIZATION MATRIX)
 | **4. Tạo công thức cá nhân** | `CreateRecipeModal.tsx`<br>Chọn ảnh `expo-image-picker`<br>4 bước sơ chế & nấu | `POST /recipes`<br>Multipart `FormData` tải ảnh lên Cloudinary `smartcook/recipes`, gán `authorId` chính chủ. | ✅ **HOÀN THÀNH 100%**<br>(Upload Cloudinary, tạo công thức cá nhân, lưu MongoDB) |
 | **5. Bếp của tôi & Tủ lạnh** | `FridgeView.tsx`<br>14 nhóm nguyên liệu chuẩn<br>Bộ gợi ý món nấu được ngay | `GET /ingredients` (58 master items)<br>`GET /fridge/my-fridge`<br>`POST /fridge/items`<br>`PUT /fridge/items/:id`<br>`DELETE /fridge/items/:id`<br>`GET /recipes/fridge-match` (xếp hạng món theo % khớp) | ✅ **HOÀN THÀNH 100%**<br>(Kho nguyên liệu MongoDB, phân loại ngăn lưu trữ, gợi ý theo % khớp) |
 | **6. Nấu ăn rảnh tay & Điểm XP** | `(main)/cooking-mode.tsx` (TTS tiếng Việt)<br>`CookingHistoryModal.tsx` | `POST /cooking-history` (Tự động cộng **+50 XP** và thăng hạng cấp bậc đầu bếp)<br>`GET /cooking-history`<br>`DELETE /cooking-history/:id` | ✅ **HOÀN THÀNH 100%**<br>(Tự động ghi nhận lịch sử, +50 XP Gamification, modal lịch sử) |
-| **7. AI Vision Scan Thực Phẩm** | `ScanAIView.tsx`<br>Laser Scan Animation<br>Thẻ ghim toạ độ Pins trực quan | `POST /ai/scan-ingredients` (Upload ảnh -> Gemini 1.5 Flash Vision -> Trả về `ingredients`, `pins` toạ độ %, `suggestedRecipe`)<br>`GET /ai/scan-history`<br>`DELETE /ai/scan-history/:id` | 🚀 **Phase 4**<br>Backend sẵn sàng 100%, tiến hành đấu nối Mobile. |
-| **8. Trợ Lý AI Kéo Thả** | `DraggableAIAssistant.tsx`<br>Bóng nổi kéo thả, chatbox gợi ý | `POST /ai/assistant-chat` (Gemini Chef tiếp nhận câu hỏi kèm context Tủ lạnh & Khẩu vị, trả về `replyText`, `suggestedDishes`, `quickPrompts`) | 🚀 **Phase 4**<br>Backend sẵn sàng 100%, tiến hành đấu nối Mobile. |
+| **7. AI Vision Scan Thực Phẩm** | `ScanAIView.tsx`<br>Laser Scan Animation<br>Thẻ ghim toạ độ Pins trực quan | `POST /ai/scan-ingredients` (Upload ảnh -> Gemini 1.5 Flash Vision -> Trả về `ingredients`, `pins` toạ độ %, `suggestedRecipe`)<br>`GET /ai/scan-history`<br>`DELETE /ai/scan-history/:id` | ✅ **HOÀN THÀNH 100%**<br>(Chụp/chọn ảnh, Bounding Pins %, Lưu tủ lạnh MongoDB, 10/10 test E2E passed) |
+| **8. Trợ Lý AI Kéo Thả** | `DraggableAIAssistant.tsx`<br>Bóng nổi kéo thả, chatbox gợi ý | `POST /ai/assistant-chat` (Gemini Chef tiếp nhận câu hỏi kèm context Tủ lạnh & Khẩu vị, trả về `replyText`, `suggestedDishes`, `quickPrompts`) | ✅ **HOÀN THÀNH 100%**<br>(Prompt động, click món điều hướng nấu ngay, 10/10 test E2E passed) |
 | **9. Mạng Xã Hội Ẩm Thực** | `CommunityView.tsx`<br>`PostCard.tsx`<br>`CreatePostModal.tsx`<br>`CommentsModal.tsx` | `GET /community/posts`<br>`POST /community/posts` (ảnh Cloudinary, +20 XP)<br>`POST /community/posts/:id/like`<br>`POST /community/posts/:id/react`<br>`GET/POST /community/posts/:id/comments` (+5 XP)<br>`DELETE /community/posts/:id` | ⏳ **Phase 5**<br>Backend sẵn sàng 100%, tiến hành đấu nối Mobile. |
 | **10. Nhắn Tin Thời Gian Thực** | `DirectChatModal.tsx`<br>`MessengerConversationsModal.tsx`<br>`ChatRoomModal.tsx` | Socket.io Server `ws://localhost:5000`<br>JWT Handshake, Events: `join_room`, `leave_room`, `send_message`, `new_message`, `typing`, `user_typing`<br>REST API: `/chat/rooms`, `/chat/conversations`, `/chat/direct` | ⏳ **Phase 5**<br>Backend sẵn sàng 100%, tiến hành đấu nối Mobile. |
 | **11. Thực Đơn Tuần & Giỏ Đi Chợ** | `PlannerView.tsx`<br>`ShoppingNoteModal.tsx`<br>Đồng bộ giỏ vào tủ lạnh | `GET /planner/current-week`<br>`PUT /planner/meals`<br>`DELETE /planner/meals`<br>`GET /planner/shopping-list` (Thuật toán trừ nguyên liệu có trong tủ lạnh)<br>`POST /planner/shopping-list`<br>`PATCH /planner/shopping-list/:id/bought`<br>`DELETE /planner/shopping-list/clear-bought`<br>`POST /planner/sync-to-fridge` | ⏳ **Phase 6**<br>Backend sẵn sàng 100%, tiến hành đấu nối Mobile. |
@@ -167,13 +167,13 @@ TIẾN ĐỘ ĐỒNG BỘ TOÀN DỰ ÁN (PROJECT SYNCHRONIZATION MATRIX)
 > **Mục tiêu Mobile:** Chụp ảnh thực phẩm bàn bếp / tủ lạnh thật $\rightarrow$ Gemini 1.5 Flash Vision nhận diện nguyên liệu và vẽ thẻ ghim pins trực quan trên ảnh; Nút "Lưu tất cả vào tủ lạnh"; Đồng bộ lịch sử quét MongoDB; Trợ lý ảo AI bóng nổi tư vấn thực đơn thông minh theo ngữ cảnh tủ lạnh và khẩu vị.
 
 #### Nhiệm vụ cụ thể:
-- [ ] **4.1. Hoàn thiện `src/services/aiService.ts` & `src/services/scanHistoryService.ts`**:
+- [x] **4.1. Hoàn thiện `src/services/aiService.ts` & `src/services/scanHistoryService.ts`**:
   - `aiService.scanIngredients(imageUri, mimeType)`: Gửi multipart `FormData` với key `'image'` (kèm fallback base64 cho Web) lên `POST /api/v1/ai/scan-ingredients`.
   - `aiService.getScanHistory(limit)`: Gọi `GET /api/v1/ai/scan-history` lấy danh sách lịch sử quét từ MongoDB.
   - `aiService.deleteScanHistory(id)`: Gọi `DELETE /api/v1/ai/scan-history/:id` xóa bản ghi lịch sử.
   - `aiService.askChefAssistant(message, conversationHistory)`: Gọi `POST /api/v1/ai/assistant-chat`, trả về `{ replyText, suggestedDishes, quickPrompts }`.
   - Nâng cấp `ScanHistoryService` đồng bộ hai chiều với API Backend (fetch ban đầu từ API, fallback cache AsyncStorage khi offline).
-- [ ] **4.2. Đấu nối Màn Hình Quét AI (`src/components/features/ScanAIView.tsx`)**:
+- [x] **4.2. Đấu nối Màn Hình Quét AI (`src/components/features/ScanAIView.tsx`)**:
   - Chụp ảnh từ camera (`ImagePicker.launchCameraAsync`) hoặc chọn ảnh từ thư viện (`ImagePicker.launchImageLibraryAsync`).
   - Kích hoạt hiệu ứng Laser Scanning mượt mà trong thời gian chờ AI xử lý.
   - **Vẽ Ghim Toạ Độ (Visual Bounding Pins)**:
@@ -183,12 +183,12 @@ TIẾN ĐỘ ĐỒNG BỘ TOÀN DỰ ÁN (PROJECT SYNCHRONIZATION MATRIX)
   - Nút **"Lưu tất cả vào tủ lạnh"**: Gọi đồng loạt `POST /api/v1/fridge/items` lưu tất cả nguyên liệu nhận diện vào kho tủ lạnh của user trên MongoDB, hiển thị toast thông báo thành công.
   - Hiển thị thẻ món ăn sáng tạo gợi ý (`suggestedRecipe`), bấm vào mở trực tiếp `recipe-detail.tsx` để xem và nấu ngay.
   - Đấu nối `ScanHistoryModal.tsx` hiển thị dữ liệu lịch sử thật từ Backend, hỗ trợ xem lại thẻ scan cũ và xóa từng mục.
-- [ ] **4.3. Đấu nối Trợ Lý Ảo Kéo Thả (`src/components/ai/DraggableAIAssistant.tsx`)**:
+- [x] **4.3. Đấu nối Trợ Lý Ảo Kéo Thả (`src/components/ai/DraggableAIAssistant.tsx`)**:
   - Kết nối chatbox với API `POST /api/v1/ai/assistant-chat`.
   - Backend tự động trích xuất nguyên liệu trong tủ lạnh và khảo sát khẩu vị của user để prompt cho Gemini đóng vai Bếp trưởng tư vấn cá nhân hóa.
   - Hiển thị tin nhắn dạng Markdown thân thiện, danh sách món ăn gợi ý (`suggestedDishes`) có thể click để điều hướng mở công thức ngay, và các thẻ câu hỏi gợi ý nhanh (`quickPrompts`).
-- [ ] **4.4. Kịch bản kiểm thử E2E Phase 4 (`scripts/testE2EPhase4.mjs`)**:
-  - Viết suite test tự động kiểm thử 8 ca: Đăng nhập $\rightarrow$ Gọi API scan ảnh thực phẩm $\rightarrow$ Kiểm tra danh sách nguyên liệu nhận diện $\rightarrow$ Kiểm tra Bounding Pins $\rightarrow$ Kiểm tra món ăn gợi ý $\rightarrow$ Chat với Trợ lý Bếp trưởng $\rightarrow$ Lấy lịch sử scan $\rightarrow$ Xóa lịch sử scan.
+- [x] **4.4. Kịch bản kiểm thử E2E Phase 4 (`scripts/testE2EPhase4.mjs`)**:
+  - Viết suite test tự động kiểm thử 10 ca: Health check -> Đăng nhập -> Scan ảnh Base64 -> Bounding Pins % -> Phân loại nguyên liệu & confidence -> Gợi ý công thức -> Lưu vào MongoDB Fridge -> AI Chef Assistant kèm Context -> Lấy lịch sử quét MongoDB -> Xóa dọn dẹp data test (100% pass).
 
 ---
 
