@@ -50,6 +50,12 @@ export default function ScanHistoryModal({
     return unsub;
   }, []);
 
+  useEffect(() => {
+    if (visible) {
+      ScanHistoryService.fetchBackendHistory();
+    }
+  }, [visible]);
+
   const handleClearAll = () => {
     Alert.alert(
       "Xóa lịch sử phân tích",
