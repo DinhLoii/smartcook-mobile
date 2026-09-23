@@ -1,4 +1,5 @@
 import { MOCK_STORES, Store } from "@/data/mockStores";
+import { apiClient } from "./apiClient";
 import * as Location from "expo-location";
 import { Linking, Platform } from "react-native";
 
@@ -212,6 +213,36 @@ export async function getTopNearbyStores(
   userLng: number,
   limit: number = 5
 ): Promise<NearestStoreResult[]> {
+  try {
+    const response = await apiClient.get<{ data: any[] }>(
+      `/stores/nearby?lat=${userLat}&lng=${userLng}&limit=${limit}`,
+      { timeout: 8000 }
+    );
+
+    const backendStores = response.data?.data || (response.data as any);
+    if (Array.isArray(backendStores) && backendStores.length > 0) {
+      return backendStores.map((item: any) => ({
+        store: {
+          id: item.id || item._id,
+          name: item.name,
+          brand: item.brand,
+          address: item.address,
+          openHours: item.openHours,
+          phone: item.phone,
+          latitude: item.latitude,
+          longitude: item.longitude,
+        },
+        distanceKm: item.distanceKm,
+        formattedDistance: item.formattedDistance,
+        travelTimeMotoMinutes: item.travelTimeMotoMinutes,
+        travelTimeWalkMinutes: item.travelTimeWalkMinutes,
+      }));
+    }
+  } catch (e) {
+    console.warn("Backend GPS store API unavailable, using local calculation fallback:", e);
+  }
+
+  // Graceful Fallback: Local Haversine Calculation from MOCK_STORES
   const stores = await getNearbyStores(userLat, userLng);
 
   if (!stores || stores.length === 0) {

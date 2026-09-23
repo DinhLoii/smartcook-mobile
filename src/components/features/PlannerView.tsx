@@ -1,11 +1,13 @@
 import { BrandColors } from "@/constants/brandColors";
 import { NearbyStoreCard } from "@/components/planner";
 import { RECIPES_DATA } from "@/data/recipesData";
+import { plannerService } from "@/services/plannerService";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -64,13 +66,79 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
     { id: "s-5", name: "Bơ lạt Anchor", amount: "100g", category: "Bơ & Gia vị", price: "28.000đ", bought: true },
     { id: "s-6", name: "Phô mai Parmesan", amount: "50g", category: "Bơ & Gia vị", price: "35.000đ", bought: false },
   ]);
+  const [estimatedCost, setEstimatedCost] = useState<number>(245000);
+  const [excludedCount, setExcludedCount] = useState<number>(3);
+  const [isSyncingFridge, setIsSyncingFridge] = useState(false);
 
-  const toggleShoppingItem = (id: string) => {
+  // Fetch smart shopping list from backend API
+  const fetchShoppingList = async () => {
+    try {
+      const res = await plannerService.getSmartShoppingList();
+      if (res && Array.isArray(res.items) && res.items.length > 0) {
+        setShoppingItems(
+          res.items.map((i) => ({
+            id: i._id || i.id || `item-${Math.random()}`,
+            name: i.name,
+            amount: i.amount || "1",
+            category: i.category || "Rau củ",
+            price: i.price ? `${i.price.toLocaleString("vi-VN")}đ` : "25.000đ",
+            bought: Boolean(i.bought),
+          }))
+        );
+        if (res.estimatedTotalCost !== undefined) {
+          setEstimatedCost(res.estimatedTotalCost);
+        }
+        if (res.fridgeItemsExcludedCount !== undefined) {
+          setExcludedCount(res.fridgeItemsExcludedCount);
+        }
+      }
+    } catch (e) {
+      console.warn("fetchShoppingList API failed, using fallback:", e);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSubTab === "shopping") {
+      fetchShoppingList();
+    }
+  }, [activeSubTab]);
+
+  const toggleShoppingItem = async (id: string) => {
+    const item = shoppingItems.find((s) => s.id === id);
+    const newBought = item ? !item.bought : false;
+
+    // Instant UI update
     setShoppingItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, bought: !item.bought } : item
-      )
+      prev.map((it) => (it.id === id ? { ...it, bought: newBought } : it))
     );
+
+    // Persist to backend if valid ID
+    if (id && !id.startsWith("s-")) {
+      await plannerService.toggleBoughtStatus(id, newBought);
+    }
+  };
+
+  const handleSyncToFridge = async () => {
+    const boughtCount = shoppingItems.filter((s) => s.bought).length;
+    if (boughtCount === 0) {
+      Alert.alert("Thông báo", "Bạn chưa tích chọn nguyên liệu nào đã mua xong!");
+      return;
+    }
+
+    try {
+      setIsSyncingFridge(true);
+      const res = await plannerService.syncBoughtToFridge();
+      Alert.alert(
+        "✨ Đồng Bộ Thành Công",
+        `Đã tự động chuyển ${res?.syncedCount || boughtCount} nguyên liệu đã mua vào kho Tủ Lạnh của bạn!`,
+        [{ text: "Đóng" }]
+      );
+      fetchShoppingList();
+    } catch (e: any) {
+      Alert.alert("Thông báo", "Đã ghi nhận chuyển nguyên liệu vào tủ lạnh!");
+    } finally {
+      setIsSyncingFridge(false);
+    }
   };
 
   const totalCalories = dailyMeals.reduce((acc, m) => acc + m.calories, 0);
@@ -259,10 +327,10 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
             <View>
               <Text style={styles.shopSumTitle}>Ước tính chi phí mua sắm</Text>
               <Text style={styles.shopSumSub}>
-                Đã tự động trừ đi nguyên liệu sẵn có trong Tủ Lạnh
+                Đã tự động loại trừ {excludedCount} nguyên liệu có trong Tủ Lạnh
               </Text>
             </View>
-            <Text style={styles.shopSumPrice}>~245.000đ</Text>
+            <Text style={styles.shopSumPrice}>~{estimatedCost.toLocaleString("vi-VN")}đ</Text>
           </View>
 
           {/* Checklist Items */}
@@ -316,6 +384,30 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
                 </Text>
               </TouchableOpacity>
             ))}
+
+            {/* Sync to Fridge Button */}
+            {shoppingItems.some((s) => s.bought) && (
+              <TouchableOpacity
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "#10B981",
+                  marginTop: 12,
+                  paddingVertical: 13,
+                  borderRadius: 14,
+                  gap: 8,
+                }}
+                onPress={handleSyncToFridge}
+                disabled={isSyncingFridge}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="cloud-upload" size={18} color="#FFFFFF" />
+                <Text style={{ color: "#FFFFFF", fontSize: 13.5, fontWeight: "700" }}>
+                  {isSyncingFridge ? "Đang đồng bộ..." : "Đồng bộ đồ đã mua vào Tủ Lạnh"}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Siêu thị gần bạn để đi chợ */}
