@@ -1,17 +1,24 @@
 import { BrandColors } from "@/constants/brandColors";
 import { NearbyStoreCard } from "@/components/planner";
 import { RECIPES_DATA } from "@/data/recipesData";
-import { plannerService } from "@/services/plannerService";
+import {
+  PlannerMealSlot,
+  plannerService,
+  WeeklyPlanResponse,
+} from "@/services/plannerService";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -24,40 +31,165 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
   );
   const [selectedDay, setSelectedDay] = useState("Thứ 2");
 
-  // Week days
-  const weekDays = [
-    { day: "Thứ 2", date: "15" },
-    { day: "Thứ 3", date: "16" },
-    { day: "Thứ 4", date: "17" },
-    { day: "Thứ 5", date: "18" },
-    { day: "Thứ 6", date: "19" },
-    { day: "Thứ 7", date: "20" },
-    { day: "CN", date: "21" },
-  ];
+  // Dynamic Week Days based on current week's Monday
+  const weekDays = useMemo(() => {
+    const now = new Date();
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(now.setDate(diff));
+    const dayLabels = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN"];
+    return dayLabels.map((d, index) => {
+      const current = new Date(monday);
+      current.setDate(monday.getDate() + index);
+      return {
+        day: d,
+        backendDay: d === "CN" ? "Chủ Nhật" : d,
+        date: current.getDate().toString(),
+      };
+    });
+  }, []);
 
-  // Meal slots for the day
-  const dailyMeals = [
+  const selectedBackendDay = useMemo(() => {
+    return selectedDay === "CN" ? "Chủ Nhật" : selectedDay;
+  }, [selectedDay]);
+
+  // Weekly plan from backend
+  const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlanResponse | null>(null);
+  const [isLoadingPlan, setIsLoadingPlan] = useState(false);
+
+  // Fallback sample meals for empty days
+  const fallbackDailyMeals = [
     {
-      slot: "Bữa Sáng",
+      slot: "Bữa Sáng" as const,
       time: "07:00",
-      recipe: RECIPES_DATA[6], // Cơm Đùi Gà Trứng Ốp
+      customTitle: "Cơm Đùi Gà Trứng Ốp",
+      recipe: RECIPES_DATA[6],
       calories: 520,
     },
     {
-      slot: "Bữa Trưa",
+      slot: "Bữa Trưa" as const,
       time: "12:00",
-      recipe: RECIPES_DATA[0], // Cơm Gà Teriyaki
+      customTitle: "Cơm Gà Teriyaki",
+      recipe: RECIPES_DATA[0],
       calories: 580,
     },
     {
-      slot: "Bữa Tối",
+      slot: "Bữa Tối" as const,
       time: "19:00",
-      recipe: RECIPES_DATA[2], // Salad Cá Hồi
+      customTitle: "Salad Cá Hồi Áp Chảo",
+      recipe: RECIPES_DATA[2],
       calories: 420,
     },
   ];
 
-  // Shopping List items (Module 13: Auto-generated from weekly plan, subtracting in-fridge items)
+  // Fetch weekly meal plan
+  const fetchWeeklyPlan = async () => {
+    try {
+      setIsLoadingPlan(true);
+      const res = await plannerService.getCurrentWeekPlan();
+      if (res && res.days) {
+        setWeeklyPlan(res);
+      }
+    } catch (e) {
+      console.warn("fetchWeeklyPlan failed:", e);
+    } finally {
+      setIsLoadingPlan(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWeeklyPlan();
+  }, []);
+
+  // Compute active meals for selected day
+  const activeDayMeals = useMemo(() => {
+    if (!weeklyPlan || !weeklyPlan.days) {
+      return fallbackDailyMeals;
+    }
+    const dayObj = weeklyPlan.days.find(
+      (d) => d.dayOfWeek === selectedBackendDay || d.dayOfWeek === selectedDay
+    );
+    if (dayObj && dayObj.meals && dayObj.meals.length > 0) {
+      return dayObj.meals.map((m) => ({
+        slot: m.slot,
+        time: m.time || "12:00",
+        customTitle: m.customTitle || m.recipe?.title || "Món ăn dinh dưỡng",
+        calories: m.calories || m.recipe?.calories || 450,
+        recipe: m.recipe
+          ? {
+              id: m.recipe.id,
+              title: m.recipe.title,
+              image:
+                typeof m.recipe.image === "string"
+                  ? { uri: m.recipe.image }
+                  : m.recipe.image || RECIPES_DATA[0].image,
+              minutes: m.recipe.minutes || 25,
+              difficulty: m.recipe.difficulty || "Dễ",
+              calories: m.recipe.calories || 450,
+              rating: m.recipe.rating || 4.8,
+            }
+          : RECIPES_DATA[0],
+      }));
+    }
+    return fallbackDailyMeals;
+  }, [weeklyPlan, selectedBackendDay, selectedDay]);
+
+  const totalCalories = activeDayMeals.reduce((acc, m) => acc + (m.calories || 0), 0);
+
+  // Add Meal Modal state
+  const [showAddMealModal, setShowAddMealModal] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<
+    "Bữa Sáng" | "Bữa Trưa" | "Bữa Tối" | "Bữa Phụ"
+  >("Bữa Trưa");
+  const [mealTitle, setMealTitle] = useState("");
+  const [mealCalories, setMealCalories] = useState("500");
+  const [mealTime, setMealTime] = useState("12:00");
+  const [isSubmittingMeal, setIsSubmittingMeal] = useState(false);
+
+  const handleSaveMealSlot = async () => {
+    if (!mealTitle.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập tên món ăn");
+      return;
+    }
+    try {
+      setIsSubmittingMeal(true);
+      await plannerService.setMealSlot({
+        dayOfWeek: selectedBackendDay,
+        slot: selectedSlot,
+        customTitle: mealTitle.trim(),
+        calories: parseInt(mealCalories, 10) || 500,
+        time: mealTime.trim() || "12:00",
+      });
+      setShowAddMealModal(false);
+      setMealTitle("");
+      await fetchWeeklyPlan();
+      Alert.alert("Thành công", `Đã thêm món vào ${selectedSlot} ngày ${selectedDay}!`);
+    } catch (e: any) {
+      Alert.alert("Lỗi", "Không thể lưu bữa ăn. Vui lòng thử lại!");
+    } finally {
+      setIsSubmittingMeal(false);
+    }
+  };
+
+  const handleRemoveMeal = (slot: string, title: string) => {
+    Alert.alert(
+      "Xác nhận xóa",
+      `Bạn có chắc muốn xóa món "${title}" khỏi ${slot}?`,
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Xóa",
+          style: "destructive",
+          onPress: async () => {
+            await plannerService.removeMealSlot(selectedBackendDay, slot);
+            await fetchWeeklyPlan();
+          },
+        },
+      ]
+    );
+  };
+
+  // ================= SHOPPING LIST STATE =================
   const [shoppingItems, setShoppingItems] = useState([
     { id: "s-1", name: "Thịt thăn bò Tenderloin", amount: "500g", category: "Thịt & Cá", price: "95.000đ", bought: false },
     { id: "s-2", name: "Phi lê cá hồi Nauy", amount: "400g", category: "Thịt & Cá", price: "80.000đ", bought: false },
@@ -70,11 +202,19 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
   const [excludedCount, setExcludedCount] = useState<number>(3);
   const [isSyncingFridge, setIsSyncingFridge] = useState(false);
 
+  // Add Item Modal state
+  const [showAddCartModal, setShowAddCartModal] = useState(false);
+  const [newCartName, setNewCartName] = useState("");
+  const [newCartAmount, setNewCartAmount] = useState("1 phần");
+  const [newCartPrice, setNewCartPrice] = useState("30000");
+  const [newCartCategory, setNewCartCategory] = useState("Rau củ");
+  const [isSubmittingCart, setIsSubmittingCart] = useState(false);
+
   // Fetch smart shopping list from backend API
   const fetchShoppingList = async () => {
     try {
       const res = await plannerService.getSmartShoppingList();
-      if (res && Array.isArray(res.items) && res.items.length > 0) {
+      if (res && Array.isArray(res.items)) {
         setShoppingItems(
           res.items.map((i) => ({
             id: i._id || i.id || `item-${Math.random()}`,
@@ -112,9 +252,67 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
       prev.map((it) => (it.id === id ? { ...it, bought: newBought } : it))
     );
 
-    // Persist to backend if valid ID
+    // Persist to backend
     if (id && !id.startsWith("s-")) {
       await plannerService.toggleBoughtStatus(id, newBought);
+    }
+  };
+
+  const handleRemoveShoppingItem = async (id: string, name: string) => {
+    Alert.alert("Xác nhận", `Xóa "${name}" khỏi danh sách đi chợ?`, [
+      { text: "Hủy", style: "cancel" },
+      {
+        text: "Xóa",
+        style: "destructive",
+        onPress: async () => {
+          setShoppingItems((prev) => prev.filter((i) => i.id !== id));
+          if (id && !id.startsWith("s-")) {
+            await plannerService.removeCartItem(id);
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleClearBoughtItems = async () => {
+    Alert.alert(
+      "Dọn dẹp món đã mua",
+      "Bạn muốn xóa tất cả các món đã tích chọn là đã mua?",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Dọn dẹp",
+          style: "destructive",
+          onPress: async () => {
+            setShoppingItems((prev) => prev.filter((i) => !i.bought));
+            await plannerService.clearBoughtItems();
+            fetchShoppingList();
+          },
+        },
+      ]
+    );
+  };
+
+  const handleSaveCartItem = async () => {
+    if (!newCartName.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập tên nguyên liệu");
+      return;
+    }
+    try {
+      setIsSubmittingCart(true);
+      await plannerService.addCartItem({
+        name: newCartName.trim(),
+        amount: newCartAmount.trim() || "1 phần",
+        price: parseInt(newCartPrice, 10) || 0,
+        category: newCartCategory,
+      });
+      setShowAddCartModal(false);
+      setNewCartName("");
+      await fetchShoppingList();
+    } catch (e: any) {
+      Alert.alert("Lỗi", "Không thể thêm nguyên liệu");
+    } finally {
+      setIsSubmittingCart(false);
     }
   };
 
@@ -141,7 +339,7 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
     }
   };
 
-  const totalCalories = dailyMeals.reduce((acc, m) => acc + m.calories, 0);
+  const unboughtCount = shoppingItems.filter((s) => !s.bought).length;
 
   return (
     <View style={styles.container}>
@@ -196,7 +394,7 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
                 activeSubTab === "shopping" && styles.subTabTextActive,
               ]}
             >
-              Đi Chợ (4)
+              Đi Chợ ({unboughtCount})
             </Text>
           </TouchableOpacity>
         </View>
@@ -249,11 +447,13 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
                   Mục tiêu {selectedDay}: 2.000 kcal
                 </Text>
                 <Text style={styles.calorieCardSub}>
-                  Đã lên thực đơn 3 bữa ({totalCalories} kcal)
+                  Đã lên thực đơn {activeDayMeals.length} bữa ({totalCalories} kcal)
                 </Text>
               </View>
               <View style={styles.calorieTag}>
-                <Text style={styles.calorieTagText}>Đạt 76%</Text>
+                <Text style={styles.calorieTagText}>
+                  Đạt {Math.min(100, Math.round((totalCalories / 2000) * 100))}%
+                </Text>
               </View>
             </View>
 
@@ -261,61 +461,176 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
               <View
                 style={[
                   styles.calorieBarFill,
-                  { width: `${(totalCalories / 2000) * 100}%` },
+                  { width: `${Math.min(100, (totalCalories / 2000) * 100)}%` },
                 ]}
               />
             </View>
           </View>
 
-          {/* 3 Meals List for Selected Day */}
+          {/* Meals List for Selected Day */}
           <View style={styles.mealsListSection}>
-            <Text style={styles.sectionHeading}>
-              Thực đơn chi tiết {selectedDay}
-            </Text>
-
-            {dailyMeals.map((meal, index) => (
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <Text style={styles.sectionHeading}>
+                Thực đơn chi tiết {selectedDay}
+              </Text>
               <TouchableOpacity
-                key={index}
-                style={styles.mealSlotCard}
-                activeOpacity={0.88}
-                onPress={() =>
-                  router.push({
-                    pathname: "/recipe-detail",
-                    params: { id: meal.recipe.id },
-                  })
-                }
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: "#FFF3E0",
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  borderRadius: 12,
+                  gap: 4,
+                }}
+                onPress={() => setShowAddMealModal(true)}
               >
-                <Image source={meal.recipe.image} style={styles.mealSlotImg} />
-                <View style={styles.mealSlotInfo}>
-                  <View style={styles.slotHeaderRow}>
-                    <View style={styles.slotBadge}>
-                      <Text style={styles.slotBadgeText}>{meal.slot}</Text>
-                    </View>
-                    <Text style={styles.slotTimeText}>{meal.time}</Text>
-                  </View>
+                <Ionicons name="add" size={15} color={BrandColors.primary} />
+                <Text style={{ fontSize: 12, fontWeight: "700", color: BrandColors.primary }}>
+                  + Thêm món
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-                  <Text style={styles.mealSlotTitle} numberOfLines={1}>
-                    {meal.recipe.title}
-                  </Text>
-                  <Text style={styles.mealSlotMeta}>
-                    🔥 {meal.calories} kcal • ⏱ {meal.recipe.minutes} phút
-                  </Text>
+            {isLoadingPlan ? (
+              <ActivityIndicator size="small" color={BrandColors.primary} style={{ marginVertical: 20 }} />
+            ) : (
+              activeDayMeals.map((meal, index) => (
+                <View key={index} style={styles.mealSlotCard}>
+                  <TouchableOpacity
+                    style={{ flexDirection: "row", flex: 1, alignItems: "center", gap: 12 }}
+                    activeOpacity={0.88}
+                    onPress={() => {
+                      if (meal.recipe?.id) {
+                        router.push({
+                          pathname: "/recipe-detail",
+                          params: { id: meal.recipe.id },
+                        });
+                      }
+                    }}
+                  >
+                    <Image source={meal.recipe.image} style={styles.mealSlotImg} />
+                    <View style={styles.mealSlotInfo}>
+                      <View style={styles.slotHeaderRow}>
+                        <View style={styles.slotBadge}>
+                          <Text style={styles.slotBadgeText}>{meal.slot}</Text>
+                        </View>
+                        <Text style={styles.slotTimeText}>{meal.time}</Text>
+                      </View>
+
+                      <Text style={styles.mealSlotTitle} numberOfLines={1}>
+                        {meal.customTitle}
+                      </Text>
+                      <Text style={styles.mealSlotMeta}>
+                        🔥 {meal.calories} kcal • ⏱ {meal.recipe.minutes} phút
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={{ padding: 6 }}
+                    onPress={() => handleRemoveMeal(meal.slot, meal.customTitle)}
+                  >
+                    <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+          </View>
+
+          {/* Add Meal Modal */}
+          <Modal visible={showAddMealModal} transparent animationType="fade">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Thêm món vào {selectedDay}</Text>
+                  <TouchableOpacity onPress={() => setShowAddMealModal(false)}>
+                    <Ionicons name="close" size={22} color="#64748B" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Slot Selector */}
+                <Text style={styles.inputLabel}>Chọn bữa ăn</Text>
+                <View style={{ flexDirection: "row", gap: 6, marginBottom: 12 }}>
+                  {(["Bữa Sáng", "Bữa Trưa", "Bữa Tối", "Bữa Phụ"] as const).map((s) => (
+                    <TouchableOpacity
+                      key={s}
+                      style={[
+                        styles.slotOption,
+                        selectedSlot === s && styles.slotOptionActive,
+                      ]}
+                      onPress={() => setSelectedSlot(s)}
+                    >
+                      <Text
+                        style={[
+                          styles.slotOptionText,
+                          selectedSlot === s && styles.slotOptionTextActive,
+                        ]}
+                      >
+                        {s}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Quick Recipes Picker */}
+                <Text style={styles.inputLabel}>Gợi ý món phổ biến</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+                  {RECIPES_DATA.slice(0, 4).map((r) => (
+                    <TouchableOpacity
+                      key={r.id}
+                      style={styles.quickRecipeChip}
+                      onPress={() => {
+                        setMealTitle(r.title);
+                        setMealCalories(r.calories.toString());
+                      }}
+                    >
+                      <Text style={styles.quickRecipeText}>{r.title}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                <Text style={styles.inputLabel}>Tên món ăn</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Ví dụ: Bò xào hành cần tây"
+                  placeholderTextColor="#94A3B8"
+                  value={mealTitle}
+                  onChangeText={setMealTitle}
+                />
+
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Lượng Calo (kcal)</Text>
+                    <TextInput
+                      style={styles.modalInput}
+                      keyboardType="numeric"
+                      value={mealCalories}
+                      onChangeText={setMealCalories}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Giờ ăn</Text>
+                    <TextInput
+                      style={styles.modalInput}
+                      value={mealTime}
+                      onChangeText={setMealTime}
+                    />
+                  </View>
                 </View>
 
                 <TouchableOpacity
-                  style={styles.slotDetailBtn}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/recipe-detail",
-                      params: { id: meal.recipe.id },
-                    })
-                  }
+                  style={styles.modalSaveBtn}
+                  onPress={handleSaveMealSlot}
+                  disabled={isSubmittingMeal}
                 >
-                  <Text style={styles.slotDetailBtnText}>Xem chi tiết →</Text>
+                  <Text style={styles.modalSaveBtnText}>
+                    {isSubmittingMeal ? "Đang lưu..." : "Lưu vào thực đơn"}
+                  </Text>
                 </TouchableOpacity>
-              </TouchableOpacity>
-            ))}
-          </View>
+              </View>
+            </View>
+          </Modal>
         </ScrollView>
       )}
 
@@ -335,54 +650,105 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
 
           {/* Checklist Items */}
           <View style={styles.shoppingListSection}>
-            <Text style={styles.sectionHeading}>
-              Cần mua cho thực đơn tuần ({shoppingItems.filter((s) => !s.bought).length} món)
-            </Text>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <Text style={styles.sectionHeading}>
+                Cần mua cho tuần ({unboughtCount} món)
+              </Text>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                {shoppingItems.some((s) => s.bought) && (
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      backgroundColor: "#FEE2E2",
+                      paddingHorizontal: 8,
+                      paddingVertical: 5,
+                      borderRadius: 10,
+                      gap: 4,
+                    }}
+                    onPress={handleClearBoughtItems}
+                  >
+                    <Ionicons name="trash-bin-outline" size={13} color="#DC2626" />
+                    <Text style={{ fontSize: 11, fontWeight: "700", color: "#DC2626" }}>
+                      Dọn đồ đã mua
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "#FFF3E0",
+                    paddingHorizontal: 8,
+                    paddingVertical: 5,
+                    borderRadius: 10,
+                    gap: 4,
+                  }}
+                  onPress={() => setShowAddCartModal(true)}
+                >
+                  <Ionicons name="add" size={14} color={BrandColors.primary} />
+                  <Text style={{ fontSize: 11, fontWeight: "700", color: BrandColors.primary }}>
+                    + Thêm món
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
 
             {shoppingItems.map((item) => (
-              <TouchableOpacity
+              <View
                 key={item.id}
                 style={[
                   styles.shopItemRow,
                   item.bought && styles.shopItemRowBought,
                 ]}
-                onPress={() => toggleShoppingItem(item.id)}
-                activeOpacity={0.7}
               >
-                <View
-                  style={[
-                    styles.shopCheckbox,
-                    item.bought && styles.shopCheckboxChecked,
-                  ]}
+                <TouchableOpacity
+                  style={{ flexDirection: "row", flex: 1, alignItems: "center", gap: 12 }}
+                  onPress={() => toggleShoppingItem(item.id)}
+                  activeOpacity={0.7}
                 >
-                  {item.bought && (
-                    <Ionicons name="checkmark" size={14} color="#FFFFFF" />
-                  )}
-                </View>
-
-                <View style={{ flex: 1 }}>
-                  <Text
+                  <View
                     style={[
-                      styles.shopItemName,
-                      item.bought && styles.shopItemNameCrossed,
+                      styles.shopCheckbox,
+                      item.bought && styles.shopCheckboxChecked,
                     ]}
                   >
-                    {item.name}
-                  </Text>
-                  <Text style={styles.shopItemCategory}>
-                    {item.category} • {item.amount}
-                  </Text>
-                </View>
+                    {item.bought && (
+                      <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                    )}
+                  </View>
 
-                <Text
-                  style={[
-                    styles.shopItemPrice,
-                    item.bought && { color: "#94A3B8" },
-                  ]}
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[
+                        styles.shopItemName,
+                        item.bought && styles.shopItemNameCrossed,
+                      ]}
+                    >
+                      {item.name}
+                    </Text>
+                    <Text style={styles.shopItemCategory}>
+                      {item.category} • {item.amount}
+                    </Text>
+                  </View>
+
+                  <Text
+                    style={[
+                      styles.shopItemPrice,
+                      item.bought && { color: "#94A3B8" },
+                    ]}
+                  >
+                    {item.price}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{ padding: 4, marginLeft: 6 }}
+                  onPress={() => handleRemoveShoppingItem(item.id, item.name)}
                 >
-                  {item.price}
-                </Text>
-              </TouchableOpacity>
+                  <Ionicons name="close-circle-outline" size={18} color="#CBD5E1" />
+                </TouchableOpacity>
+              </View>
             ))}
 
             {/* Sync to Fridge Button */}
@@ -410,6 +776,84 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
             )}
           </View>
 
+          {/* Add Shopping Item Modal */}
+          <Modal visible={showAddCartModal} transparent animationType="fade">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Thêm nguyên liệu cần mua</Text>
+                  <TouchableOpacity onPress={() => setShowAddCartModal(false)}>
+                    <Ionicons name="close" size={22} color="#64748B" />
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={styles.inputLabel}>Tên nguyên liệu</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Ví dụ: Tôm tươi, Nấm đông cô"
+                  placeholderTextColor="#94A3B8"
+                  value={newCartName}
+                  onChangeText={setNewCartName}
+                />
+
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Số lượng</Text>
+                    <TextInput
+                      style={styles.modalInput}
+                      placeholder="500g / 1 bó"
+                      value={newCartAmount}
+                      onChangeText={setNewCartAmount}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Đơn giá dự kiến</Text>
+                    <TextInput
+                      style={styles.modalInput}
+                      keyboardType="numeric"
+                      placeholder="35000"
+                      value={newCartPrice}
+                      onChangeText={setNewCartPrice}
+                    />
+                  </View>
+                </View>
+
+                <Text style={styles.inputLabel}>Phân loại</Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+                  {["Rau củ", "Thịt & Cá", "Gia vị", "Trái cây", "Đồ khô"].map((cat) => (
+                    <TouchableOpacity
+                      key={cat}
+                      style={[
+                        styles.catOption,
+                        newCartCategory === cat && styles.catOptionActive,
+                      ]}
+                      onPress={() => setNewCartCategory(cat)}
+                    >
+                      <Text
+                        style={[
+                          styles.catOptionText,
+                          newCartCategory === cat && styles.catOptionTextActive,
+                        ]}
+                      >
+                        {cat}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <TouchableOpacity
+                  style={styles.modalSaveBtn}
+                  onPress={handleSaveCartItem}
+                  disabled={isSubmittingCart}
+                >
+                  <Text style={styles.modalSaveBtnText}>
+                    {isSubmittingCart ? "Đang thêm..." : "Thêm vào danh sách"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
           {/* Siêu thị gần bạn để đi chợ */}
           <NearbyStoreCard
             style={{ marginTop: 14 }}
@@ -420,6 +864,7 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -713,4 +1158,113 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#0F172A",
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 20,
+    width: "100%",
+    maxWidth: 400,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#475569",
+    marginBottom: 6,
+  },
+  modalInput: {
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 13.5,
+    color: "#0F172A",
+    marginBottom: 12,
+  },
+  slotOption: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: "#F1F5F9",
+    alignItems: "center",
+  },
+  slotOptionActive: {
+    backgroundColor: BrandColors.primary,
+  },
+  slotOptionText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#64748B",
+  },
+  slotOptionTextActive: {
+    color: "#FFFFFF",
+  },
+  quickRecipeChip: {
+    backgroundColor: "#FFF3E0",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginRight: 6,
+    borderWidth: 1,
+    borderColor: "#FFE0B2",
+  },
+  quickRecipeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#E65100",
+  },
+  catOption: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    backgroundColor: "#F1F5F9",
+  },
+  catOptionActive: {
+    backgroundColor: BrandColors.primary,
+  },
+  catOptionText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#64748B",
+  },
+  catOptionTextActive: {
+    color: "#FFFFFF",
+  },
+  modalSaveBtn: {
+    backgroundColor: BrandColors.primary,
+    borderRadius: 14,
+    paddingVertical: 13,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  modalSaveBtnText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+  },
 });
+

@@ -164,6 +164,59 @@ export const plannerService = {
   },
 
   /**
+   * Xóa món ăn khỏi một slot bữa ăn trong tuần
+   * DELETE /api/v1/planner/meals?dayOfWeek=...&slot=...&weekDate=...
+   */
+  removeMealSlot: async (
+    dayOfWeek: string,
+    slot: string,
+    weekDate?: string
+  ): Promise<WeeklyPlanResponse | null> => {
+    try {
+      const params = new URLSearchParams({ dayOfWeek, slot });
+      if (weekDate) params.append("weekDate", weekDate);
+      const res = await apiClient.delete<{ data: WeeklyPlanResponse }>(
+        `/planner/meals?${params.toString()}`
+      );
+      return res.data?.data || (res.data as any);
+    } catch (e) {
+      console.warn("plannerService.removeMealSlot failed:", e);
+      return null;
+    }
+  },
+
+  /**
+   * Xóa một nguyên liệu khỏi danh sách đi chợ
+   * DELETE /api/v1/planner/shopping-list/:id
+   */
+  removeCartItem: async (itemId: string): Promise<boolean> => {
+    try {
+      await apiClient.delete(`/planner/shopping-list/${itemId}`);
+      return true;
+    } catch (e) {
+      console.warn("plannerService.removeCartItem failed:", e);
+      return false;
+    }
+  },
+
+  /**
+   * Xóa tất cả các món đã mua (bought: true) khỏi giỏ đi chợ
+   * DELETE /api/v1/planner/shopping-list/clear-bought
+   */
+  clearBoughtItems: async (): Promise<number> => {
+    try {
+      const res = await apiClient.delete<{ data: { deletedCount: number } }>(
+        "/planner/shopping-list/clear-bought"
+      );
+      const data = res.data?.data || (res.data as any);
+      return data?.deletedCount ?? 0;
+    } catch (e) {
+      console.warn("plannerService.clearBoughtItems failed:", e);
+      return 0;
+    }
+  },
+
+  /**
    * 1-Click Đồng bộ các nguyên liệu đã mua (bought: true) vào kho Tủ Lạnh
    * POST /api/v1/planner/sync-to-fridge
    */
@@ -183,3 +236,4 @@ export const plannerService = {
     }
   },
 };
+

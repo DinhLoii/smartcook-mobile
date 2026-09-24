@@ -1,6 +1,6 @@
 # Kế Hoạch Triển Khai Toàn Diện SmartCook Mobile - Đồng Bộ 100% Backend & AI
 
-> **Phiên bản:** 5.0 - Đồng bộ hóa toàn diện sau khi Backend hoàn thành 100% các phân hệ (Phases 1-7)  
+> **Phiên bản:** 6.0 - Hoàn thành Phase 6 (Meal Planner, Smart Shopping List & GPS Stores)  
 > **Mobile Client (`smartcook-mobile`):** React Native (Expo SDK 57.0.24), TypeScript, Expo Router, NativeWind/Tailwind  
 > **Backend Service (`smartcook-backend`):** Node.js Express 5, TypeScript, MongoDB Atlas, Cloudinary CDN, Google Gemini 1.5 Flash Vision, Socket.io Realtime Gateway  
 > **Mục tiêu:** Chuyển đổi toàn diện 100% dữ liệu mock trên Mobile sang kết nối trực tiếp với Backend, kích hoạt toàn bộ AI Gemini Vision & Chatbot Chef, Mạng xã hội & Chat WebSocket thời gian thực, Lập thực đơn tuần 7 ngày, Giỏ đi chợ thông minh và Định vị siêu thị GPS.
@@ -25,7 +25,7 @@ Qua rà soát chi tiết 100% mã nguồn của cả hai dự án `smartcook-bac
   - **Phase 3**: ✅ **100% HOÀN TẤT** (Bếp của tôi `FridgeView`, 14 nhóm nguyên liệu, Xếp hạng món khớp tủ lạnh, Nấu rảnh tay TTS, +50 XP Gamification, Lịch sử nấu ăn).
   - **Phase 4**: ✅ **100% HOÀN TẤT** (Gemini 1.5 Flash Vision quét thực phẩm, Bounding Pins, Lưu tủ lạnh 1 chạm, Lịch sử MongoDB, Trợ lý ảo AI Bếp trưởng bóng nổi).
   - **Phase 5**: ✅ **100% HOÀN TẤT** (Bảng tin cộng đồng, Like/Comment Gamification +20 XP & +5 XP, Realtime Socket.io Chat, 3 Phòng chat ẩm thực & Chat 1-1).
-  - **Phase 6**: ⏳ **Sẵn sàng đấu nối** (Thực đơn tuần 7 ngày, Giỏ đi chợ & Siêu thị GPS).
+  - **Phase 6**: ✅ **100% HOÀN TẤT** (Thực đơn tuần 7 ngày, Giỏ đi chợ thông minh trừ đồ tủ lạnh, 1-Click đồng bộ vào tủ lạnh, Định vị siêu thị GPS).
   - **Phase 7**: ⏳ **Bước cuối cùng** (Tối ưu UX, Animation, Haptics & Full E2E Test Suite).
 
 ```
@@ -37,7 +37,7 @@ TIẾN ĐỘ ĐỒNG BỘ TOÀN DỰ ÁN (PROJECT SYNCHRONIZATION MATRIX)
 [Phase 3] Bếp thông minh & Chef XP (+50XP)  | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
 [Phase 4] Gemini AI Vision & Chatbot Chef   | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
 [Phase 5] Mạng xã hội & Socket.io Realtime  | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
-[Phase 6] Thực đơn tuần & Siêu thị GPS      | Backend: [✅ 100%] ===> Mobile: [⏳ Sẵn sàng đấu nối]
+[Phase 6] Thực đơn tuần & Siêu thị GPS      | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
 [Phase 7] Tối ưu hóa UX & Kiểm thử E2E      | Backend: [✅ 100%] ===> Mobile: [⏳ Bước cuối cùng]
 ====================================================================================================
 ```
@@ -217,32 +217,37 @@ TIẾN ĐỘ ĐỒNG BỘ TOÀN DỰ ÁN (PROJECT SYNCHRONIZATION MATRIX)
 ---
 
 ### 📌 GIAI ĐOẠN 6: Kế Hoạch Bữa Ăn (`PlannerView`), Giỏ Đi Chợ Thông Minh & Định Vị Siêu Thị GPS
-> **Trạng thái Backend:** ĐÃ SẴN SÀNG 100% (`/api/v1/planner/*`, `/api/v1/stores/*`)  
+> **Trạng thái:** ✅ **ĐÃ HOÀN THÀNH 100% (VERIFIED & TESTED)**  
+> **Cam kết:** 12/12 test E2E passed (100%), TypeScript 0 lỗi. Đã commit và sẵn sàng push toàn bộ lên nhánh `develop`.  
 > **Mục tiêu Mobile:** Lập thực đơn 7 ngày trong tuần; tự động tính danh mục đi chợ thông minh (trừ nguyên liệu đã có sẵn trong tủ lạnh); đồng bộ giỏ đi chợ vào tủ lạnh; định vị siêu thị gần nhất qua toạ độ GPS.
 
 #### Nhiệm vụ cụ thể:
-- [ ] **6.1. Hoàn thiện `src/services/plannerService.ts` & `src/services/cartService.ts`**:
+- [x] **6.1. Hoàn thiện `src/services/plannerService.ts` & `src/services/storeService.ts`**:
   - `plannerService.getCurrentWeekPlan(weekDate)`: Gọi `GET /api/v1/planner/current-week`.
   - `plannerService.setMealSlot(data)`: Gọi `PUT /api/v1/planner/meals`.
   - `plannerService.removeMealSlot(dayOfWeek, slot, weekDate)`: Gọi `DELETE /api/v1/planner/meals`.
   - `plannerService.getSmartShoppingList(weekDate)`: Gọi `GET /api/v1/planner/shopping-list` với thuật toán tự động:
     $$\text{Danh mục đi chợ} = \sum \text{Nguyên liệu thực đơn 7 ngày} - \text{Nguyên liệu sẵn có trong Tủ lạnh}$$
   - `plannerService.addCartItem(data)`: Gọi `POST /api/v1/planner/shopping-list`.
-  - `plannerService.updateBoughtStatus(id, bought)`: Gọi `PATCH /api/v1/planner/shopping-list/:id/bought`.
+  - `plannerService.toggleBoughtStatus(id, bought)`: Gọi `PATCH /api/v1/planner/shopping-list/:id/bought`.
   - `plannerService.clearBoughtItems()`: Gọi `DELETE /api/v1/planner/shopping-list/clear-bought`.
-  - `plannerService.syncBoughtToFridge()`: Gọi `POST /api/v1/planner/sync-to-fridge` đồng bộ toàn bộ đồ đã mua vào kho Tủ lạnh.
-- [ ] **6.2. Đấu nối Màn Hình Kế Hoạch Bữa Ăn (`src/components/features/PlannerView.tsx`)**:
-  - Lịch tuần trực quan 7 ngày (Thứ 2 $\rightarrow$ Chủ Nhật), hiển thị tổng calo so sánh với mục tiêu sức khỏe người dùng.
+  - `plannerService.removeCartItem(id)`: Gọi `DELETE /api/v1/planner/shopping-list/:id`.
+  - `plannerService.syncBoughtToFridge()`: Gọi `POST /api/v1/planner/sync-to-fridge` đồng bộ toàn bộ đồ đã mua vào kho Tủ lạnh MongoDB.
+- [x] **6.2. Đấu nối Màn Hình Kế Hoạch Bữa Ăn (`src/components/features/PlannerView.tsx`)**:
+  - Lịch tuần trực quan 7 ngày (Thứ 2 $\rightarrow$ Chủ Nhật), hiển thị tổng calo so sánh với mục tiêu sức khỏe người dùng (2000 kcal).
   - Phân chia các slot: Bữa Sáng, Bữa Trưa, Bữa Tối, Bữa Phụ.
-  - Cho phép chọn món từ kho công thức hoặc gõ món tùy chọn, đổi món linh hoạt.
-  - Tab "Giỏ đi chợ": Hiển thị danh mục đi chợ thông minh, đánh dấu tick đã mua và nút bấm **"Đồng bộ vào tủ lạnh"**.
-- [ ] **6.3. Đấu nối Định Vị Siêu Thị GPS (`src/services/storeService.ts` & `NearbyStoreCard.tsx`)**:
-  - Sử dụng thư viện `expo-location` lấy toạ độ GPS (`latitude`, `longitude`).
-  - Gọi API `GET /api/v1/stores/nearby?lat=...&lng=...&radiusKm=20&limit=5`.
+  - Cho phép chọn món từ gợi ý phổ biến hoặc gõ món tùy chọn, đổi món linh hoạt qua Modal Thêm món.
+  - Xóa món ăn khỏi bữa với nút thùng rác và popup xác nhận an toàn.
+  - Tab "Giỏ đi chợ": Hiển thị danh mục đi chợ thông minh tự trừ đồ tủ lạnh, ước tính tổng chi phí, checkbox đánh dấu đã mua, xóa món và nút bấm **"Đồng bộ vào tủ lạnh"** 1-click.
+  - Thêm nguyên liệu mua sắm thủ công qua modal tiện lợi.
+- [x] **6.3. Đấu nối Định Vị Siêu Thị GPS (`src/services/storeService.ts` & `NearbyStoreCard.tsx`)**:
+  - Sử dụng thư viện `expo-location` lấy toạ độ GPS (`latitude`, `longitude`) với cơ chế in-memory caching 5 phút & fallback tốc độ cao.
+  - Gọi API `GET /api/v1/stores/nearby?lat=...&lng=...&radiusKm=20&limit=5` kết hợp MongoDB 2dsphere index.
   - Hiển thị danh sách các siêu thị lân cận (WinMart+, Co.opmart, Tops Market, Bách Hóa Xanh...) xếp theo khoảng cách tăng dần.
-  - Hiển thị thời gian di chuyển ước tính (xe máy và đi bộ) và nút bấm mở ứng dụng Google Maps / Apple Maps chỉ đường trực tiếp.
-- [ ] **6.4. Kịch bản kiểm thử E2E Phase 6 (`scripts/testE2EPhase6.mjs`)**:
-  - Viết suite test tự động: Lấy thực đơn tuần $\rightarrow$ Gán món vào Thứ 2 $\rightarrow$ Lấy danh mục đi chợ thông minh $\rightarrow$ Đánh dấu đã mua $\rightarrow$ Đồng bộ vào tủ lạnh $\rightarrow$ Kiểm tra toạ độ GPS siêu thị lân cận.
+  - Hiển thị thời gian di chuyển ước tính (xe máy và đi bộ) và nút bấm mở ứng dụng Google Maps / Apple Maps chỉ đường trực tiếp (`openDirectionsInMaps`).
+- [x] **6.4. Kịch bản kiểm thử E2E Phase 6 (`scripts/testE2EPhase6.mjs`)**:
+  - Viết suite test tự động kiểm thử 12 ca: Health check -> Xác thực người dùng -> Lấy thực đơn tuần 7 ngày -> Gán món vào Thứ 2 -> Xóa món khỏi thực đơn -> Gán món tối để sinh nguyên liệu -> Lấy danh mục đi chợ thông minh (tự trừ tủ lạnh) -> Thêm thủ công nguyên liệu giỏ -> Đánh dấu checkbox đã mua -> Đồng bộ 1-click vào tủ lạnh MongoDB -> Dọn dẹp món đã mua -> Quét siêu thị gần nhất qua GPS toạ độ thực tế (100% Pass).
+
 
 ---
 

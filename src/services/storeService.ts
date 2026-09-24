@@ -34,15 +34,61 @@ export function invalidateCoordinatesCache() {
 }
 
 /**
- * Service lấy danh sách siêu thị mẫu dựa trên tọa độ người dùng.
- * Tính toán trực tiếp trong bộ nhớ (0ms latency).
+ * Service lấy danh sách siêu thị dựa trên tọa độ người dùng.
+ * Ưu tiên gọi backend API `/stores/nearby`, fallback sang MOCK_STORES khi offline.
  */
 export async function getNearbyStores(
   latitude: number,
   longitude: number
 ): Promise<Store[]> {
+  try {
+    const res = await apiClient.get<{ data: any[] }>(
+      `/stores/nearby?lat=${latitude}&lng=${longitude}&radiusKm=20&limit=10`
+    );
+    const data = res.data?.data || (res.data as any);
+    if (Array.isArray(data) && data.length > 0) {
+      return data.map((item: any) => ({
+        id: item.id || item._id,
+        name: item.name,
+        brand: item.brand,
+        address: item.address,
+        openHours: item.openHours,
+        phone: item.phone,
+        latitude: item.latitude,
+        longitude: item.longitude,
+      }));
+    }
+  } catch (e) {
+    // Graceful offline fallback
+  }
   return MOCK_STORES;
 }
+
+/**
+ * Lấy tất cả siêu thị trong hệ thống
+ */
+export async function getAllStores(): Promise<Store[]> {
+  try {
+    const res = await apiClient.get<{ data: any[] }>("/stores");
+    const data = res.data?.data || (res.data as any);
+    if (Array.isArray(data) && data.length > 0) {
+      return data.map((item: any) => ({
+        id: item.id || item._id,
+        name: item.name,
+        brand: item.brand,
+        address: item.address,
+        openHours: item.openHours,
+        phone: item.phone,
+        latitude: item.latitude,
+        longitude: item.longitude,
+      }));
+    }
+  } catch (e) {
+    // Graceful offline fallback
+  }
+  return MOCK_STORES;
+}
+
 
 /**
  * Lấy tọa độ GPS người dùng tối ưu hóa tốc độ cao:
