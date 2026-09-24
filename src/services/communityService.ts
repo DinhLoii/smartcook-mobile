@@ -1,10 +1,13 @@
 import {
   ChatMessage,
+  ChatRoom,
   CommunityAuthor,
   CommunityComment,
   CommunityPost,
   DirectConversation,
 } from "@/types";
+import { apiClient } from "./apiClient";
+import { socketService } from "./socketService";
 
 type Listener = () => void;
 
@@ -16,7 +19,7 @@ export const CURRENT_USER: CommunityAuthor = {
   isChef: true,
 };
 
-// Initial preset contacts / conversations for Messenger list
+// Initial preset contacts / conversations for Messenger list (fallback)
 const INITIAL_CONVERSATIONS: DirectConversation[] = [
   {
     id: "chef-lan",
@@ -60,34 +63,6 @@ const INITIAL_CONVERSATIONS: DirectConversation[] = [
     unreadCount: 0,
     isOnline: false,
   },
-  {
-    id: "chef-dung",
-    user: {
-      id: "chef-dung",
-      name: "Dũng Trần",
-      avatar: require("@/assets/images/pasta-bolognese.jpg"),
-      badge: "Mê Nấu Ăn",
-      isChef: false,
-    },
-    lastMessage: "Món mỳ Ý sốt bò bằm làm nhanh lắm, hôm nào bạn thử nhé!",
-    lastMessageTime: "3 giờ trước",
-    unreadCount: 0,
-    isOnline: false,
-  },
-  {
-    id: "u-2",
-    user: {
-      id: "u-2",
-      name: "Hoàng Minh",
-      avatar: require("@/assets/images/steak-asparagus.jpg"),
-      badge: "Yêu Bếp",
-      isChef: false,
-    },
-    lastMessage: "Cảm ơn bạn đã chỉ mình cách nêm nước sốt nhé ❤️",
-    lastMessageTime: "Hôm qua",
-    unreadCount: 0,
-    isOnline: true,
-  },
 ];
 
 const INITIAL_POSTS: CommunityPost[] = [
@@ -123,19 +98,6 @@ const INITIAL_POSTS: CommunityPost[] = [
         createdAt: "10 phút trước",
         likesCount: 3,
       },
-      {
-        id: "c-2",
-        author: {
-          id: "chef-lan",
-          name: "Lan Anh Nguyễn",
-          avatar: require("@/assets/images/hero-teriyaki-bowl.jpg"),
-          badge: "Master Chef",
-          isChef: true,
-        },
-        content: "Mình tự pha tỉ lệ: 2 xì dầu Kikkoman + 2 mirin + 1 rượu sake + 1 đường nâu nha @Hoàng Minh! Đun sôi lăn tăn là thơm lừng.",
-        createdAt: "5 phút trước",
-        likesCount: 5,
-      },
     ],
   },
   {
@@ -157,156 +119,284 @@ const INITIAL_POSTS: CommunityPost[] = [
     isSaved: false,
     commentsCount: 7,
     createdAt: "1 giờ trước",
-    comments: [
-      {
-        id: "c-3",
-        author: {
-          id: "u-3",
-          name: "Thanh Hằng",
-          avatar: require("@/assets/images/crispy-chicken.jpg"),
-          badge: "Học Nấu Ăn",
-        },
-        content: "Làm sao để áp chảo cá hồi mà không bị khô bã bên trong vậy bạn?",
-        createdAt: "30 phút trước",
-        likesCount: 1,
-      },
-    ],
-  },
-  {
-    id: "post-3",
-    author: {
-      id: "chef-mai",
-      name: "Mai Anh Cooking",
-      avatar: require("@/assets/images/steak-asparagus.jpg"),
-      badge: "Đầu Bếp Gia Đình",
-      isChef: false,
-    },
-    dishName: "Bít Tết Bò Tenderloin Kèm Măng Tây Nướng",
-    content:
-      "Kỷ niệm cuối tuần làm món Âu đổi gió cho ông xã. Miếng thịt bò mềm như bơ ăn kèm bơ tỏi hương thảo thơm nức. Măng tây nướng giữ nguyên độ giòn ngọt. Cả nhà chấm điểm 10/10 luôn ạ!",
-    images: [require("@/assets/images/steak-asparagus.jpg")],
-    tags: ["#KhoeMonNgon", "#MonAu", "#CuoiTuanVaoBep"],
-    likesCount: 215,
-    isLiked: false,
-    isSaved: false,
-    commentsCount: 24,
-    createdAt: "3 giờ trước",
-    comments: [
-      {
-        id: "c-4",
-        author: {
-          id: "u-4",
-          name: "Văn Đức",
-          avatar: require("@/assets/images/pasta-bolognese.jpg"),
-          badge: "Yêu Bếp",
-        },
-        content: "Nhìn màu thịt medium rare chuẩn nhà hàng 5 sao luôn chị ơi!",
-        createdAt: "2 giờ trước",
-        likesCount: 4,
-      },
-    ],
-  },
-  {
-    id: "post-4",
-    author: {
-      id: "chef-dung",
-      name: "Dũng Trần",
-      avatar: require("@/assets/images/pasta-bolognese.jpg"),
-      badge: "Mê Nấu Ăn",
-      isChef: false,
-    },
-    dishName: "Mỳ Ý Sốt Bò Bằm Phô Mai Parmesan",
-    content:
-      "Món ăn cứu cánh cho những ngày lười chỉ tốn đúng 20 phút chuẩn bị. Nước sốt cà chua hầm thịt bò bằm đậm đà, rắc thêm phô mai béo ngậy ai cũng mê.",
-    images: [require("@/assets/images/pasta-bolognese.jpg")],
-    tags: ["#MonNhanh", "#CongThucMoi", "#MienPhi"],
-    likesCount: 76,
-    isLiked: false,
-    isSaved: false,
-    commentsCount: 9,
-    createdAt: "5 giờ trước",
     comments: [],
   },
 ];
 
-const INITIAL_DIRECT_MESSAGES: Record<string, ChatMessage[]> = {
-  "direct-chef-lan": [
-    {
-      id: "dm-lan-1",
-      sender: {
-        id: "chef-lan",
-        name: "Lan Anh Nguyễn",
-        avatar: require("@/assets/images/hero-teriyaki-bowl.jpg"),
-        badge: "Master Chef",
-        isChef: true,
-      },
-      text: "Chào bạn! Mình thấy bạn xem món Cơm Bò Teriyaki. Bạn có thắc mắc gì về công thức không nè?",
-      timestamp: "08:10",
-      isMe: false,
-    },
-    {
-      id: "dm-lan-2",
-      sender: CURRENT_USER,
-      text: "Chào chị Lan Anh! Em muốn hỏi mua mirin ở đâu chuẩn vị Nhật ạ?",
-      timestamp: "08:12",
-      isMe: true,
-    },
-    {
-      id: "dm-lan-3",
-      sender: {
-        id: "chef-lan",
-        name: "Lan Anh Nguyễn",
-        avatar: require("@/assets/images/hero-teriyaki-bowl.jpg"),
-        badge: "Master Chef",
-        isChef: true,
-      },
-      text: "Mình tự pha tỉ lệ: 2 xì dầu Kikkoman + 2 mirin + 1 rượu sake hoặc bạn ghé Annam Gourmet / WinMart lớn đều có chai Kikkoman Mirin nhé!",
-      timestamp: "08:15",
-      isMe: false,
-    },
-  ],
-  "direct-chef-quoc": [
-    {
-      id: "dm-quoc-1",
-      sender: {
-        id: "chef-quoc",
-        name: "Quốc Bảo FitLife",
-        avatar: require("@/assets/images/salad-salmon.jpg"),
-        badge: "Chuyên Gia Eat Clean",
-        isChef: false,
-      },
-      text: "Cá hồi bạn áp chảo mặt da 3 phút lửa vừa là giòn rụm nha!",
-      timestamp: "07:45",
-      isMe: false,
-    },
-  ],
-};
+const INITIAL_ROOMS: ChatRoom[] = [
+  {
+    id: "room-quick-cook",
+    title: "Góc Chia Sẻ Mẹo Nấu Nhanh",
+    description: "Kinh nghiệm sơ chế nguyên liệu, mẹo nêm nếm và công thức tiết kiệm thời gian",
+    iconName: "flash-outline",
+    tags: ["Mẹo vặt", "Nấu nhanh", "Bếp gọn"],
+    activeMembers: 342,
+    lastMessage: "Chị em cho mình hỏi bí quyết luộc lòng heo giòn trắng với ạ!",
+    lastMessageTime: "2 phút trước",
+    unreadCount: 3,
+    isAiBot: false,
+  },
+  {
+    id: "room-eat-clean",
+    title: "Hội Ăn Chay & Eat Clean",
+    description: "Trao đổi thực đơn lành mạnh, giảm calo, đồ thuần chay đủ chất dinh dưỡng",
+    iconName: "leaf-outline",
+    tags: ["Eat Clean", "Thuần chay", "Keto"],
+    activeMembers: 518,
+    lastMessage: "Bữa trưa hôm nay: Đậu hũ sốt cà chua nấm hương và quinoa dẻo thơm.",
+    lastMessageTime: "8 phút trước",
+    unreadCount: 0,
+    isAiBot: false,
+  },
+  {
+    id: "room-ask-chef",
+    title: "Hỏi Đáp Cùng Bếp Trưởng",
+    description: "Giải đáp kỹ thuật nấu nướng nâng cao, nhiệt độ sous-vide, kỹ năng dùng dao chuyên nghiệp",
+    iconName: "school-outline",
+    tags: ["Bếp trưởng", "Kỹ thuật", "Hỏi đáp"],
+    activeMembers: 189,
+    lastMessage: "Bít tết Ribeye nên để nhiệt độ lõi bao nhiêu là Medium Rare chuẩn nhất?",
+    lastMessageTime: "15 phút trước",
+    unreadCount: 0,
+    isAiBot: false,
+  },
+];
 
 class CommunityServiceClass {
   private posts: CommunityPost[] = [...INITIAL_POSTS];
   private conversations: DirectConversation[] = [...INITIAL_CONVERSATIONS];
-  private messages: Record<string, ChatMessage[]> = { ...INITIAL_DIRECT_MESSAGES };
+  private chatRooms: ChatRoom[] = [...INITIAL_ROOMS];
+  private messages: Record<string, ChatMessage[]> = {};
   private listeners: Set<Listener> = new Set();
+  private hasFetchedPosts = false;
+  private hasFetchedConversations = false;
+  private hasFetchedRooms = false;
 
-  getPosts(): CommunityPost[] {
+  constructor() {
+    // Listen for realtime messages from Socket.io to keep active conversations updated
+    socketService.onNewMessage((msg) => {
+      this.handleIncomingRealtimeMessage(msg);
+    });
+  }
+
+  /**
+   * Helper to format relative friendly time
+   */
+  private formatRelativeTime(dateInput?: string | Date): string {
+    if (!dateInput) return "Vừa xong";
+    const now = new Date();
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return "Vừa xong";
+    const diffMs = now.getTime() - d.getTime();
+    const diffMinutes = Math.floor(diffMs / 60000);
+
+    if (diffMinutes < 1) return "Vừa xong";
+    if (diffMinutes < 60) return `${diffMinutes} phút trước`;
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours} giờ trước`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) return "Hôm qua";
+    return `${diffDays} ngày trước`;
+  }
+
+  /**
+   * Normalize an image source into React Native format
+   */
+  private normalizeImage(img: any): any {
+    if (!img) return require("@/assets/images/hero-teriyaki-bowl.jpg");
+    if (typeof img === "number") return img; // require asset
+    if (typeof img === "string") return { uri: img };
+    if (typeof img === "object" && img.url) return { uri: img.url };
+    if (typeof img === "object" && img.uri) return img;
+    return require("@/assets/images/hero-teriyaki-bowl.jpg");
+  }
+
+  /**
+   * Normalize author object from backend
+   */
+  private normalizeAuthor(authorData: any): CommunityAuthor {
+    if (!authorData) return CURRENT_USER;
+    const id = authorData.id || authorData._id || "unknown";
+    const name =
+      authorData.name ||
+      authorData.fullName ||
+      `${authorData.firstName || ""} ${authorData.lastName || ""}`.trim() ||
+      "Đầu bếp SmartCook";
+    const avatar = authorData.avatar
+      ? typeof authorData.avatar === "string"
+        ? { uri: authorData.avatar }
+        : authorData.avatar
+      : require("@/assets/images/smartcook-auth-bg.jpg");
+
+    return {
+      id,
+      name,
+      avatar,
+      badge: authorData.badge || authorData.level || "Đầu Bếp Tại Gia",
+      isChef: authorData.isChef ?? (authorData.level === "Bếp trưởng" || authorData.level === "Đầu bếp tài ba"),
+    };
+  }
+
+  /**
+   * Normalize a post from backend DTO
+   */
+  private normalizePost(raw: any): CommunityPost {
+    const rawImages = raw.images || raw.imageUrls || [];
+    const images = Array.isArray(rawImages) && rawImages.length > 0
+      ? rawImages.map((img: any) => this.normalizeImage(img))
+      : [require("@/assets/images/hero-teriyaki-bowl.jpg")];
+
+    const rawComments = raw.comments || [];
+    const comments: CommunityComment[] = Array.isArray(rawComments)
+      ? rawComments.map((c: any) => ({
+          id: c.id || c._id || `c-${Date.now()}`,
+          author: this.normalizeAuthor(c.author || c.user),
+          content: c.content || "",
+          createdAt: this.formatRelativeTime(c.createdAt),
+          likesCount: c.likesCount || 0,
+        }))
+      : [];
+
+    return {
+      id: raw.id || raw._id || `post-${Date.now()}`,
+      author: this.normalizeAuthor(raw.author || raw.user),
+      dishName: raw.dishName || raw.title || "Món Ngon Tự Nấu",
+      content: raw.content || raw.caption || "",
+      images,
+      tags: Array.isArray(raw.tags) && raw.tags.length > 0 ? raw.tags : ["#KhoeMonNgon"],
+      likesCount: raw.likesCount ?? (raw.totalReactions || 0),
+      isLiked: !!raw.isLiked,
+      isSaved: !!raw.isSaved,
+      commentsCount: raw.commentsCount ?? comments.length,
+      comments,
+      createdAt: this.formatRelativeTime(raw.createdAt),
+      recipeId: raw.recipeId,
+    };
+  }
+
+  /**
+   * Handle incoming message from Socket.io Gateway
+   */
+  private handleIncomingRealtimeMessage(msg: any) {
+    const convId = msg.conversationId;
+    if (!convId) return;
+
+    const chatMsg: ChatMessage = {
+      id: msg.id || `msg-${Date.now()}`,
+      sender: this.normalizeAuthor(msg.sender),
+      text: msg.text || "",
+      imageUri: msg.imageUri,
+      timestamp: msg.timestamp || new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+      isMe: msg.sender?.id === CURRENT_USER.id,
+    };
+
+    if (!this.messages[convId]) {
+      this.messages[convId] = [];
+    }
+    // Prevent duplicate messages
+    if (!this.messages[convId].some((m) => m.id === chatMsg.id)) {
+      this.messages[convId].push(chatMsg);
+    }
+
+    // Update conversation in list
+    const conv = this.conversations.find((c) => c.id === convId || (c as any).conversationId === convId);
+    if (conv) {
+      conv.lastMessage = chatMsg.text || "[Hình ảnh]";
+      conv.lastMessageTime = "Vừa xong";
+      if (!chatMsg.isMe) {
+        conv.unreadCount = (conv.unreadCount || 0) + 1;
+      }
+    }
+
+    this.notify();
+  }
+
+  /**
+   * Fetch posts from backend API (GET /api/v1/community/posts)
+   */
+  async fetchPosts(filter?: { page?: number; limit?: number; tag?: string; search?: string }): Promise<CommunityPost[]> {
+    try {
+      const params: any = {
+        page: filter?.page || 1,
+        limit: filter?.limit || 20,
+      };
+      if (filter?.tag && filter.tag !== "Tất cả") {
+        params.tag = filter.tag.replace(/^#/, "");
+      }
+      if (filter?.search) {
+        params.search = filter.search;
+      }
+
+      const res = await apiClient.get("/community/posts", { params });
+      const data = res.data?.data;
+      const rawPosts = Array.isArray(data) ? data : data?.posts;
+
+      if (Array.isArray(rawPosts)) {
+        const normalized = rawPosts.map((p: any) => this.normalizePost(p));
+        this.posts = normalized;
+        this.hasFetchedPosts = true;
+        this.notify();
+        return normalized;
+      }
+    } catch (e) {
+      console.warn("⚠️ [CommunityService] Không thể tải bài viết từ API, dùng dữ liệu sẵn có:", e);
+    }
+
     return [...this.posts];
   }
 
-  getConversations(): DirectConversation[] {
-    return [...this.conversations];
+  /**
+   * Synchronous getter for posts (for UI subscription)
+   */
+  getPosts(): CommunityPost[] {
+    if (!this.hasFetchedPosts) {
+      this.fetchPosts().catch(() => {});
+    }
+    return [...this.posts];
   }
 
-  getDirectMessages(targetUserId: string): ChatMessage[] {
-    const key = `direct-${targetUserId}`;
-    return [...(this.messages[key] || [])];
-  }
-
-  createPost(data: {
+  /**
+   * Create a new community post (POST /api/v1/community/posts) -> User receives +20 XP
+   */
+  async createPost(data: {
     dishName: string;
     content: string;
     images: any[];
     tags: string[];
-  }): CommunityPost {
+    recipeId?: string;
+  }): Promise<CommunityPost> {
+    try {
+      // Extract pure string URLs if available
+      const imageUrls: string[] = [];
+      data.images.forEach((img) => {
+        if (typeof img === "string" && img.startsWith("http")) {
+          imageUrls.push(img);
+        } else if (img?.uri && img.uri.startsWith("http")) {
+          imageUrls.push(img.uri);
+        }
+      });
+
+      const payload = {
+        dishName: data.dishName.trim() || "Món Ngon Tự Nấu",
+        caption: data.content.trim(),
+        content: data.content.trim(),
+        tags: data.tags.length > 0 ? data.tags : ["#KhoeMonNgon"],
+        images: imageUrls.length > 0 ? imageUrls : ["https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80"],
+        recipeId: data.recipeId,
+      };
+
+      const res = await apiClient.post("/community/posts", payload);
+      if (res.data?.success && res.data?.data) {
+        const created = this.normalizePost(res.data.data);
+        this.posts.unshift(created);
+        this.notify();
+        return created;
+      }
+    } catch (e) {
+      console.warn("⚠️ [CommunityService] Lỗi tạo bài đăng qua API, fallback lưu tạm:", e);
+    }
+
+    // Local optimistic fallback
     const newPost: CommunityPost = {
       id: `post-${Date.now()}`,
       author: CURRENT_USER,
@@ -320,6 +410,7 @@ class CommunityServiceClass {
       commentsCount: 0,
       createdAt: "Vừa xong",
       comments: [],
+      recipeId: data.recipeId,
     };
 
     this.posts.unshift(newPost);
@@ -327,20 +418,41 @@ class CommunityServiceClass {
     return newPost;
   }
 
-  toggleLikePost(postId: string): void {
+  /**
+   * Toggle like post with Optimistic Update (POST /api/v1/community/posts/:id/like)
+   */
+  async toggleLikePost(postId: string): Promise<void> {
     const post = this.posts.find((p) => p.id === postId);
-    if (post) {
-      if (post.isLiked) {
-        post.isLiked = false;
-        post.likesCount = Math.max(0, post.likesCount - 1);
-      } else {
-        post.isLiked = true;
-        post.likesCount += 1;
+    if (!post) return;
+
+    const previousLiked = post.isLiked;
+    const previousLikesCount = post.likesCount;
+
+    // 1. Optimistic Update
+    post.isLiked = !previousLiked;
+    post.likesCount = post.isLiked ? previousLikesCount + 1 : Math.max(0, previousLikesCount - 1);
+    this.notify();
+
+    // 2. Sync with Backend
+    try {
+      const res = await apiClient.post(`/community/posts/${postId}/like`);
+      if (res.data?.success && res.data?.data) {
+        const backendData = res.data.data;
+        post.isLiked = backendData.isLiked ?? post.isLiked;
+        post.likesCount = backendData.likesCount ?? backendData.totalReactions ?? post.likesCount;
+        this.notify();
       }
+    } catch (e) {
+      console.warn("⚠️ [CommunityService] Lỗi toggle like qua API, rollback:", e);
+      post.isLiked = previousLiked;
+      post.likesCount = previousLikesCount;
       this.notify();
     }
   }
 
+  /**
+   * Toggle saved state of post
+   */
   toggleSavePost(postId: string): void {
     const post = this.posts.find((p) => p.id === postId);
     if (post) {
@@ -349,15 +461,46 @@ class CommunityServiceClass {
     }
   }
 
-  addComment(postId: string, content: string): CommunityComment | null {
-    if (!content.trim()) return null;
+  /**
+   * Add a comment to post (POST /api/v1/community/posts/:id/comments) -> User receives +5 XP
+   */
+  async addComment(postId: string, content: string, parentCommentId?: string): Promise<CommunityComment | null> {
+    const text = content.trim();
+    if (!text) return null;
+
     const post = this.posts.find((p) => p.id === postId);
     if (!post) return null;
 
+    try {
+      const res = await apiClient.post(`/community/posts/${postId}/comments`, {
+        content: text,
+        parentCommentId,
+      });
+
+      if (res.data?.success && res.data?.data) {
+        const c = res.data.data;
+        const newComment: CommunityComment = {
+          id: c.id || c._id || `c-${Date.now()}`,
+          author: this.normalizeAuthor(c.author || c.user),
+          content: c.content || text,
+          createdAt: "Vừa xong",
+          likesCount: 0,
+        };
+
+        post.comments.push(newComment);
+        post.commentsCount += 1;
+        this.notify();
+        return newComment;
+      }
+    } catch (e) {
+      console.warn("⚠️ [CommunityService] Lỗi gửi bình luận qua API, fallback lưu tạm:", e);
+    }
+
+    // Local optimistic fallback
     const newComment: CommunityComment = {
       id: `c-${Date.now()}`,
       author: CURRENT_USER,
-      content: content.trim(),
+      content: text,
       createdAt: "Vừa xong",
       likesCount: 0,
     };
@@ -368,31 +511,242 @@ class CommunityServiceClass {
     return newComment;
   }
 
-  sendDirectMessage(targetUser: CommunityAuthor, text: string, imageUri?: string): ChatMessage {
-    const key = `direct-${targetUser.id}`;
+  /**
+   * Fetch comments for a post (GET /api/v1/community/posts/:id/comments)
+   */
+  async fetchComments(postId: string): Promise<CommunityComment[]> {
+    try {
+      const res = await apiClient.get(`/community/posts/${postId}/comments`);
+      const data = res.data?.data;
+      const rawComments = Array.isArray(data) ? data : data?.comments;
+
+      if (Array.isArray(rawComments)) {
+        const comments = rawComments.map((c: any) => ({
+          id: c.id || c._id,
+          author: this.normalizeAuthor(c.author || c.user),
+          content: c.content || "",
+          createdAt: this.formatRelativeTime(c.createdAt),
+          likesCount: c.likesCount || 0,
+        }));
+
+        const post = this.posts.find((p) => p.id === postId);
+        if (post) {
+          post.comments = comments;
+          post.commentsCount = comments.length;
+          this.notify();
+        }
+
+        return comments;
+      }
+    } catch (e) {
+      console.warn("⚠️ [CommunityService] Lỗi lấy danh sách bình luận:", e);
+    }
+
+    const post = this.posts.find((p) => p.id === postId);
+    return post ? post.comments : [];
+  }
+
+  /**
+   * Delete post (DELETE /api/v1/community/posts/:id)
+   */
+  async deletePost(postId: string): Promise<boolean> {
+    try {
+      const res = await apiClient.delete(`/community/posts/${postId}`);
+      if (res.data?.success) {
+        this.posts = this.posts.filter((p) => p.id !== postId);
+        this.notify();
+        return true;
+      }
+    } catch (e) {
+      console.warn("⚠️ [CommunityService] Lỗi xoá bài đăng:", e);
+    }
+    return false;
+  }
+
+  /**
+   * Fetch community chat rooms from backend (GET /api/v1/chat/rooms)
+   */
+  async fetchChatRooms(): Promise<ChatRoom[]> {
+    try {
+      const res = await apiClient.get("/chat/rooms");
+      const list = res.data?.data;
+      if (Array.isArray(list) && list.length > 0) {
+        this.chatRooms = list.map((r: any) => ({
+          id: r.id || r._id || `room-${Date.now()}`,
+          title: r.title || "Phòng Chat Ẩm Thực",
+          description: r.description || "",
+          iconName: r.iconName || "chatbubbles-outline",
+          activeMembers: r.activeMembers || 150,
+          lastMessage: r.lastMessage || "Tham gia thảo luận cùng mọi người!",
+          lastMessageTime: r.lastMessageTime || "Vừa xong",
+          unreadCount: r.unreadCount || 0,
+          isAiBot: r.isAiBot || false,
+          tags: Array.isArray(r.tags) ? r.tags : ["Cộng đồng"],
+        }));
+        this.hasFetchedRooms = true;
+        this.notify();
+        return this.chatRooms;
+      }
+    } catch (e) {
+      console.warn("⚠️ [CommunityService] Lỗi lấy danh sách phòng chat, dùng dữ liệu mặc định:", e);
+    }
+    return [...this.chatRooms];
+  }
+
+  /**
+   * Synchronous getter for chat rooms
+   */
+  getChatRooms(): ChatRoom[] {
+    if (!this.hasFetchedRooms) {
+      this.fetchChatRooms().catch(() => {});
+    }
+    return [...this.chatRooms];
+  }
+
+  /**
+   * Fetch direct conversations from backend (GET /api/v1/chat/conversations)
+   */
+  async fetchConversations(): Promise<DirectConversation[]> {
+    try {
+      const res = await apiClient.get("/chat/conversations");
+      const list = res.data?.data;
+      if (Array.isArray(list)) {
+        this.conversations = list.map((conv: any) => ({
+          id: conv.id || conv._id,
+          conversationId: conv.conversationId || conv.id || conv._id,
+          user: this.normalizeAuthor(conv.user || conv.targetUser),
+          lastMessage: conv.lastMessage || "Bắt đầu cuộc trò chuyện...",
+          lastMessageTime: conv.lastMessageTime || "Vừa xong",
+          unreadCount: conv.unreadCount || 0,
+          isOnline: conv.isOnline ?? true,
+        }));
+        this.hasFetchedConversations = true;
+        this.notify();
+        return this.conversations;
+      }
+    } catch (e) {
+      console.warn("⚠️ [CommunityService] Lỗi lấy danh sách hội thoại, dùng dữ liệu sẵn có:", e);
+    }
+    return [...this.conversations];
+  }
+
+  /**
+   * Synchronous getter for conversations
+   */
+  getConversations(): DirectConversation[] {
+    if (!this.hasFetchedConversations) {
+      this.fetchConversations().catch(() => {});
+    }
+    return [...this.conversations];
+  }
+
+  /**
+   * Get or create 1-1 conversation with target user (POST /api/v1/chat/direct)
+   */
+  async getOrCreateDirectChat(targetUserId: string): Promise<{ conversationId: string; user: CommunityAuthor }> {
+    try {
+      const res = await apiClient.post("/chat/direct", { targetUserId });
+      if (res.data?.success && res.data?.data) {
+        const conv = res.data.data;
+        const convId = conv.conversationId || conv.id || conv._id;
+        const targetUser = this.normalizeAuthor(conv.user || conv.targetUser);
+
+        // Join room on Socket.io for realtime messages
+        socketService.joinRoom(convId);
+
+        return {
+          conversationId: convId,
+          user: targetUser,
+        };
+      }
+    } catch (e) {
+      console.warn("⚠️ [CommunityService] Lỗi khởi tạo chat 1-1, dùng fallback key:", e);
+    }
+
+    const fallbackKey = `direct-${targetUserId}`;
+    socketService.joinRoom(fallbackKey);
+    const existing = this.conversations.find((c) => c.id === targetUserId);
+    return {
+      conversationId: fallbackKey,
+      user: existing ? existing.user : { id: targetUserId, name: "Đầu Bếp", avatar: require("@/assets/images/salad-salmon.jpg") },
+    };
+  }
+
+  /**
+   * Fetch message history of a room or conversation (GET /api/v1/chat/conversations/:id/messages)
+   */
+  async fetchMessageHistory(conversationId: string): Promise<ChatMessage[]> {
+    try {
+      socketService.joinRoom(conversationId);
+      const res = await apiClient.get(`/chat/conversations/${conversationId}/messages`);
+      const list = res.data?.data;
+      if (Array.isArray(list)) {
+        const normalized: ChatMessage[] = list.map((m: any) => ({
+          id: m.id || m._id || `m-${Date.now()}`,
+          sender: this.normalizeAuthor(m.sender || m.user),
+          text: m.text || "",
+          imageUri: m.imageUri || m.imageUrl,
+          timestamp: m.timestamp || new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+          isMe: (m.sender?.id || m.sender?._id || m.user?._id) === CURRENT_USER.id,
+        }));
+
+        this.messages[conversationId] = normalized;
+        this.notify();
+        return normalized;
+      }
+    } catch (e) {
+      console.warn(`⚠️ [CommunityService] Lỗi lấy lịch sử tin nhắn của ${conversationId}:`, e);
+    }
+
+    return this.messages[conversationId] || [];
+  }
+
+  /**
+   * Get direct messages for conversation
+   */
+  getDirectMessages(targetUserIdOrConvId: string): ChatMessage[] {
+    const key = this.messages[targetUserIdOrConvId]
+      ? targetUserIdOrConvId
+      : `direct-${targetUserIdOrConvId}`;
+    return [...(this.messages[key] || this.messages[targetUserIdOrConvId] || [])];
+  }
+
+  /**
+   * Send a direct message via Socket.io Realtime (with REST API fallback)
+   */
+  async sendDirectMessage(
+    targetUser: CommunityAuthor,
+    text: string,
+    imageUri?: string,
+    explicitConversationId?: string
+  ): Promise<ChatMessage> {
+    const cleanText = text.trim();
+    const convId = explicitConversationId || `direct-${targetUser.id}`;
+
     const newMsg: ChatMessage = {
       id: `m-${Date.now()}`,
       sender: CURRENT_USER,
-      text: text.trim(),
+      text: cleanText,
       imageUri,
       timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
       isMe: true,
     };
 
-    if (!this.messages[key]) {
-      this.messages[key] = [];
+    if (!this.messages[convId]) {
+      this.messages[convId] = [];
     }
-    this.messages[key].push(newMsg);
+    this.messages[convId].push(newMsg);
 
-    // Update or insert conversation into conversation list
-    const existingIndex = this.conversations.findIndex((c) => c.id === targetUser.id);
-    const lastMsgText = `Bạn: ${text.trim() || "[Hình ảnh]"}`;
+    // Update conversation in list
+    const existingIndex = this.conversations.findIndex(
+      (c) => c.id === targetUser.id || (c as any).conversationId === convId
+    );
+    const lastMsgText = `Bạn: ${cleanText || "[Hình ảnh]"}`;
 
     if (existingIndex >= 0) {
       const conv = this.conversations[existingIndex];
       conv.lastMessage = lastMsgText;
       conv.lastMessageTime = "Vừa xong";
-      // Move to top
       this.conversations.splice(existingIndex, 1);
       this.conversations.unshift(conv);
     } else {
@@ -408,45 +762,39 @@ class CommunityServiceClass {
 
     this.notify();
 
-    // Auto reply simulation after 1.5s from the other cook
-    setTimeout(() => {
-      let reply = `Chào bạn! Cảm ơn bạn đã nhắn tin trao đổi về món ăn nhé ❤️ Mình rất vui được chia sẻ kinh nghiệm nấu nướng cùng bạn!`;
-      const queryLower = text.toLowerCase();
-      if (queryLower.includes("công thức") || queryLower.includes("gia vị")) {
-        reply = `Công thức này mình nêm vừa miệng theo khẩu vị gia đình, bạn có thể gia giảm tiêu hoặc ớt theo ý thích nha!`;
-      } else if (queryLower.includes("mua ở đâu") || queryLower.includes("nguyên liệu")) {
-        reply = `Nguyên liệu này mình hay ghé siêu thị WinMart hoặc Co.opmart mua buổi sáng rất tươi ngon đó bạn!`;
-      } else if (queryLower.includes("nấu") || queryLower.includes("lửa")) {
-        reply = `Khi nấu bạn nhớ để lửa vừa để ngấm gia vị, không nên đun lửa quá to nước sốt sẽ dễ bị cạn nhanh nhé!`;
-      }
-
-      const replyMsg: ChatMessage = {
-        id: `m-reply-${Date.now()}`,
-        sender: targetUser,
-        text: reply,
-        timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-        isMe: false,
-      };
-
-      if (!this.messages[key]) {
-        this.messages[key] = [];
-      }
-      this.messages[key].push(replyMsg);
-
-      // Update conversation in list
-      const conv = this.conversations.find((c) => c.id === targetUser.id);
-      if (conv) {
-        conv.lastMessage = reply;
-        conv.lastMessageTime = "Vừa xong";
-        conv.unreadCount += 1;
-      }
-
-      this.notify();
-    }, 1500);
+    // 1. Try sending via Realtime Socket
+    if (socketService.isConnected()) {
+      socketService.sendMessage(convId, cleanText, imageUri, (ack) => {
+        if (!ack?.success) {
+          console.warn("⚠️ [SocketService] ACK trả về false, fallback REST API:", ack?.error);
+          this.sendMessageViaRest(convId, cleanText, imageUri);
+        }
+      });
+    } else {
+      // 2. Fallback via REST API
+      this.sendMessageViaRest(convId, cleanText, imageUri);
+    }
 
     return newMsg;
   }
 
+  /**
+   * REST fallback for sending chat message
+   */
+  private async sendMessageViaRest(conversationId: string, text: string, imageUri?: string) {
+    try {
+      await apiClient.post(`/chat/conversations/${conversationId}/messages`, {
+        text,
+        imageUri,
+      });
+    } catch (e) {
+      console.warn("⚠️ [CommunityService] Gửi tin nhắn qua REST API thất bại:", e);
+    }
+  }
+
+  /**
+   * Mark conversation as read
+   */
   markConversationAsRead(targetUserId: string): void {
     const conv = this.conversations.find((c) => c.id === targetUserId);
     if (conv && conv.unreadCount > 0) {
@@ -455,6 +803,9 @@ class CommunityServiceClass {
     }
   }
 
+  /**
+   * Observer pattern subscription
+   */
   subscribe(listener: Listener): () => void {
     this.listeners.add(listener);
     return () => {
@@ -474,3 +825,4 @@ class CommunityServiceClass {
 }
 
 export const CommunityService = new CommunityServiceClass();
+export default CommunityService;
