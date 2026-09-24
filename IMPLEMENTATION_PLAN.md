@@ -24,7 +24,7 @@ Qua rà soát chi tiết 100% mã nguồn của cả hai dự án `smartcook-bac
   - **Phase 2**: ✅ **100% HOÀN TẤT** (Danh mục MongoDB, Phân trang, Bộ lọc thông minh, Chi tiết món Scaler, Đăng món Cloudinary).
   - **Phase 3**: ✅ **100% HOÀN TẤT** (Bếp của tôi `FridgeView`, 14 nhóm nguyên liệu, Xếp hạng món khớp tủ lạnh, Nấu rảnh tay TTS, +50 XP Gamification, Lịch sử nấu ăn).
   - **Phase 4**: ✅ **100% HOÀN TẤT** (Gemini 1.5 Flash Vision quét thực phẩm, Bounding Pins, Lưu tủ lạnh 1 chạm, Lịch sử MongoDB, Trợ lý ảo AI Bếp trưởng bóng nổi).
-  - **Phase 5**: ⏳ **Sẵn sàng đấu nối** (Mạng xã hội & Chat Socket.io Realtime).
+  - **Phase 5**: ✅ **100% HOÀN TẤT** (Bảng tin cộng đồng, Like/Comment Gamification +20 XP & +5 XP, Realtime Socket.io Chat, 3 Phòng chat ẩm thực & Chat 1-1).
   - **Phase 6**: ⏳ **Sẵn sàng đấu nối** (Thực đơn tuần 7 ngày, Giỏ đi chợ & Siêu thị GPS).
   - **Phase 7**: ⏳ **Bước cuối cùng** (Tối ưu UX, Animation, Haptics & Full E2E Test Suite).
 
@@ -36,7 +36,7 @@ TIẾN ĐỘ ĐỒNG BỘ TOÀN DỰ ÁN (PROJECT SYNCHRONIZATION MATRIX)
 [Phase 2] Công thức, Scaler & Đăng món      | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
 [Phase 3] Bếp thông minh & Chef XP (+50XP)  | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
 [Phase 4] Gemini AI Vision & Chatbot Chef   | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
-[Phase 5] Mạng xã hội & Socket.io Realtime  | Backend: [✅ 100%] ===> Mobile: [⏳ Sẵn sàng đấu nối]
+[Phase 5] Mạng xã hội & Socket.io Realtime  | Backend: [✅ 100%] ===> Mobile: [✅ 100% HOÀN TẤT]
 [Phase 6] Thực đơn tuần & Siêu thị GPS      | Backend: [✅ 100%] ===> Mobile: [⏳ Sẵn sàng đấu nối]
 [Phase 7] Tối ưu hóa UX & Kiểm thử E2E      | Backend: [✅ 100%] ===> Mobile: [⏳ Bước cuối cùng]
 ====================================================================================================
@@ -56,8 +56,8 @@ TIẾN ĐỘ ĐỒNG BỘ TOÀN DỰ ÁN (PROJECT SYNCHRONIZATION MATRIX)
 | **6. Nấu ăn rảnh tay & Điểm XP** | `(main)/cooking-mode.tsx` (TTS tiếng Việt)<br>`CookingHistoryModal.tsx` | `POST /cooking-history` (Tự động cộng **+50 XP** và thăng hạng cấp bậc đầu bếp)<br>`GET /cooking-history`<br>`DELETE /cooking-history/:id` | ✅ **HOÀN THÀNH 100%**<br>(Tự động ghi nhận lịch sử, +50 XP Gamification, modal lịch sử) |
 | **7. AI Vision Scan Thực Phẩm** | `ScanAIView.tsx`<br>Laser Scan Animation<br>Thẻ ghim toạ độ Pins trực quan | `POST /ai/scan-ingredients` (Upload ảnh -> Gemini 1.5 Flash Vision -> Trả về `ingredients`, `pins` toạ độ %, `suggestedRecipe`)<br>`GET /ai/scan-history`<br>`DELETE /ai/scan-history/:id` | ✅ **HOÀN THÀNH 100%**<br>(Chụp/chọn ảnh, Bounding Pins %, Lưu tủ lạnh MongoDB, 10/10 test E2E passed) |
 | **8. Trợ Lý AI Kéo Thả** | `DraggableAIAssistant.tsx`<br>Bóng nổi kéo thả, chatbox gợi ý | `POST /ai/assistant-chat` (Gemini Chef tiếp nhận câu hỏi kèm context Tủ lạnh & Khẩu vị, trả về `replyText`, `suggestedDishes`, `quickPrompts`) | ✅ **HOÀN THÀNH 100%**<br>(Prompt động, click món điều hướng nấu ngay, 10/10 test E2E passed) |
-| **9. Mạng Xã Hội Ẩm Thực** | `CommunityView.tsx`<br>`PostCard.tsx`<br>`CreatePostModal.tsx`<br>`CommentsModal.tsx` | `GET /community/posts`<br>`POST /community/posts` (ảnh Cloudinary, +20 XP)<br>`POST /community/posts/:id/like`<br>`POST /community/posts/:id/react`<br>`GET/POST /community/posts/:id/comments` (+5 XP)<br>`DELETE /community/posts/:id` | ⏳ **Phase 5**<br>Backend sẵn sàng 100%, tiến hành đấu nối Mobile. |
-| **10. Nhắn Tin Thời Gian Thực** | `DirectChatModal.tsx`<br>`MessengerConversationsModal.tsx`<br>`ChatRoomModal.tsx` | Socket.io Server `ws://localhost:5000`<br>JWT Handshake, Events: `join_room`, `leave_room`, `send_message`, `new_message`, `typing`, `user_typing`<br>REST API: `/chat/rooms`, `/chat/conversations`, `/chat/direct` | ⏳ **Phase 5**<br>Backend sẵn sàng 100%, tiến hành đấu nối Mobile. |
+| **9. Mạng Xã Hội Ẩm Thực** | `CommunityView.tsx`<br>`PostCard.tsx`<br>`CreatePostModal.tsx`<br>`CommentsModal.tsx` | `GET /community/posts`<br>`POST /community/posts` (ảnh Cloudinary, +20 XP)<br>`POST /community/posts/:id/like`<br>`POST /community/posts/:id/react`<br>`GET/POST /community/posts/:id/comments` (+5 XP)<br>`DELETE /community/posts/:id` | ✅ **HOÀN THÀNH 100%**<br>(Bảng tin phân trang, đăng bài +20 XP, thả tim/hủy tim, bình luận lồng nhau +5 XP, 12/12 test E2E passed) |
+| **10. Nhắn Tin Thời Gian Thực** | `DirectChatModal.tsx`<br>`MessengerConversationsModal.tsx`<br>`ChatRoomModal.tsx` | Socket.io Server `ws://localhost:5000`<br>JWT Handshake, Events: `join_room`, `leave_room`, `send_message`, `new_message`, `typing`, `user_typing`<br>REST API: `/chat/rooms`, `/chat/conversations`, `/chat/direct` | ✅ **HOÀN THÀNH 100%**<br>(Socket.io Client, 3 phòng chat cộng đồng, chat 1-1 tức thời, 12/12 test E2E passed) |
 | **11. Thực Đơn Tuần & Giỏ Đi Chợ** | `PlannerView.tsx`<br>`ShoppingNoteModal.tsx`<br>Đồng bộ giỏ vào tủ lạnh | `GET /planner/current-week`<br>`PUT /planner/meals`<br>`DELETE /planner/meals`<br>`GET /planner/shopping-list` (Thuật toán trừ nguyên liệu có trong tủ lạnh)<br>`POST /planner/shopping-list`<br>`PATCH /planner/shopping-list/:id/bought`<br>`DELETE /planner/shopping-list/clear-bought`<br>`POST /planner/sync-to-fridge` | ⏳ **Phase 6**<br>Backend sẵn sàng 100%, tiến hành đấu nối Mobile. |
 | **12. Định Vị Siêu Thị GPS** | `NearbyStoreCard.tsx`<br>Tính khoảng cách & thời gian đi xe/đi bộ | `GET /stores/nearby?lat=...&lng=...&radiusKm=...&limit=...` (MongoDB 2dsphere `$geoNear`)<br>`GET /stores`<br>`GET /stores/:id` | ⏳ **Phase 6**<br>Backend sẵn sàng 100%, tiến hành đấu nối Mobile. |
 
@@ -197,22 +197,22 @@ TIẾN ĐỘ ĐỒNG BỘ TOÀN DỰ ÁN (PROJECT SYNCHRONIZATION MATRIX)
 > **Mục tiêu Mobile:** Bảng tin chia sẻ hình ảnh và công thức món ăn; tương tác like/bình luận; chat 1-1 trực tiếp và tham gia 3 phòng chat cộng đồng thời gian thực qua WebSocket.
 
 #### Nhiệm vụ cụ thể:
-- [ ] **5.1. Thiết lập Kết Nối Socket.io (`src/services/socketService.ts` & `src/contexts/SocketContext.tsx`)**:
+- [x] **5.1. Thiết lập Kết Nối Socket.io (`src/services/socketService.ts` & `src/contexts/SocketContext.tsx`)**:
   - Cài đặt thư viện: `socket.io-client`.
   - Khởi tạo kết nối Socket.io với server: `io(API_URL, { auth: { token: accessToken }, transports: ["websocket", "polling"] })`.
   - Lắng nghe các sự kiện: `new_message`, `user_typing`, `user_stop_typing`, `online_users`.
   - Cung cấp các phương thức: `joinRoom(conversationId)`, `leaveRoom(conversationId)`, `sendMessage(payload, callback)`, `sendTyping(conversationId, isTyping)`.
-- [ ] **5.2. Đấu nối Mạng Xã Hội (`src/components/features/CommunityView.tsx` & `PostCard.tsx`)**:
+- [x] **5.2. Đấu nối Mạng Xã Hội (`src/components/features/CommunityView.tsx` & `PostCard.tsx`)**:
   - Nâng cấp `src/services/communityService.ts` chuyển từ in-memory sang gọi API `GET /api/v1/community/posts` (hỗ trợ phân trang, lọc theo hashtag, tìm kiếm).
   - Thả tim bài viết: Gọi `POST /api/v1/community/posts/:id/like` với Optimistic Update (tăng ngay số like trên UI).
   - Đăng bài mới qua `CreatePostModal.tsx`: Chọn ảnh món ăn, nhập tiêu đề, hashtag và nội dung chia sẻ -> Gửi multipart `FormData` lên `POST /api/v1/community/posts` (Người dùng nhận **+20 XP**).
   - Bình luận qua `CommentsModal.tsx`: Gọi `POST /api/v1/community/posts/:id/comments` (Người dùng nhận **+5 XP**).
-- [ ] **5.3. Đấu nối Nhắn Tin 1-1 & Phòng Chat Cộng Đồng**:
+- [x] **5.3. Đấu nối Nhắn Tin 1-1 & Phòng Chat Cộng Đồng**:
   - `DirectChatModal.tsx`: Gửi và nhận tin nhắn trực tiếp không độ trễ qua Socket.io.
   - `MessengerConversationsModal.tsx`: Gọi `GET /api/v1/chat/conversations` hiển thị danh sách hội thoại kèm avatar người chat, tin nhắn cuối và đếm số tin chưa đọc.
   - `ChatRoomModal.tsx`: Gọi `GET /api/v1/chat/rooms` hiển thị 3 phòng chat ẩm thực mặc định ("Góc Chia Sẻ Mẹo Nấu Nhanh", "Hội Ăn Chay & Eat Clean", "Hỏi Đáp Cùng Bếp Trưởng") và tham gia chat thời gian thực.
-- [ ] **5.4. Kịch bản kiểm thử E2E Phase 5 (`scripts/testE2EPhase5.mjs`)**:
-  - Viết suite test tự động kiểm thử: Đăng bài viết cộng đồng $\rightarrow$ Nhận +20 XP $\rightarrow$ Like bài viết $\rightarrow$ Thêm bình luận $\rightarrow$ Nhận +5 XP $\rightarrow$ Kết nối WebSocket $\rightarrow$ Join room $\rightarrow$ Gửi & nhận tin nhắn realtime.
+- [x] **5.4. Kịch bản kiểm thử E2E Phase 5 (`scripts/testE2EPhase5.mjs`)**:
+  - Viết suite test tự động kiểm thử 12 ca: Health check -> Xác thực 2 tài khoản -> Đăng bài viết cộng đồng -> Nhận +20 XP -> Lấy bảng tin phân trang -> Lọc hashtag #ComGiaDinh -> Like & Unlike tức thì -> Thêm bình luận nhận +5 XP -> Trả lời bình luận lồng nhau -> Lấy 3 phòng chat cộng đồng -> Khởi tạo chat 1-1 -> Kết nối Socket.io Realtime trao đổi tin nhắn & gõ phím -> Xoá dọn dẹp dữ liệu test (100% Pass).
 
 ---
 
