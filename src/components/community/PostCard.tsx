@@ -1,7 +1,7 @@
 import { BrandColors } from "@/constants/brandColors";
 import { CommunityAuthor, CommunityPost } from "@/types";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   StyleSheet,
@@ -32,6 +32,12 @@ export default function PostCard({
   const [liked, setLiked] = useState(post.isLiked);
   const [likesCount, setLikesCount] = useState(post.likesCount);
   const [saved, setSaved] = useState(post.isSaved);
+
+  useEffect(() => {
+    setLiked(post.isLiked);
+    setLikesCount(post.likesCount);
+    setSaved(post.isSaved);
+  }, [post.isLiked, post.likesCount, post.isSaved]);
 
   const handleToggleLike = () => {
     const nextState = !liked;
