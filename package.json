@@ -57,7 +57,12 @@
     "lint": "expo lint",
     "type-check": "tsc --noEmit",
     "test:e2e:phase1": "node scripts/testE2EPhase1.mjs",
-    "test:e2e:phase3": "node scripts/testE2EPhase3.mjs"
+    "test:e2e:phase2": "node scripts/testE2EPhase2.mjs",
+    "test:e2e:phase3": "node scripts/testE2EPhase3.mjs",
+    "test:e2e:phase4": "node scripts/testE2EPhase4.mjs",
+    "test:e2e:phase5": "node scripts/testE2EPhase5.mjs",
+    "test:e2e:phase6": "node scripts/testE2EPhase6.mjs",
+    "test:e2e:all": "node scripts/testE2EFullJourney.mjs"
   },
   "private": true
 }
