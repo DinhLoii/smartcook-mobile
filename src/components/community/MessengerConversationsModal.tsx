@@ -1,4 +1,5 @@
 import { BrandColors } from "@/constants/brandColors";
+import DismissKeyboard from "@/components/common/DismissKeyboard";
 import { CommunityAuthor, DirectConversation } from "@/types";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -6,6 +7,7 @@ import React, { useState } from "react";
 import {
   FlatList,
   Image,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   StyleSheet,
@@ -98,6 +100,11 @@ export default function MessengerConversationsModal({
       animationType="slide"
       onRequestClose={onClose}
     >
+      <DismissKeyboard>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
+      >
       <View
         style={[
           styles.container,
@@ -265,6 +272,8 @@ export default function MessengerConversationsModal({
           }
         />
       </View>
+      </KeyboardAvoidingView>
+      </DismissKeyboard>
     </Modal>
   );
 }

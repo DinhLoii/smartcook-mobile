@@ -1,4 +1,5 @@
 import { BrandColors } from "@/constants/brandColors";
+import DismissKeyboard from "@/components/common/DismissKeyboard";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
@@ -148,6 +149,7 @@ export default function CreatePostModal({
       transparent={true}
       onRequestClose={onClose}
     >
+      <DismissKeyboard>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.modalOverlay}
@@ -308,6 +310,7 @@ export default function CreatePostModal({
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
+      </DismissKeyboard>
     </Modal>
   );
 }

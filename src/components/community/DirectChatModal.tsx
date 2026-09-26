@@ -1,4 +1,5 @@
 import { BrandColors } from "@/constants/brandColors";
+import DismissKeyboard from "@/components/common/DismissKeyboard";
 import { ChatMessage, CommunityAuthor } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -144,6 +145,7 @@ export default function DirectChatModal({
       animationType="slide"
       onRequestClose={onClose}
     >
+      <DismissKeyboard>
       <View
         style={[
           styles.container,
@@ -270,6 +272,7 @@ export default function DirectChatModal({
           </View>
         </KeyboardAvoidingView>
       </View>
+      </DismissKeyboard>
     </Modal>
   );
 }

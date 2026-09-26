@@ -10,7 +10,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Image,
+  Keyboard,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -141,8 +144,9 @@ export default function ScanHistoryModal({
     >
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.backdrop}>
-          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-            <View
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : undefined}
               style={[
                 styles.modalContainer,
                 { paddingBottom: Math.max(insets.bottom, 16) },
@@ -461,7 +465,7 @@ export default function ScanHistoryModal({
                   </View>
                 )}
               </ScrollView>
-            </View>
+            </KeyboardAvoidingView>
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>

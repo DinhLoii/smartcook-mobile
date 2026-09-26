@@ -732,7 +732,10 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
   }, []);
 
   useEffect(() => {
-    loadFridgeData();
+    const timer = setTimeout(() => {
+      void loadFridgeData();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [loadFridgeData]);
 
   // Toggle Accordion Group with smooth animation

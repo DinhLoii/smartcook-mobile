@@ -9,6 +9,7 @@ import {
 } from "@/services/scanHistoryService";
 import { aiService } from "@/services/aiService";
 import { FridgeService } from "@/services/fridgeService";
+import { hapticSuccess } from "@/utils/haptics";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
@@ -204,6 +205,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
         });
         savedCount++;
       }
+      void hapticSuccess();
       showToast(`✨ Đã lưu ${savedCount} nguyên liệu vào Bếp của bạn!`);
     } catch (e) {
       console.warn("Lỗi lưu nguyên liệu vào tủ lạnh:", e);
@@ -323,7 +325,9 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
         setActivePins(apiResult.pins || []);
         
         const suggested: ScanSuggestedRecipe = {
-          id: apiResult.suggestedRecipe?.id || `ai-recipe-${Date.now()}`,
+          id:
+            apiResult.suggestedRecipe?.id ||
+            `ai-recipe-${encodeURIComponent(uri).slice(-24)}`,
           title: apiResult.suggestedRecipe?.title || "Món ăn sáng tạo từ nguyên liệu của bạn",
           desc: apiResult.suggestedRecipe?.desc || "Công thức tối ưu từ 100% nguyên liệu vừa quét được.",
           calories: apiResult.suggestedRecipe?.calories || 450,

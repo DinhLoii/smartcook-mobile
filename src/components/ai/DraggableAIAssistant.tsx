@@ -1,4 +1,5 @@
 import { BrandColors } from "@/constants/brandColors";
+import DismissKeyboard from "@/components/common/DismissKeyboard";
 import { RECIPES_DATA } from "@/data/recipesData";
 import { aiService } from "@/services/aiService";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -66,19 +67,17 @@ export default function DraggableAIAssistant() {
   const defaultX = SCREEN_WIDTH - 68;
   const defaultY = Math.max(300, SCREEN_HEIGHT - 220);
 
-  const pan = useRef(new Animated.ValueXY({ x: defaultX, y: defaultY })).current;
+  const [pan] = useState(
+    () => new Animated.ValueXY({ x: defaultX, y: defaultY })
+  );
 
-  // Track dragging state to prevent firing onPress when dragging
-  const isDraggingRef = useRef(false);
-
-  const panResponder = useRef(
+  const [panResponder] = useState(() =>
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_, gestureState) => {
         return Math.abs(gestureState.dx) > 3 || Math.abs(gestureState.dy) > 3;
       },
       onPanResponderGrant: () => {
-        isDraggingRef.current = false;
         pan.setOffset({
           // @ts-ignore
           x: pan.x._value,
@@ -88,9 +87,6 @@ export default function DraggableAIAssistant() {
         pan.setValue({ x: 0, y: 0 });
       },
       onPanResponderMove: (_, gestureState) => {
-        if (Math.abs(gestureState.dx) > 5 || Math.abs(gestureState.dy) > 5) {
-          isDraggingRef.current = true;
-        }
         Animated.event([null, { dx: pan.x, dy: pan.y }], {
           useNativeDriver: false,
         })(_, gestureState);
@@ -126,7 +122,7 @@ export default function DraggableAIAssistant() {
         }).start();
       },
     })
-  ).current;
+  );
 
   const handleOpenAssistant = () => {
     setModalVisible(true);
@@ -276,6 +272,7 @@ export default function DraggableAIAssistant() {
         transparent={true}
         onRequestClose={() => setModalVisible(false)}
       >
+        <DismissKeyboard>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.modalOverlay}
@@ -456,6 +453,7 @@ export default function DraggableAIAssistant() {
             </View>
           </View>
         </KeyboardAvoidingView>
+        </DismissKeyboard>
       </Modal>
     </>
   );

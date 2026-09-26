@@ -1,4 +1,5 @@
 import { BrandColors } from "@/constants/brandColors";
+import DismissKeyboard from "@/components/common/DismissKeyboard";
 import { NearbyStoreCard } from "@/components/planner";
 import { RECIPES_DATA } from "@/data/recipesData";
 import {
@@ -14,7 +15,9 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -98,7 +101,10 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
   };
 
   useEffect(() => {
-    fetchWeeklyPlan();
+    const timer = setTimeout(() => {
+      void fetchWeeklyPlan();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Compute active meals for selected day
@@ -239,7 +245,10 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
 
   useEffect(() => {
     if (activeSubTab === "shopping") {
-      fetchShoppingList();
+      const timer = setTimeout(() => {
+        void fetchShoppingList();
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [activeSubTab]);
 
@@ -540,7 +549,11 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
 
           {/* Add Meal Modal */}
           <Modal visible={showAddMealModal} transparent animationType="fade">
-            <View style={styles.modalOverlay}>
+            <DismissKeyboard>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : undefined}
+              style={styles.modalOverlay}
+            >
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Thêm món vào {selectedDay}</Text>
@@ -629,7 +642,8 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
                   </Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </KeyboardAvoidingView>
+            </DismissKeyboard>
           </Modal>
         </ScrollView>
       )}
@@ -778,7 +792,11 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
 
           {/* Add Shopping Item Modal */}
           <Modal visible={showAddCartModal} transparent animationType="fade">
-            <View style={styles.modalOverlay}>
+            <DismissKeyboard>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : undefined}
+              style={styles.modalOverlay}
+            >
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Thêm nguyên liệu cần mua</Text>
@@ -851,7 +869,8 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
                   </Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </KeyboardAvoidingView>
+            </DismissKeyboard>
           </Modal>
 
           {/* Siêu thị gần bạn để đi chợ */}
