@@ -42,13 +42,6 @@ export default function NearbyStoreCard({
   const [activeRadiusFilter, setActiveRadiusFilter] = useState<"all" | "2km" | "5km">("all");
   const [isFallbackLocation, setIsFallbackLocation] = useState(false);
 
-  // Kích hoạt tìm kiếm khi người dùng nhấn "Xem địa chỉ" từ sản phẩm/nguyên liệu
-  useEffect(() => {
-    if (searchTrigger && searchTrigger > 0) {
-      handleFindNearbyStores(false);
-    }
-  }, [searchTrigger]);
-
   const handleFindNearbyStores = async (forceRefresh: boolean = false) => {
     try {
       if (forceRefresh) {
@@ -111,6 +104,16 @@ export default function NearbyStoreCard({
       setIsRefreshing(false);
     }
   };
+
+  // Kích hoạt tìm kiếm khi người dùng nhấn "Xem địa chỉ" từ sản phẩm/nguyên liệu
+  useEffect(() => {
+    if (searchTrigger && searchTrigger > 0) {
+      const timer = setTimeout(() => {
+        void handleFindNearbyStores(false);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [searchTrigger]);
 
   // Lọc theo bán kính (Client-side 0ms instant filter)
   const filteredList = useMemo(() => {

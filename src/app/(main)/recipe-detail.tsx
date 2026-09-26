@@ -210,54 +210,50 @@ export default function RecipeDetailScreen() {
     );
     const totalWeight = weights.reduce((sum, w) => sum + w, 0);
 
-    let allocatedTotal = 0;
     const rawPrices = weights.map((w) => {
-      const price = Math.max(
+      return Math.max(
         1000,
         Math.round(((w / totalWeight) * scaledTotal) / 1000) * 1000
       );
-      allocatedTotal += price;
-      return price;
     });
 
+    const allocatedTotal = rawPrices.reduce((sum, price) => sum + price, 0);
     const diff = scaledTotal - allocatedTotal;
     if (diff !== 0 && rawPrices.length > 0) {
       const maxIdx = weights.indexOf(Math.max(...weights));
-      rawPrices[maxIdx] = Math.max(1000, rawPrices[maxIdx] + diff);
+      return rawPrices.map((price, index) =>
+        index === maxIdx ? Math.max(1000, price + diff) : price
+      );
     }
 
     return rawPrices;
   }, [recipe.price, recipe.ingredients, defaultServings, servingsCount]);
 
   // Dynamic remaining cost, savings, owned count, and match percentage
-  const { remainingCost, savedCost, ownedCount, totalCount, matchPercent } =
-    useMemo(() => {
-      const total = recipe.ingredients.length;
-      let remaining = 0;
-      let saved = 0;
-      let owned = 0;
-
-      recipe.ingredients.forEach((_, idx) => {
-        const isChecked = Boolean(checkedIngredients[idx]);
-        const cost = ingredientPrices[idx] || 0;
-        if (isChecked) {
-          saved += cost;
-          owned += 1;
-        } else {
-          remaining += cost;
-        }
-      });
-
-      const percent = total > 0 ? Math.round((owned / total) * 100) : 0;
-
-      return {
-        remainingCost: remaining,
-        savedCost: saved,
-        ownedCount: owned,
-        totalCount: total,
-        matchPercent: percent,
-      };
-    }, [recipe.ingredients, checkedIngredients, ingredientPrices]);
+  const ingredientCostSummary = recipe.ingredients.reduce(
+    (summary, _, index) => {
+      const cost = ingredientPrices[index] || 0;
+      if (checkedIngredients[index]) {
+        return {
+          ...summary,
+          savedCost: summary.savedCost + cost,
+          ownedCount: summary.ownedCount + 1,
+        };
+      }
+      return { ...summary, remainingCost: summary.remainingCost + cost };
+    },
+    {
+      remainingCost: 0,
+      savedCost: 0,
+      ownedCount: 0,
+    }
+  );
+  const totalCount = recipe.ingredients.length;
+  const matchPercent =
+    totalCount > 0
+      ? Math.round((ingredientCostSummary.ownedCount / totalCount) * 100)
+      : 0;
+  const { remainingCost, savedCost, ownedCount } = ingredientCostSummary;
 
   // Handle adding missing ingredients to shopping cart
   const handleAddToCart = () => {

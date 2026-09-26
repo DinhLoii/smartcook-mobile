@@ -1,4 +1,5 @@
 import { BrandColors } from "@/constants/brandColors";
+import DismissKeyboard from "@/components/common/DismissKeyboard";
 import { ChatMessage, ChatRoom } from "@/types";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -147,6 +148,7 @@ export default function ChatRoomModal({
       animationType="slide"
       onRequestClose={onClose}
     >
+      <DismissKeyboard>
       <View
         style={[
           styles.modalContainer,
@@ -263,6 +265,7 @@ export default function ChatRoomModal({
           </View>
         </KeyboardAvoidingView>
       </View>
+      </DismissKeyboard>
     </Modal>
   );
 }

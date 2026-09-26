@@ -1,4 +1,5 @@
 import { BrandColors } from "@/constants/brandColors";
+import DismissKeyboard from "@/components/common/DismissKeyboard";
 import { CommunityAuthor, CommunityComment, CommunityPost } from "@/types";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
@@ -96,6 +97,7 @@ export default function CommentsModal({
       transparent={true}
       onRequestClose={onClose}
     >
+      <DismissKeyboard>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.modalOverlay}
@@ -184,6 +186,7 @@ export default function CommentsModal({
           </View>
         </View>
       </KeyboardAvoidingView>
+      </DismissKeyboard>
     </Modal>
   );
 }

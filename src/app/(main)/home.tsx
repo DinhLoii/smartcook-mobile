@@ -152,7 +152,10 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-    fetchRecipes();
+    const timer = setTimeout(() => {
+      void fetchRecipes();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [selectedCategory, searchQuery, filterTime, filterCalo, currentPage]);
 
   const handleRecipeCreated = (newRecipe: Recipe) => {

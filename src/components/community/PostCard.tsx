@@ -1,7 +1,9 @@
 import { BrandColors } from "@/constants/brandColors";
 import { CommunityAuthor, CommunityPost } from "@/types";
+import { hapticSelection } from "@/utils/haptics";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import { Image as ExpoImage } from "expo-image";
+import React from "react";
 import {
   Image,
   StyleSheet,
@@ -29,25 +31,12 @@ export default function PostCard({
   onShare,
   onTagPress,
 }: PostCardProps) {
-  const [liked, setLiked] = useState(post.isLiked);
-  const [likesCount, setLikesCount] = useState(post.likesCount);
-  const [saved, setSaved] = useState(post.isSaved);
-
-  useEffect(() => {
-    setLiked(post.isLiked);
-    setLikesCount(post.likesCount);
-    setSaved(post.isSaved);
-  }, [post.isLiked, post.likesCount, post.isSaved]);
-
   const handleToggleLike = () => {
-    const nextState = !liked;
-    setLiked(nextState);
-    setLikesCount((prev) => (nextState ? prev + 1 : Math.max(0, prev - 1)));
+    void hapticSelection();
     onLike(post.id);
   };
 
   const handleToggleSave = () => {
-    setSaved(!saved);
     onSave?.(post.id);
   };
 
@@ -149,10 +138,12 @@ export default function PostCard({
       {/* Post Image */}
       {post.images && post.images.length > 0 && (
         <View style={styles.imageWrapper}>
-          <Image
+          <ExpoImage
             source={post.images[0]}
             style={styles.postImage}
-            resizeMode="cover"
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            transition={180}
           />
         </View>
       )}
@@ -162,22 +153,25 @@ export default function PostCard({
         <View style={styles.actionLeft}>
           {/* Like Button */}
           <TouchableOpacity
-            style={[styles.actionPillBtn, liked && styles.actionPillBtnLiked]}
+            style={[
+              styles.actionPillBtn,
+              post.isLiked && styles.actionPillBtnLiked,
+            ]}
             activeOpacity={0.7}
             onPress={handleToggleLike}
           >
             <Ionicons
-              name={liked ? "heart" : "heart-outline"}
+              name={post.isLiked ? "heart" : "heart-outline"}
               size={18}
-              color={liked ? "#EF4444" : "#475569"}
+              color={post.isLiked ? "#EF4444" : "#475569"}
             />
             <Text
               style={[
                 styles.actionPillText,
-                liked && { color: "#EF4444", fontWeight: "700" },
+                post.isLiked && { color: "#EF4444", fontWeight: "700" },
               ]}
             >
-              {likesCount > 0 ? likesCount : "Thích"}
+              {post.likesCount > 0 ? post.likesCount : "Thích"}
             </Text>
           </TouchableOpacity>
 
@@ -206,9 +200,9 @@ export default function PostCard({
             onPress={handleToggleSave}
           >
             <Ionicons
-              name={saved ? "bookmark" : "bookmark-outline"}
+              name={post.isSaved ? "bookmark" : "bookmark-outline"}
               size={19}
-              color={saved ? BrandColors.primary : "#64748B"}
+              color={post.isSaved ? BrandColors.primary : "#64748B"}
             />
           </TouchableOpacity>
 

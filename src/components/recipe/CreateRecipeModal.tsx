@@ -1,4 +1,5 @@
 import { BrandColors } from "@/constants/brandColors";
+import DismissKeyboard from "@/components/common/DismissKeyboard";
 import { RecipeService } from "@/services/recipeService";
 import { Recipe, RecipeIngredient, RecipeNutrition, RecipeStep } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
@@ -465,6 +466,7 @@ export default function CreateRecipeModal({
       transparent={false}
       onRequestClose={onClose}
     >
+      <DismissKeyboard>
       <View style={[styles.modalRoot, { paddingTop: insets.top }]}>
         {/* Compact Top Header */}
         <View style={styles.modalHeader}>
@@ -1179,6 +1181,7 @@ export default function CreateRecipeModal({
           )}
         </View>
       </View>
+      </DismissKeyboard>
     </Modal>
   );
 }

@@ -18,6 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 
 import { BrandColors } from "@/constants/brandColors";
+import DismissKeyboard from "@/components/common/DismissKeyboard";
 import { StoredUser, UpdateProfilePayload } from "@/types";
 
 interface EditProfileModalProps {
@@ -117,6 +118,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       animationType="fade"
       onRequestClose={onClose}
     >
+      <DismissKeyboard>
       <KeyboardAvoidingView
         style={styles.modalBackdrop}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -250,6 +252,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           </View>
         </View>
       </KeyboardAvoidingView>
+      </DismissKeyboard>
     </Modal>
   );
 };
