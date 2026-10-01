@@ -106,10 +106,25 @@ class RecipeServiceClass {
     return local;
   }
 
+  private localFavoriteIds: Set<string> = new Set(["dish-1"]);
+
   /**
    * Toggle yêu thích món ăn (Lưu vào User.favoriteRecipeIds trên MongoDB)
    */
   async toggleFavorite(id: string): Promise<{ isFavorite: boolean }> {
+    // Nếu là ID mock / local (ví dụ: dish-1, dish-2 hoặc không phải 24 ký tự hex của MongoDB)
+    // thì xử lý trạng thái yêu thích cục bộ an toàn, không gọi lên server để tránh lỗi 404
+    const isMongoId = /^[0-9a-fA-F]{24}$/.test(id);
+    if (!isMongoId) {
+      const current = this.localFavoriteIds.has(id);
+      if (current) {
+        this.localFavoriteIds.delete(id);
+      } else {
+        this.localFavoriteIds.add(id);
+      }
+      return { isFavorite: !current };
+    }
+
     try {
       const response = await apiClient.post<{
         success: boolean;
@@ -118,6 +133,11 @@ class RecipeServiceClass {
       }>(`/recipes/${id}/favorite`);
 
       if (response.data?.success && response.data.data) {
+        if (response.data.data.isFavorite) {
+          this.localFavoriteIds.add(id);
+        } else {
+          this.localFavoriteIds.delete(id);
+        }
         return response.data.data;
       }
     } catch (error) {

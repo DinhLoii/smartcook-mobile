@@ -15,6 +15,7 @@ export interface UserCoordinates {
   latitude: number;
   longitude: number;
   isFallback?: boolean;
+  addressName?: string;
 }
 
 // In-memory cache để truy xuất tức thì 0ms, tránh gọi GPS phần cứng nhiều lần
@@ -25,6 +26,32 @@ let cachedCoordinates: {
 
 // Thời gian hiệu lực cache: 5 phút
 const CACHE_TTL_MS = 5 * 60 * 1000;
+
+/**
+ * Lấy địa chỉ cụ thể từ tọa độ GPS thông qua reverse geocoding
+ */
+export async function getAddressFromCoordinates(
+  latitude: number,
+  longitude: number
+): Promise<string> {
+  try {
+    if (Location && Location.reverseGeocodeAsync) {
+      const places = await Location.reverseGeocodeAsync({ latitude, longitude });
+      if (places && places.length > 0) {
+        const p = places[0];
+        const parts: string[] = [];
+        if (p.street || p.name) parts.push(p.street || p.name || "");
+        if (p.district || p.subregion) parts.push(p.district || p.subregion || "");
+        if (p.city || p.region) parts.push(p.city || p.region || "");
+        const formatted = parts.filter(Boolean).join(", ");
+        if (formatted) return formatted;
+      }
+    }
+  } catch {
+    // Reverse geocode fallback
+  }
+  return "";
+}
 
 /**
  * Xóa cache vị trí nếu người dùng muốn làm mới (GPS Refresh)
@@ -91,11 +118,12 @@ export async function getAllStores(): Promise<Store[]> {
 
 
 /**
- * Lấy tọa độ GPS người dùng tối ưu hóa tốc độ cao:
+ * Lấy tọa độ GPS người dùng tối ưu hóa độ chính xác và tốc độ:
  * 1. Kiểm tra in-memory cache trước (0ms)
- * 2. Thử `Location.getLastKnownPositionAsync` của OS (siêu nhanh < 15ms, không phải bật chip GPS)
- * 3. Nếu chưa có, gọi `Location.getCurrentPositionAsync` với timeout ngắn 1.2s và độ chính xác Balanced
- * 4. Fallback tự động về tọa độ mẫu (Quận 1, TP.HCM) nếu thiết bị không bật GPS/máy ảo
+ * 2. Thử `Location.getLastKnownPositionAsync` của OS (siêu nhanh < 15ms) nếu không forceRefresh
+ * 3. Nếu chưa có hoặc khi bấm cập nhật, gọi `Location.getCurrentPositionAsync` với timeout đủ (5.5s)
+ * 4. Tự động lấy địa chỉ thực tế (reverse geocode) để hiển thị tên phường, quận, thành phố chính xác
+ * 5. Fallback an toàn về Quận 1, TP.HCM nếu không có quyền GPS
  */
 export async function getUserCoordinates(
   forceRefresh: boolean = false
@@ -104,7 +132,12 @@ export async function getUserCoordinates(
     latitude: 10.7725,
     longitude: 106.698,
     isFallback: true,
+    addressName: "Quận 1, TP. Hồ Chí Minh",
   };
+
+  if (forceRefresh) {
+    invalidateCoordinatesCache();
+  }
 
   // 1. Kiểm tra cache trong phiên làm việc
   if (
@@ -117,7 +150,7 @@ export async function getUserCoordinates(
 
   const fetchWithSpeedOptimization = async (): Promise<UserCoordinates> => {
     try {
-      // Kiểm tra quyền nhanh
+      // Kiểm tra quyền vị trí
       if (Location && Location.getForegroundPermissionsAsync) {
         let { status } = await Location.getForegroundPermissionsAsync();
         if (status !== "granted") {
@@ -126,39 +159,51 @@ export async function getUserCoordinates(
         }
 
         if (status === "granted") {
-          // Bước 2: Thử lấy vị trí cuối cùng được lưu bởi hệ điều hành (Gần như tức thì < 15ms)
-          try {
-            const lastKnown = await Location.getLastKnownPositionAsync({
-              maxAge: 600000, // Chấp nhận vị trí trong vòng 10 phút gần nhất của OS
-            });
-            if (lastKnown?.coords?.latitude && lastKnown?.coords?.longitude) {
-              const coords: UserCoordinates = {
-                latitude: lastKnown.coords.latitude,
-                longitude: lastKnown.coords.longitude,
-                isFallback: false,
-              };
-              cachedCoordinates = { coords, timestamp: Date.now() };
-              return coords;
+          // Bước 2: Thử lấy vị trí cuối cùng nếu không yêu cầu forceRefresh
+          if (!forceRefresh) {
+            try {
+              const lastKnown = await Location.getLastKnownPositionAsync({
+                maxAge: 300000, // 5 phút gần nhất
+              });
+              if (lastKnown?.coords?.latitude && lastKnown?.coords?.longitude) {
+                const addr = await getAddressFromCoordinates(
+                  lastKnown.coords.latitude,
+                  lastKnown.coords.longitude
+                );
+                const coords: UserCoordinates = {
+                  latitude: lastKnown.coords.latitude,
+                  longitude: lastKnown.coords.longitude,
+                  isFallback: false,
+                  addressName: addr || undefined,
+                };
+                cachedCoordinates = { coords, timestamp: Date.now() };
+                return coords;
+              }
+            } catch {
+              // Tiếp tục lấy vị trí mới
             }
-          } catch {
-            // Tiếp tục lấy vị trí mới nếu chưa có lastKnown
           }
 
-          // Bước 3: Lấy vị trí trực tiếp nhưng dùng độ chính xác Balanced & timeout 1.2s
+          // Bước 3: Lấy vị trí thực tế trực tiếp với timeout 5.5s
           try {
             const locPromise = Location.getCurrentPositionAsync({
               accuracy: Location.Accuracy.Balanced,
             });
             const timeoutPromise = new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error("LOCATION_TIMEOUT")), 1200)
+              setTimeout(() => reject(new Error("LOCATION_TIMEOUT")), 5500)
             );
 
             const loc = await Promise.race([locPromise, timeoutPromise]);
             if (loc?.coords?.latitude && loc?.coords?.longitude) {
+              const addr = await getAddressFromCoordinates(
+                loc.coords.latitude,
+                loc.coords.longitude
+              );
               const coords: UserCoordinates = {
                 latitude: loc.coords.latitude,
                 longitude: loc.coords.longitude,
                 isFallback: false,
+                addressName: addr || undefined,
               };
               cachedCoordinates = { coords, timestamp: Date.now() };
               return coords;
@@ -178,15 +223,20 @@ export async function getUserCoordinates(
         const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
             enableHighAccuracy: false,
-            timeout: 1000,
+            timeout: 3000,
             maximumAge: 60000,
           });
         });
         if (pos?.coords?.latitude && pos?.coords?.longitude) {
+          const addr = await getAddressFromCoordinates(
+            pos.coords.latitude,
+            pos.coords.longitude
+          );
           const coords: UserCoordinates = {
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
             isFallback: false,
+            addressName: addr || undefined,
           };
           cachedCoordinates = { coords, timestamp: Date.now() };
           return coords;
@@ -196,16 +246,17 @@ export async function getUserCoordinates(
       }
     }
 
-    // Nếu không lấy được (hoặc máy ảo chưa set vị trí), dùng fallback chuẩn
+    // Nếu không lấy được, dùng fallback chuẩn
     cachedCoordinates = { coords: fallbackCoords, timestamp: Date.now() };
     return fallbackCoords;
   };
 
   try {
+    const timeoutDuration = forceRefresh ? 6000 : 3500;
     const result = await Promise.race([
       fetchWithSpeedOptimization(),
       new Promise<UserCoordinates>((resolve) =>
-        setTimeout(() => resolve(fallbackCoords), 1500)
+        setTimeout(() => resolve(fallbackCoords), timeoutDuration)
       ),
     ]);
     return result;
