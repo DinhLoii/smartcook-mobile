@@ -5,3 +5,5 @@ export * from "./auth";
 export * from "./category";
 export * from "./fridge";
 export * from "./cookingHistory";
+export * from "./notification";
+export * from "./reward";

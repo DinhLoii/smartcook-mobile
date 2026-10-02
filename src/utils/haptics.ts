@@ -18,3 +18,33 @@ export const hapticSuccess = (): Promise<void> =>
   safelyTrigger(() =>
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
   );
+
+export const triggerHaptic = (
+  type: "light" | "medium" | "heavy" | "success" | "warning" | "error" | "selection" = "light"
+): Promise<void> => {
+  switch (type) {
+    case "selection":
+      return hapticSelection();
+    case "success":
+      return hapticSuccess();
+    case "warning":
+      return safelyTrigger(() =>
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
+      );
+    case "error":
+      return safelyTrigger(() =>
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+      );
+    case "medium":
+      return safelyTrigger(() =>
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+      );
+    case "heavy":
+      return safelyTrigger(() =>
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
+      );
+    case "light":
+    default:
+      return hapticLightImpact();
+  }
+};
