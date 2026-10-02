@@ -41,6 +41,7 @@ export default function NearbyStoreCard({
   const [nearbyList, setNearbyList] = useState<NearestStoreResult[]>([]);
   const [activeRadiusFilter, setActiveRadiusFilter] = useState<"all" | "2km" | "5km">("all");
   const [isFallbackLocation, setIsFallbackLocation] = useState(false);
+  const [userAddressName, setUserAddressName] = useState<string>("");
 
   const handleFindNearbyStores = async (forceRefresh: boolean = false) => {
     try {
@@ -57,6 +58,11 @@ export default function NearbyStoreCard({
 
       const coords = await getUserCoordinates(forceRefresh);
       setIsFallbackLocation(Boolean(coords.isFallback));
+      if (coords.addressName) {
+        setUserAddressName(coords.addressName);
+      } else if (coords.isFallback) {
+        setUserAddressName("Quận 1, TP. Hồ Chí Minh");
+      }
 
       // Giai đoạn 2: Quét tìm siêu thị gần nhất (mô phỏng quét siêu thị ~450ms)
       if (selectedProduct) {
@@ -92,6 +98,7 @@ export default function NearbyStoreCard({
           if (fallbackResults && fallbackResults.length > 0) {
             setNearbyList(fallbackResults);
             setIsFallbackLocation(true);
+            setUserAddressName("Quận 1, TP. Hồ Chí Minh");
             setStatus("success");
           } else {
             setStatus("empty");
@@ -132,13 +139,15 @@ export default function NearbyStoreCard({
       <View style={styles.headerRow}>
         <View style={styles.titleGroup}>
           <Text style={styles.headerIcon}>🏪</Text>
-          <View>
+          <View style={{ flexShrink: 1, paddingRight: 6 }}>
             <Text style={styles.headerTitle}>
               {selectedProduct ? `Địa chỉ bán "${selectedProduct}" gần bạn` : title}
             </Text>
             {status === "success" && (
-              <Text style={styles.headerSubtext}>
-                {isFallbackLocation
+              <Text style={styles.headerSubtext} numberOfLines={1}>
+                {userAddressName
+                  ? `📍 Gần ${userAddressName}`
+                  : isFallbackLocation
                   ? "📍 Gần Quận 1, TP. Hồ Chí Minh"
                   : "📍 Vị trí GPS chính xác của bạn"}
               </Text>

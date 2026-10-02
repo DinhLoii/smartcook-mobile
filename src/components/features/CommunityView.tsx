@@ -456,11 +456,19 @@ export default function CommunityView({ insetsTop }: { insetsTop: number }) {
               >
                 <View style={styles.roomTopRow}>
                   <View style={styles.roomIconBadge}>
-                    <Ionicons
-                      name={(room.iconName || "chatbubbles") as any}
-                      size={18}
-                      color={BrandColors.primary}
-                    />
+                    {room.iconName === "chef-hat" ? (
+                      <MaterialCommunityIcons
+                        name="chef-hat"
+                        size={18}
+                        color={BrandColors.primary}
+                      />
+                    ) : (
+                      <Ionicons
+                        name={(room.iconName || "chatbubbles") as any}
+                        size={18}
+                        color={BrandColors.primary}
+                      />
+                    )}
                   </View>
                   <View style={styles.onlineBadge}>
                     <Ionicons name="people" size={10} color="#059669" />
