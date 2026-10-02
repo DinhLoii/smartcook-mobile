@@ -24,10 +24,11 @@ import {
   View,
 } from "react-native";
 
-// Enable LayoutAnimation for Android
+// Enable LayoutAnimation for Android on Old Architecture
 if (
   Platform.OS === "android" &&
-  UIManager.setLayoutAnimationEnabledExperimental
+  UIManager.setLayoutAnimationEnabledExperimental &&
+  !(globalThis as any).nativeFabricUIManager
 ) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
@@ -718,6 +719,19 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
       if (fridgeRes?.items && fridgeRes.items.length > 0) {
         setFridgeItems(fridgeRes.items);
         setSelectedIngredients(fridgeRes.items.map((i) => i.name));
+      } else {
+        // Đồng bộ các nguyên liệu ban đầu lên backend nếu tủ lạnh backend đang trống
+        if (selectedIngredients.length > 0) {
+          Promise.all(
+            selectedIngredients.map((name) =>
+              FridgeService.addItem({ name }).catch(() => null)
+            )
+          ).then(() => {
+            FridgeService.getMyFridge().then((res) => {
+              if (res?.items && res.items.length > 0) setFridgeItems(res.items);
+            });
+          });
+        }
       }
 
       if (matchedRes && matchedRes.length > 0) {
@@ -770,40 +784,42 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
           console.error("Lỗi khi xóa khỏi tủ lạnh:", e);
         }
       }
-      // Optimistic add
-      setSelectedIngredients((prev) => [...prev, name]);
-      try {
-        const catCodeMap: Record<string, string> = {
-          meat: "meat",
-          seafood: "seafood",
-          veggie: "greens",
-          tuber: "veggies",
-          aromatic_herb: "herbs",
-          fruit: "fruits",
-          egg_tofu: "egg_tofu",
-          dairy: "dairy",
-          carb: "carbs",
-          grain: "grain",
-          spice: "seasoning",
-          aromatic: "spice",
-          oil_sauce: "sauces",
-          dry: "dry",
-        };
-        const backendCategory = catCodeMap[activeMainCat] || undefined;
+      return;
+    }
 
-        const addedItem = await FridgeService.addItem({
-          name,
-          category: backendCategory,
-        });
-        if (addedItem) {
-          setFridgeItems((prev) => [addedItem, ...prev]);
-        }
-        FridgeService.getFridgeMatchedRecipes(15).then((res) => {
-          if (res && res.length > 0) setBackendMatchedRecipes(res);
-        });
-      } catch (e) {
-        console.error("Lỗi khi thêm vào tủ lạnh:", e);
+    // Optimistic add
+    setSelectedIngredients((prev) => [...prev, name]);
+    try {
+      const catCodeMap: Record<string, string> = {
+        meat: "meat",
+        seafood: "seafood",
+        veggie: "greens",
+        tuber: "veggies",
+        aromatic_herb: "herbs",
+        fruit: "fruits",
+        egg_tofu: "egg_tofu",
+        dairy: "dairy",
+        carb: "carbs",
+        grain: "grain",
+        spice: "seasoning",
+        aromatic: "spice",
+        oil_sauce: "sauces",
+        dry: "dry",
+      };
+      const backendCategory = catCodeMap[activeMainCat] || undefined;
+
+      const addedItem = await FridgeService.addItem({
+        name,
+        category: backendCategory,
+      });
+      if (addedItem) {
+        setFridgeItems((prev) => [addedItem, ...prev]);
       }
+      FridgeService.getFridgeMatchedRecipes(15).then((res) => {
+        if (res && res.length > 0) setBackendMatchedRecipes(res);
+      });
+    } catch (e) {
+      console.error("Lỗi khi thêm vào tủ lạnh:", e);
     }
   };
 
@@ -877,58 +893,80 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
     return count;
   };
 
-  // Compute matched recipes with dynamic ranking (Backend first, then local fallback)
+  // Compute matched recipes with dynamic ranking based on currently selected ingredients
   const rankedRecipes = useMemo(() => {
-    if (backendMatchedRecipes.length > 0) {
-      return backendMatchedRecipes.map((item) => ({
-        recipe: item.recipe,
-        matchPercent: item.fridgeMatchPercent,
-        matchedCount: item.matchedCount,
-        totalRequired: item.totalIngredients,
-        matchedIngredients: item.availableIngredients,
-        missingIngredients: item.missingIngredients,
-      }));
-    }
-
     if (selectedIngredients.length === 0) return [];
 
-    return RECIPES_DATA.map((recipe) => {
-      let matchedCount = 0;
-      const matchedIngredients: string[] = [];
-      const missingIngredients: string[] = [];
+    // Base recipes pool: standard RECIPES_DATA
+    const pool = [...RECIPES_DATA];
 
-      recipe.ingredients.forEach((ing) => {
-        if (matchIngredient(ing.name, selectedIngredients)) {
-          matchedCount++;
-          matchedIngredients.push(ing.name);
-        } else {
-          missingIngredients.push(ing.name);
+    // Augment with any backend recipes that aren't already in pool
+    if (backendMatchedRecipes.length > 0) {
+      backendMatchedRecipes.forEach((bm) => {
+        const r = bm.recipe;
+        const rId = (r as any)._id?.toString() || r.id;
+        if (!pool.some((p) => p.id === rId)) {
+          pool.push({
+            id: rId,
+            title: r.title,
+            image: typeof r.image === "string" ? { uri: r.image } : r.image,
+            minutes: (r as any).cookTimeMinutes || (r as any).minutes || 25,
+            calories: r.calories || 450,
+            fridgeMatchPercent: bm.fridgeMatchPercent || 0,
+            ingredients: (r.ingredients || []).map((ing: any) => ({
+              name: typeof ing === "string" ? ing : ing.name,
+              amount: typeof ing === "object" ? ing.amount : "",
+            })),
+            steps: (r as any).instructions || (r as any).steps || [],
+            difficulty: ((r as any).difficulty as any) || "Trung bình",
+            category: r.category || "Món chính",
+          } as any);
         }
       });
+    }
 
-      const totalRequired = recipe.ingredients.length;
-      const matchPercent = Math.min(
-        100,
-        Math.round((matchedCount / totalRequired) * 100),
-      );
+    return pool
+      .map((recipe) => {
+        let matchedCount = 0;
+        const matchedIngredients: string[] = [];
+        const missingIngredients: string[] = [];
 
-      return {
-        recipe,
-        matchPercent,
-        matchedCount,
-        totalRequired,
-        matchedIngredients,
-        missingIngredients,
-      };
-    })
-      .filter((item) => item.matchPercent >= 30) // Show recipes with at least 30% match
+        (recipe.ingredients || []).forEach((ing) => {
+          const ingName = typeof ing === "string" ? ing : ing.name;
+          if (matchIngredient(ingName, selectedIngredients)) {
+            matchedCount++;
+            matchedIngredients.push(ingName);
+          } else {
+            missingIngredients.push(ingName);
+          }
+        });
+
+        const totalRequired = recipe.ingredients?.length || 1;
+        const matchPercent = Math.min(
+          100,
+          Math.round((matchedCount / totalRequired) * 100),
+        );
+
+        return {
+          recipe,
+          matchPercent,
+          matchedCount,
+          totalRequired,
+          matchedIngredients,
+          missingIngredients,
+        };
+      })
+      .filter((item) => item.matchPercent >= 25) // Show recipes with at least 25% match
       .sort((a, b) => b.matchPercent - a.matchPercent);
   }, [backendMatchedRecipes, selectedIngredients]);
 
-  // Split into 100% ready vs partially ready
+  // Split into 100% ready vs partially ready vs suggestions
   const perfectMatches = rankedRecipes.filter((r) => r.matchPercent === 100);
   const partialMatches = rankedRecipes.filter(
     (r) => r.matchPercent >= 50 && r.matchPercent < 100,
+  );
+  const otherMatches = rankedRecipes.filter(
+    (r) => r.matchPercent >= 25 && r.matchPercent < 50,
   );
 
   return (
@@ -1270,7 +1308,14 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                       })
                     }
                   >
-                    <Image source={recipe.image} style={styles.recipeCardImg} />
+                    <Image
+                      source={
+                        typeof recipe.image === "string"
+                          ? { uri: recipe.image }
+                          : recipe.image
+                      }
+                      style={styles.recipeCardImg}
+                    />
                     <View style={styles.recipeCardRight}>
                       <View style={styles.recipeMatchBadgeGreen}>
                         <Text style={styles.recipeMatchTextGreen}>
@@ -1352,7 +1397,14 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                       })
                     }
                   >
-                    <Image source={recipe.image} style={styles.recipeCardImg} />
+                    <Image
+                      source={
+                        typeof recipe.image === "string"
+                          ? { uri: recipe.image }
+                          : recipe.image
+                      }
+                      style={styles.recipeCardImg}
+                    />
                     <View style={styles.recipeCardRight}>
                       <View style={styles.recipeMatchBadgeOrange}>
                         <Text style={styles.recipeMatchTextOrange}>
@@ -1393,6 +1445,77 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                     </View>
                   </TouchableOpacity>
                 ),
+              )}
+            </View>
+          </View>
+        )}
+        {/* TIER 3: GỢI Ý MÓN CẦN MUA THÊM (NẾU CHƯA CÓ MÓN 100% HOẶC 50%) */}
+        {perfectMatches.length === 0 && partialMatches.length === 0 && otherMatches.length > 0 && (
+          <View style={[styles.matchTierBlock, { marginTop: 18 }]}>
+            <View style={styles.tierHeader}>
+              <View style={[styles.tierBadgeOrange, { backgroundColor: "#FEF3C7", borderColor: "#FCD34D" }]}>
+                <Ionicons name="basket-outline" size={13} color="#D97706" />
+                <Text style={styles.tierBadgeOrangeText}>
+                  CẦN MUA THÊM NGUYÊN LIỆU • GỢI Ý THAM KHẢO
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.recipesVerticalList}>
+              {otherMatches.map(
+                ({ recipe, matchPercent, missingIngredients }) => (
+                  <TouchableOpacity
+                    key={recipe.id}
+                    style={styles.recipeCardFull}
+                    activeOpacity={0.88}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/recipe-detail",
+                        params: { id: recipe.id },
+                      })
+                    }
+                  >
+                    <Image
+                      source={typeof recipe.image === "string" ? { uri: recipe.image } : recipe.image}
+                      style={styles.recipeCardImg}
+                    />
+                    <View style={styles.recipeCardRight}>
+                      <View style={[styles.recipeMatchBadgeOrange, { backgroundColor: "#FEF3C7" }]}>
+                        <Text style={[styles.recipeMatchTextOrange, { color: "#D97706" }]}>
+                          Độ khớp {matchPercent}%
+                        </Text>
+                      </View>
+
+                      <Text style={styles.recipeFullTitle} numberOfLines={1}>
+                        {recipe.title}
+                      </Text>
+
+                      <Text style={styles.recipeFullMeta}>
+                        ⏱ {recipe.minutes} phút • 🔥 {recipe.calories} kcal
+                      </Text>
+
+                      {missingIngredients.length > 0 && (
+                        <Text style={styles.missingWarningText} numberOfLines={1}>
+                          ⚠️ Cần thêm: {missingIngredients.slice(0, 2).join(", ")}
+                        </Text>
+                      )}
+
+                      <TouchableOpacity
+                        style={styles.viewRecipeMiniBtn}
+                        onPress={() =>
+                          router.push({
+                            pathname: "/recipe-detail",
+                            params: { id: recipe.id },
+                          })
+                        }
+                      >
+                        <Text style={styles.viewRecipeMiniText}>
+                          Xem chi tiết →
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </TouchableOpacity>
+                )
               )}
             </View>
           </View>
