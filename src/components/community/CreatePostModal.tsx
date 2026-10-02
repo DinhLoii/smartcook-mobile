@@ -41,11 +41,11 @@ const AVAILABLE_TAGS = [
 ];
 
 const PRESET_SAMPLE_PHOTOS = [
-  { id: "p1", name: "Cơm Gà", source: require("@/assets/images/hero-teriyaki-bowl.jpg") },
-  { id: "p2", name: "Cá Hồi", source: require("@/assets/images/salad-salmon.jpg") },
-  { id: "p3", name: "Bít Tết", source: require("@/assets/images/steak-asparagus.jpg") },
-  { id: "p4", name: "Mỳ Ý", source: require("@/assets/images/pasta-bolognese.jpg") },
-  { id: "p5", name: "Gà Giòn", source: require("@/assets/images/crispy-chicken.jpg") },
+  { id: "p1", name: "Cơm Gà", source: require("@/assets/images/hero-teriyaki-bowl.jpg"), url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80" },
+  { id: "p2", name: "Cá Hồi", source: require("@/assets/images/salad-salmon.jpg"), url: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80" },
+  { id: "p3", name: "Bít Tết", source: require("@/assets/images/steak-asparagus.jpg"), url: "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=800&q=80" },
+  { id: "p4", name: "Mỳ Ý", source: require("@/assets/images/pasta-bolognese.jpg"), url: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80" },
+  { id: "p5", name: "Gà Giòn", source: require("@/assets/images/crispy-chicken.jpg"), url: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=800&q=80" },
 ];
 
 export default function CreatePostModal({
@@ -57,7 +57,7 @@ export default function CreatePostModal({
   const [dishName, setDishName] = useState("");
   const [content, setContent] = useState("");
   const [selectedPhoto, setSelectedPhoto] = useState<any>(
-    PRESET_SAMPLE_PHOTOS[0].source
+    PRESET_SAMPLE_PHOTOS[0]
   );
   const [selectedTags, setSelectedTags] = useState<string[]>([
     "#KhoeMonNgon",
@@ -129,9 +129,12 @@ export default function CreatePostModal({
       return;
     }
 
+    const finalContent = content.trim() || "Món ngon tự nấu chia sẻ cùng cả nhà! 🍲";
+    const finalDishName = dishName.trim() || (selectedPhoto?.name ? `Món ${selectedPhoto.name}` : "Món Ngon Tự Nấu");
+
     onSubmit({
-      dishName: "",
-      content: content.trim(),
+      dishName: finalDishName,
+      content: finalContent,
       images: selectedPhoto ? [selectedPhoto] : [],
       tags: selectedTags,
     });
@@ -220,7 +223,7 @@ export default function CreatePostModal({
               {selectedPhoto && (
                 <View style={styles.previewImageWrapper}>
                   <Image
-                    source={selectedPhoto}
+                    source={selectedPhoto?.source || selectedPhoto}
                     style={styles.previewImage}
                     resizeMode="cover"
                   />
@@ -261,20 +264,26 @@ export default function CreatePostModal({
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.sampleScroll}
               >
-                {PRESET_SAMPLE_PHOTOS.map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={[
-                      styles.sampleThumbnailWrapper,
-                      selectedPhoto === item.source && styles.sampleThumbnailActive,
-                    ]}
-                    activeOpacity={0.8}
-                    onPress={() => setSelectedPhoto(item.source)}
-                  >
-                    <Image source={item.source} style={styles.sampleThumbnail} />
-                    <Text style={styles.sampleThumbnailText}>{item.name}</Text>
-                  </TouchableOpacity>
-                ))}
+                {PRESET_SAMPLE_PHOTOS.map((item) => {
+                  const isSelected =
+                    selectedPhoto === item ||
+                    selectedPhoto?.id === item.id ||
+                    selectedPhoto === item.source;
+                  return (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={[
+                        styles.sampleThumbnailWrapper,
+                        isSelected && styles.sampleThumbnailActive,
+                      ]}
+                      activeOpacity={0.8}
+                      onPress={() => setSelectedPhoto(item)}
+                    >
+                      <Image source={item.source} style={styles.sampleThumbnail} />
+                      <Text style={styles.sampleThumbnailText}>{item.name}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </ScrollView>
             </View>
 

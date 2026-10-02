@@ -8,6 +8,7 @@ import {
 } from "@/types";
 import { apiClient } from "./apiClient";
 import { socketService } from "./socketService";
+import { tokenStorage } from "@/utils/tokenStorage";
 
 type Listener = () => void;
 
@@ -18,6 +19,16 @@ export const CURRENT_USER: CommunityAuthor = {
   badge: "Đầu Bếp Tại Gia",
   isChef: true,
 };
+
+// Initialize CURRENT_USER with real logged-in user if available
+tokenStorage.getUser().then((user) => {
+  if (user?.id) {
+    CURRENT_USER.id = user.id;
+  }
+  if (user?.fullName || (user?.firstName && user?.lastName)) {
+    CURRENT_USER.name = user.fullName || `${user.firstName} ${user.lastName}`.trim();
+  }
+}).catch(() => {});
 
 // Initial preset contacts / conversations for Messenger list (fallback)
 const INITIAL_CONVERSATIONS: DirectConversation[] = [
@@ -365,25 +376,42 @@ class CommunityServiceClass {
     tags: string[];
     recipeId?: string;
   }): Promise<CommunityPost> {
+    const finalContent =
+      data.content?.trim() ||
+      data.dishName?.trim() ||
+      "Món ngon tự nấu chia sẻ cùng cả nhà! 🍲";
+    const finalDishName = data.dishName?.trim() || "Món Ngon Tự Nấu";
+    const finalTags =
+      data.tags && data.tags.length > 0 ? data.tags : ["#KhoeMonNgon"];
+
     try {
       // Extract pure string URLs if available
       const imageUrls: string[] = [];
       data.images.forEach((img) => {
         if (typeof img === "string" && img.startsWith("http")) {
           imageUrls.push(img);
-        } else if (img?.uri && img.uri.startsWith("http")) {
+        } else if (img?.url && typeof img.url === "string" && img.url.startsWith("http")) {
+          imageUrls.push(img.url);
+        } else if (img?.uri && typeof img.uri === "string" && img.uri.startsWith("http")) {
           imageUrls.push(img.uri);
         }
       });
 
-      const payload = {
-        dishName: data.dishName.trim() || "Món Ngon Tự Nấu",
-        caption: data.content.trim(),
-        content: data.content.trim(),
-        tags: data.tags.length > 0 ? data.tags : ["#KhoeMonNgon"],
-        images: imageUrls.length > 0 ? imageUrls : ["https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80"],
-        recipeId: data.recipeId,
+      const payload: any = {
+        dishName: finalDishName,
+        caption: finalContent,
+        content: finalContent,
+        tags: finalTags,
+        images:
+          imageUrls.length > 0
+            ? imageUrls
+            : [
+                "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80",
+              ],
       };
+      if (data.recipeId) {
+        payload.recipeId = data.recipeId;
+      }
 
       const res = await apiClient.post("/community/posts", payload);
       if (res.data?.success && res.data?.data) {
@@ -392,18 +420,24 @@ class CommunityServiceClass {
         this.notify();
         return created;
       }
-    } catch (e) {
-      console.warn("⚠️ [CommunityService] Lỗi tạo bài đăng qua API, fallback lưu tạm:", e);
+    } catch (e: any) {
+      console.warn(
+        "⚠️ [CommunityService] Lỗi tạo bài đăng qua API, fallback lưu tạm:",
+        e?.response?.data || e?.message || e
+      );
     }
 
     // Local optimistic fallback
     const newPost: CommunityPost = {
       id: `post-${Date.now()}`,
       author: CURRENT_USER,
-      dishName: data.dishName || "Món Ngon Tự Nấu",
-      content: data.content,
-      images: data.images.length > 0 ? data.images : [require("@/assets/images/hero-teriyaki-bowl.jpg")],
-      tags: data.tags.length > 0 ? data.tags : ["#KhoeMonNgon"],
+      dishName: finalDishName,
+      content: finalContent,
+      images:
+        data.images.length > 0
+          ? data.images
+          : [require("@/assets/images/hero-teriyaki-bowl.jpg")],
+      tags: finalTags,
       likesCount: 1,
       isLiked: true,
       isSaved: false,
@@ -681,14 +715,22 @@ class CommunityServiceClass {
       const res = await apiClient.get(`/chat/conversations/${conversationId}/messages`);
       const list = res.data?.data;
       if (Array.isArray(list)) {
-        const normalized: ChatMessage[] = list.map((m: any) => ({
-          id: m.id || m._id || `m-${Date.now()}`,
-          sender: this.normalizeAuthor(m.sender || m.user),
-          text: m.text || "",
-          imageUri: m.imageUri || m.imageUrl,
-          timestamp: m.timestamp || new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-          isMe: (m.sender?.id || m.sender?._id || m.user?._id) === CURRENT_USER.id,
-        }));
+        const normalized: ChatMessage[] = list.map((m: any) => {
+          const sId = m.sender?.id || m.sender?._id || m.user?._id;
+          const isSenderMe =
+            typeof m.isMe === "boolean"
+              ? m.isMe
+              : Boolean(sId && (sId === CURRENT_USER.id || sId === "user-me"));
+
+          return {
+            id: m.id || m._id || `m-${Date.now()}`,
+            sender: this.normalizeAuthor(m.sender || m.user),
+            text: m.text || "",
+            imageUri: m.imageUri || m.imageUrl,
+            timestamp: m.timestamp || new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+            isMe: isSenderMe,
+          };
+        });
 
         this.messages[conversationId] = normalized;
         this.notify();
@@ -724,7 +766,7 @@ class CommunityServiceClass {
     const convId = explicitConversationId || `direct-${targetUser.id}`;
 
     const newMsg: ChatMessage = {
-      id: `m-${Date.now()}`,
+      id: `m-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       sender: CURRENT_USER,
       text: cleanText,
       imageUri,
