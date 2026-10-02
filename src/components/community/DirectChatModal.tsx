@@ -5,12 +5,14 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -18,6 +20,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { triggerHaptic } from "@/utils/haptics";
 
 interface DirectChatModalProps {
   visible: boolean;
@@ -51,6 +54,7 @@ export default function DirectChatModal({
 
   const handleSend = () => {
     if (!inputText.trim() && !attachedImage) return;
+    triggerHaptic("medium");
     onSendMessage(inputText.trim(), attachedImage || undefined);
     setInputText("");
     setAttachedImage(null);
@@ -76,202 +80,251 @@ export default function DirectChatModal({
   };
 
   const renderMessageItem = ({ item }: { item: ChatMessage }) => {
-    const isMe = item.isMe;
+    // In a 1-1 direct conversation, there are only two parties:
+    // targetUser (the other party) and Current User (Me).
+    const targetId = targetUser.id || (targetUser as any)._id;
+    const senderId = item.sender?.id || (item.sender as any)?._id;
+
+    const isSenderTarget =
+      (targetId && senderId && String(targetId) === String(senderId)) ||
+      (targetUser.name && item.sender?.name && targetUser.name === item.sender?.name);
+
+    // If sender is NOT the target user, or item.isMe is true -> it's definitely ME!
+    const isMe = isSenderTarget ? false : (item.isMe !== undefined ? item.isMe : true);
 
     return (
-      <View
-        style={[
-          styles.messageRow,
-          isMe ? styles.messageRowRight : styles.messageRowLeft,
-        ]}
-      >
-        {/* Other user avatar */}
-        {!isMe && (
-          <Image source={item.sender.avatar} style={styles.senderAvatar} />
-        )}
+      <View style={[styles.messageWrapper, isMe ? styles.wrapperMe : styles.wrapperOther]}>
+        <View style={[styles.messageRow, isMe ? styles.messageRowRight : styles.messageRowLeft]}>
+          {/* Only show target user's avatar on the left */}
+          {!isMe && (
+            <Image
+              source={
+                typeof item.sender?.avatar === "string"
+                  ? { uri: item.sender.avatar }
+                  : item.sender?.avatar || require("@/assets/images/salad-salmon.jpg")
+              }
+              style={styles.senderAvatar}
+            />
+          )}
 
-        <View style={styles.bubbleCol}>
-          <View
-            style={[
-              styles.messageBubble,
-              isMe ? styles.bubbleMe : styles.bubbleOther,
-            ]}
-          >
-            {item.imageUri ? (
-              <Image
-                source={{ uri: item.imageUri }}
-                style={styles.attachedImgInBubble}
-                resizeMode="cover"
-              />
-            ) : null}
+          <View style={[styles.bubbleCol, isMe && styles.bubbleColMe]}>
+            <View
+              style={[
+                styles.messageBubble,
+                isMe ? styles.bubbleMe : styles.bubbleOther,
+              ]}
+            >
+              {item.imageUri ? (
+                <Image
+                  source={{ uri: item.imageUri }}
+                  style={styles.attachedImgInBubble}
+                  resizeMode="cover"
+                />
+              ) : null}
 
-            {item.text ? (
-              <Text
-                style={[
-                  styles.messageText,
-                  isMe ? styles.textMe : styles.textOther,
-                ]}
-              >
-                {item.text}
-              </Text>
-            ) : null}
-          </View>
+              {item.text ? (
+                <Text
+                  style={[
+                    styles.messageText,
+                    isMe ? styles.textMe : styles.textOther,
+                  ]}
+                >
+                  {item.text}
+                </Text>
+              ) : null}
+            </View>
 
-          {/* Time & status check */}
-          <View
-            style={[
-              styles.timeRow,
-              isMe ? styles.timeRowRight : styles.timeRowLeft,
-            ]}
-          >
-            <Text style={styles.timeText}>{item.timestamp}</Text>
-            {isMe && (
-              <Ionicons
-                name="checkmark-done"
-                size={13}
-                color="#FFFFFF"
-                style={{ marginLeft: 3 }}
-              />
-            )}
+            {/* Time & status check */}
+            <View
+              style={[
+                styles.timeRow,
+                isMe ? styles.timeRowRight : styles.timeRowLeft,
+              ]}
+            >
+              <Text style={styles.timeText}>{item.timestamp}</Text>
+              {isMe && (
+                <Ionicons
+                  name="checkmark-done"
+                  size={14}
+                  color={BrandColors.primary}
+                  style={{ marginLeft: 3 }}
+                />
+              )}
+            </View>
           </View>
         </View>
       </View>
     );
   };
 
+  const headerTopPadding =
+    Platform.OS === "android"
+      ? (StatusBar.currentHeight || insets.top || 24) + 6
+      : insets.top + 6;
+
   return (
     <Modal
       visible={visible}
       animationType="slide"
       onRequestClose={onClose}
+      statusBarTranslucent={true}
     >
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={true} />
       <DismissKeyboard>
-      <View
-        style={[
-          styles.container,
-          { paddingTop: Math.max(insets.top, 10), paddingBottom: Math.max(insets.bottom, 10) },
-        ]}
-      >
-        {/* Top Header - Exact match to image 2 */}
-        <View style={styles.topHeader}>
-          <View style={styles.headerLeft}>
-            <TouchableOpacity
-              style={styles.backBtn}
-              activeOpacity={0.7}
-              onPress={onClose}
-            >
-              <Ionicons name="chevron-back" size={24} color="#0F172A" />
-            </TouchableOpacity>
+        <View style={styles.container}>
+          {/* Top Header - Merged seamlessly with Status Bar */}
+          <View style={[styles.topHeader, { paddingTop: headerTopPadding }]}>
+            <View style={styles.headerLeft}>
+              <TouchableOpacity
+                style={styles.backBtn}
+                activeOpacity={0.7}
+                onPress={onClose}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="chevron-back" size={26} color="#0F172A" />
+              </TouchableOpacity>
 
-            <View style={styles.avatarWrap}>
-              <Image source={targetUser.avatar} style={styles.headerAvatar} />
-              <View style={styles.onlineBadge} />
-            </View>
-
-            <View style={styles.userMeta}>
-              <Text style={styles.headerUserName} numberOfLines={1}>
-                {targetUser.name}
-              </Text>
-              <View style={styles.statusRow}>
-                <View style={styles.statusDot} />
-                <Text style={styles.statusText}>Đang hoạt động</Text>
+              <View style={styles.avatarWrap}>
+                <Image
+                  source={
+                    typeof targetUser.avatar === "string"
+                      ? { uri: targetUser.avatar }
+                      : targetUser.avatar
+                  }
+                  style={styles.headerAvatar}
+                />
+                <View style={styles.onlineBadge} />
               </View>
-            </View>
-          </View>
 
-          {/* Call, Video Call, More buttons */}
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7}>
-              <Ionicons name="call" size={20} color={BrandColors.primary} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7}>
-              <Ionicons name="videocam" size={22} color={BrandColors.primary} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7}>
-              <Ionicons name="ellipsis-vertical" size={18} color="#0F172A" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Messages Stream */}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.keyboardContainer}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
-        >
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            keyExtractor={(item) => item.id}
-            renderItem={renderMessageItem}
-            contentContainerStyle={styles.messagesList}
-            showsVerticalScrollIndicator={false}
-            ListHeaderComponent={
-              /* Date badge "Hôm nay" - exact match to image 2 */
-              <View style={styles.dateBadgeContainer}>
-                <View style={styles.dateBadge}>
-                  <Text style={styles.dateBadgeText}>Hôm nay</Text>
+              <View style={styles.userMeta}>
+                <Text style={styles.headerUserName} numberOfLines={1}>
+                  {targetUser.name}
+                </Text>
+                <View style={styles.statusRow}>
+                  <View style={styles.statusDot} />
+                  <Text style={styles.statusText}>Đang hoạt động</Text>
                 </View>
               </View>
-            }
-          />
-
-          {/* Image Attachment Preview */}
-          {attachedImage && (
-            <View style={styles.attachedPreviewRow}>
-              <Image source={{ uri: attachedImage }} style={styles.attachedThumb} />
-              <TouchableOpacity
-                style={styles.removeAttachedBtn}
-                onPress={() => setAttachedImage(null)}
-              >
-                <Ionicons name="close-circle" size={20} color="#EF4444" />
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* Bottom Chat Input Bar - Exact match to image 2 */}
-          <View style={styles.bottomBar}>
-            {/* Plus Button */}
-            <TouchableOpacity
-              style={styles.plusBtn}
-              activeOpacity={0.7}
-              onPress={handlePickPhoto}
-            >
-              <Ionicons name="add" size={22} color={BrandColors.primary} />
-            </TouchableOpacity>
-
-            {/* Input Field with Emoji Icon */}
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Nhập tin nhắn..."
-                placeholderTextColor="#94A3B8"
-                value={inputText}
-                onChangeText={setInputText}
-                multiline
-                maxLength={400}
-              />
-              <TouchableOpacity style={styles.emojiBtn} activeOpacity={0.7}>
-                <Ionicons name="happy-outline" size={20} color="#64748B" />
-              </TouchableOpacity>
             </View>
 
-            {/* Blue / Orange Send Button with Send Plane */}
-            <TouchableOpacity
-              style={[
-                styles.sendBtn,
-                (inputText.trim() || attachedImage)
-                  ? styles.sendBtnActive
-                  : styles.sendBtnInactive,
-              ]}
-              disabled={!inputText.trim() && !attachedImage}
-              onPress={handleSend}
-            >
-              <Ionicons name="paper-plane" size={16} color="#FFFFFF" />
-            </TouchableOpacity>
+            {/* Call, Video Call, More buttons */}
+            <View style={styles.headerRight}>
+              <TouchableOpacity style={styles.actionBtn} activeOpacity={0.7}>
+                <Ionicons name="call" size={20} color={BrandColors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionBtn} activeOpacity={0.7}>
+                <Ionicons name="videocam" size={22} color={BrandColors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionBtn} activeOpacity={0.7}>
+                <Ionicons name="ellipsis-vertical" size={18} color="#475569" />
+              </TouchableOpacity>
+            </View>
           </View>
-        </KeyboardAvoidingView>
-      </View>
+
+          {/* Messages Stream */}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            style={styles.keyboardContainer}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+          >
+            <FlatList
+              ref={flatListRef}
+              data={messages}
+              keyExtractor={(item, index) =>
+                item.id ? `${item.id}-${index}` : `msg-${index}`
+              }
+              renderItem={renderMessageItem}
+              contentContainerStyle={styles.messagesList}
+              showsVerticalScrollIndicator={false}
+              ListHeaderComponent={
+                <View style={styles.dateBadgeContainer}>
+                  <View style={styles.dateBadge}>
+                    <Text style={styles.dateBadgeText}>Hôm nay</Text>
+                  </View>
+                </View>
+              }
+              ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                  <ActivityIndicator
+                    size="small"
+                    color={BrandColors.primary}
+                    style={{ marginBottom: 10 }}
+                  />
+                  <Text style={styles.emptyText}>Đang kết nối đoạn chat...</Text>
+                  <Text style={styles.emptySubText}>
+                    Gửi lời chào đến {targetUser.name} để bắt đầu cuộc trò chuyện!
+                  </Text>
+                </View>
+              }
+            />
+
+            {/* Image Attachment Preview */}
+            {attachedImage && (
+              <View style={styles.attachedPreviewRow}>
+                <Image source={{ uri: attachedImage }} style={styles.attachedThumb} />
+                <TouchableOpacity
+                  style={styles.removeAttachedBtn}
+                  onPress={() => setAttachedImage(null)}
+                >
+                  <Ionicons name="close-circle" size={22} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Bottom Chat Input Bar */}
+            <View
+              style={[
+                styles.bottomBar,
+                { paddingBottom: Math.max(insets.bottom, 12) },
+              ]}
+            >
+              {/* Media Button */}
+              <TouchableOpacity
+                style={styles.plusBtn}
+                activeOpacity={0.7}
+                onPress={handlePickPhoto}
+              >
+                <Ionicons name="image-outline" size={22} color={BrandColors.primary} />
+              </TouchableOpacity>
+
+              {/* Input Field with Emoji Icon */}
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Nhập tin nhắn..."
+                  placeholderTextColor="#94A3B8"
+                  value={inputText}
+                  onChangeText={setInputText}
+                  multiline
+                  maxLength={500}
+                />
+                <TouchableOpacity style={styles.emojiBtn} activeOpacity={0.7}>
+                  <Ionicons name="happy-outline" size={20} color="#64748B" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Send Button */}
+              <TouchableOpacity
+                style={[
+                  styles.sendBtn,
+                  inputText.trim() || attachedImage
+                    ? styles.sendBtnActive
+                    : styles.sendBtnInactive,
+                ]}
+                disabled={!inputText.trim() && !attachedImage}
+                onPress={handleSend}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="paper-plane"
+                  size={17}
+                  color="#FFFFFF"
+                  style={{ marginLeft: 2 }}
+                />
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
       </DismissKeyboard>
     </Modal>
   );
@@ -287,10 +340,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingBottom: 12,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+    zIndex: 10,
   },
   headerLeft: {
     flexDirection: "row",
@@ -299,25 +358,27 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     padding: 6,
-    marginRight: 4,
+    marginRight: 6,
   },
   avatarWrap: {
     position: "relative",
     marginRight: 10,
   },
   headerAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: "#F1F5F9",
+    borderWidth: 1.5,
+    borderColor: "#F1F5F9",
   },
   onlineBadge: {
     position: "absolute",
     bottom: 0,
     right: 0,
-    width: 11,
-    height: 11,
-    borderRadius: 5.5,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     backgroundColor: "#22C55E",
     borderWidth: 2,
     borderColor: "#FFFFFF",
@@ -326,7 +387,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerUserName: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
     color: "#0F172A",
   },
@@ -336,30 +397,36 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
     backgroundColor: "#22C55E",
-    marginRight: 4,
+    marginRight: 5,
   },
   statusText: {
-    fontSize: 11,
-    color: "#64748B",
+    fontSize: 12,
+    color: "#16A34A",
+    fontWeight: "500",
   },
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 8,
   },
-  iconBtn: {
-    padding: 4,
+  actionBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8FAFC",
   },
   keyboardContainer: {
     flex: 1,
   },
   messagesList: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
     flexGrow: 1,
   },
   dateBadgeContainer: {
@@ -373,67 +440,93 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   dateBadgeText: {
-    fontSize: 11.5,
+    fontSize: 12,
     color: "#475569",
-    fontWeight: "500",
+    fontWeight: "600",
+  },
+  messageWrapper: {
+    marginBottom: 14,
+  },
+  wrapperMe: {
+    alignItems: "flex-end",
+  },
+  wrapperOther: {
+    alignItems: "flex-start",
   },
   messageRow: {
     flexDirection: "row",
-    marginBottom: 14,
     alignItems: "flex-end",
   },
   messageRowLeft: {
-    alignSelf: "flex-start",
-    maxWidth: "80%",
+    maxWidth: "84%",
   },
   messageRowRight: {
-    alignSelf: "flex-end",
-    flexDirection: "row-reverse",
     maxWidth: "80%",
+    justifyContent: "flex-end",
   },
   senderAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     marginRight: 8,
     backgroundColor: "#E2E8F0",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginBottom: 20, // Align with bubble bottom
   },
   bubbleCol: {
     flexShrink: 1,
   },
+  bubbleColMe: {
+    alignItems: "flex-end",
+  },
   messageBubble: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 18,
+    paddingHorizontal: 15,
+    paddingVertical: 11,
+    borderRadius: 20,
   },
   bubbleOther: {
     backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
     borderBottomLeftRadius: 4,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 1,
   },
   bubbleMe: {
     backgroundColor: BrandColors.primary,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 20,
     borderBottomRightRadius: 4,
+    shadowColor: BrandColors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 2,
   },
   messageText: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 22,
   },
   textOther: {
     color: "#0F172A",
   },
   textMe: {
     color: "#FFFFFF",
+    fontWeight: "400",
   },
   attachedImgInBubble: {
-    width: 180,
-    height: 120,
-    borderRadius: 12,
-    marginBottom: 4,
+    width: 220,
+    height: 150,
+    borderRadius: 14,
+    marginBottom: 6,
   },
   timeRow: {
     flexDirection: "row",
@@ -441,46 +534,54 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   timeRowLeft: {
-    marginLeft: 4,
+    marginLeft: 6,
   },
   timeRowRight: {
-    alignSelf: "flex-end",
     marginRight: 4,
+    justifyContent: "flex-end",
   },
   timeText: {
-    fontSize: 10,
+    fontSize: 11,
     color: "#94A3B8",
+    fontWeight: "400",
   },
   attachedPreviewRow: {
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 10,
+    paddingBottom: 4,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
   },
   attachedThumb: {
-    width: 50,
-    height: 50,
-    borderRadius: 8,
+    width: 56,
+    height: 56,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
   removeAttachedBtn: {
-    marginLeft: -10,
-    marginTop: -30,
+    marginLeft: -12,
+    marginTop: -32,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
   },
   bottomBar: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingTop: 8,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
     borderTopColor: "#F1F5F9",
   },
   plusBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "#FFF3E0",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#FFF1EC",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 8,
@@ -490,33 +591,58 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F1F5F9",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    minHeight: 40,
+    borderRadius: 22,
+    paddingHorizontal: 14,
+    minHeight: 42,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
   textInput: {
     flex: 1,
-    fontSize: 13.5,
+    fontSize: 14.5,
     color: "#0F172A",
-    paddingVertical: Platform.OS === "android" ? 4 : 0,
-    maxHeight: 90,
+    paddingVertical: Platform.OS === "android" ? 6 : 8,
+    maxHeight: 100,
   },
   emojiBtn: {
     padding: 4,
     marginLeft: 4,
   },
   sendBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 8,
   },
   sendBtnActive: {
     backgroundColor: BrandColors.primary,
+    shadowColor: BrandColors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
   },
   sendBtnInactive: {
     backgroundColor: "#CBD5E1",
+  },
+  emptyContainer: {
+    paddingVertical: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  emptyText: {
+    fontSize: 14.5,
+    fontWeight: "600",
+    color: "#64748B",
+    marginBottom: 6,
+  },
+  emptySubText: {
+    fontSize: 12.5,
+    color: "#94A3B8",
+    textAlign: "center",
+    lineHeight: 18,
   },
 });
