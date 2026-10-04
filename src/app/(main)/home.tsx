@@ -48,7 +48,7 @@ export default function HomeScreen() {
   const { user, updateChefXP } = useAuth();
 
   const [activeTab, setActiveTab] = useState<
-    "home" | "fridge" | "scan" | "community" | "profile"
+    "home" | "fridge" | "planner" | "scan" | "community" | "profile"
   >("home");
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showShoppingNote, setShowShoppingNote] = useState(false);
@@ -1435,6 +1435,15 @@ export default function HomeScreen() {
                 )}
               </TouchableOpacity>
 
+              {/* Weekly Meal Planner Quick Button */}
+              <TouchableOpacity
+                style={styles.circularIconBtn}
+                activeOpacity={0.75}
+                onPress={() => setActiveTab("planner")}
+              >
+                <Ionicons name="calendar-outline" size={19} color="#0284C7" />
+              </TouchableOpacity>
+
               {/* Gift / Recipe Rewards Box */}
               <TouchableOpacity
                 style={styles.circularIconBtn}
@@ -2079,6 +2088,22 @@ export default function HomeScreen() {
         </ScrollView>
       )}
 
+      {/* 2.5. Weekly Meal Planner Content (SRS Module 15 & 16) */}
+      {activeTab === "planner" && (
+        <View style={{ flex: 1, paddingTop: insets.top + 8, paddingBottom: insets.bottom + 90 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 8, gap: 10 }}>
+            <TouchableOpacity
+              onPress={() => setActiveTab("home")}
+              style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#F1F5F9", justifyContent: "center", alignItems: "center" }}
+            >
+              <Ionicons name="arrow-back" size={20} color="#334155" />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: "#0F172A" }}>Thực Đơn & Kế Hoạch Tuần</Text>
+          </View>
+          <PlannerView insetsTop={0} />
+        </View>
+      )}
+
       {/* 3. Scan AI Tab Content (Module 7 & 25) */}
       {activeTab === "scan" && (
         <ScrollView
@@ -2435,6 +2460,7 @@ export default function HomeScreen() {
       <GiftRewardsModal
         visible={showGiftModal}
         onClose={() => setShowGiftModal(false)}
+        onXpUpdated={(newXp, newLevel) => updateChefXP(newXp, newLevel)}
       />
 
       {/* Floating Draggable AI Assistant Bubble */}
