@@ -26,10 +26,11 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/AuthContext";
 
-// Enable LayoutAnimation for Android
+// Enable LayoutAnimation for Android on Old Architecture
 if (
   Platform.OS === "android" &&
-  UIManager.setLayoutAnimationEnabledExperimental
+  UIManager.setLayoutAnimationEnabledExperimental &&
+  !(globalThis as any).nativeFabricUIManager
 ) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }

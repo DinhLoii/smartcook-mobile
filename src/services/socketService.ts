@@ -27,12 +27,14 @@ export interface TypingData {
 type MessageListener = (message: RealtimeMessage) => void;
 type TypingListener = (data: TypingData) => void;
 type StopTypingListener = (data: { conversationId: string; userId: string }) => void;
+type NotificationListener = (notification: any) => void;
 
 class SocketService {
   private socket: Socket | null = null;
   private messageListeners = new Set<MessageListener>();
   private typingListeners = new Set<TypingListener>();
   private stopTypingListeners = new Set<StopTypingListener>();
+  private notificationListeners = new Set<NotificationListener>();
   private currentJoinedRooms = new Set<string>();
 
   /**
@@ -124,6 +126,17 @@ class SocketService {
         });
       });
 
+      // Notification listener
+      this.socket.on("new_notification", (notif: any) => {
+        this.notificationListeners.forEach((listener) => {
+          try {
+            listener(notif);
+          } catch (e) {
+            console.error("Lỗi khi xử lý notificationListener:", e);
+          }
+        });
+      });
+
       return this.socket;
     } catch (e) {
       console.error("❌ [SocketService] Lỗi khởi tạo socket:", e);
@@ -151,10 +164,20 @@ class SocketService {
   }
 
   /**
+   * Get underlying Socket.io instance
+   */
+  getSocket(): Socket | null {
+    return this.socket;
+  }
+
+  /**
    * Join a room or conversation
    */
   joinRoom(conversationId: string) {
     if (!conversationId) return;
+    if (this.currentJoinedRooms.has(conversationId)) {
+      return;
+    }
     this.currentJoinedRooms.add(conversationId);
     if (this.socket && this.socket.connected) {
       this.socket.emit("join_room", { conversationId });
@@ -243,6 +266,16 @@ class SocketService {
     this.stopTypingListeners.add(listener);
     return () => {
       this.stopTypingListeners.delete(listener);
+    };
+  }
+
+  /**
+   * Subscribe to new incoming realtime notifications
+   */
+  onNewNotification(listener: NotificationListener): () => void {
+    this.notificationListeners.add(listener);
+    return () => {
+      this.notificationListeners.delete(listener);
     };
   }
 }

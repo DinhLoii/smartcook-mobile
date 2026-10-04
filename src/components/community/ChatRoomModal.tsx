@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -142,21 +143,28 @@ export default function ChatRoomModal({
     );
   };
 
+  const headerTopPadding =
+    Platform.OS === "android"
+      ? (StatusBar.currentHeight || insets.top || 24) + 6
+      : insets.top + 6;
+
   return (
     <Modal
       visible={visible}
       animationType="slide"
       onRequestClose={onClose}
+      statusBarTranslucent={true}
     >
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={true} />
       <DismissKeyboard>
       <View
         style={[
           styles.modalContainer,
-          { paddingTop: Math.max(insets.top, 12), paddingBottom: Math.max(insets.bottom, 12) },
+          { paddingBottom: Math.max(insets.bottom, 12) },
         ]}
       >
         {/* Chat Room Top Bar */}
-        <View style={styles.topHeader}>
+        <View style={[styles.topHeader, { paddingTop: headerTopPadding }]}>
           <TouchableOpacity
             style={styles.backBtn}
             activeOpacity={0.7}
@@ -205,7 +213,7 @@ export default function ChatRoomModal({
           <FlatList
             ref={flatListRef}
             data={messages}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item, index) => (item.id ? `${item.id}-${index}` : `msg-${index}`)}
             renderItem={renderMessageItem}
             contentContainerStyle={styles.messagesList}
             showsVerticalScrollIndicator={false}

@@ -27,6 +27,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  StatusBar,
 } from "react-native";
 
 const COMMUNITY_TAGS = [
@@ -38,7 +39,13 @@ const COMMUNITY_TAGS = [
   "#BiQuyet",
 ];
 
-export default function CommunityView({ insetsTop }: { insetsTop: number }) {
+export default function CommunityView({
+  insetsTop,
+  insetsBottom,
+}: {
+  insetsTop: number;
+  insetsBottom?: number;
+}) {
   // State from CommunityService
   const [posts, setPosts] = useState<CommunityPost[]>(() =>
     CommunityService.getPosts(),
@@ -117,7 +124,10 @@ export default function CommunityView({ insetsTop }: { insetsTop: number }) {
               text: msg.text,
               imageUri: msg.imageUri,
               timestamp: msg.timestamp,
-              isMe: msg.sender?.id === CURRENT_USER.id,
+              isMe:
+                msg.isMe !== undefined
+                  ? Boolean(msg.isMe)
+                  : msg.sender?.id === CURRENT_USER.id,
             },
           ];
         });
@@ -126,10 +136,18 @@ export default function CommunityView({ insetsTop }: { insetsTop: number }) {
       // If message belongs to active direct chat
       if (
         directChatTarget &&
-        (msg.conversationId === activeConvId || msg.sender.id === directChatTarget.id)
+        (msg.conversationId === activeConvId ||
+          msg.sender?.id === directChatTarget.id ||
+          (msg.sender as any)?._id === directChatTarget.id)
       ) {
         setDirectMessages((prev) => {
           if (prev.some((m) => m.id === msg.id)) return prev;
+          const isSenderTarget =
+            msg.sender?.id === directChatTarget.id ||
+            (msg.sender as any)?._id === directChatTarget.id ||
+            msg.sender?.name === directChatTarget.name;
+          const isMe = msg.isMe !== undefined ? Boolean(msg.isMe) : !isSenderTarget;
+
           return [
             ...prev,
             {
@@ -138,7 +156,7 @@ export default function CommunityView({ insetsTop }: { insetsTop: number }) {
               text: msg.text,
               imageUri: msg.imageUri,
               timestamp: msg.timestamp,
-              isMe: msg.sender?.id === CURRENT_USER.id,
+              isMe,
             },
           ];
         });
@@ -220,12 +238,35 @@ export default function CommunityView({ insetsTop }: { insetsTop: number }) {
 
   // Open direct 1-1 chat with a user
   const handleOpenDirectChat = async (author: CommunityAuthor) => {
-    CommunityService.markConversationAsRead(author.id);
+    // Leave previous room if any
+    if (activeConvId) {
+      socketService.leaveRoom(activeConvId);
+    }
+
+    // Instantly clear/load cache for the new target so previous chat never persists
+    setActiveConvId("");
     setDirectChatTarget(author);
-    const directInfo = await CommunityService.getOrCreateDirectChat(author.id);
-    setActiveConvId(directInfo.conversationId);
-    const history = await CommunityService.fetchMessageHistory(directInfo.conversationId);
-    setDirectMessages(history);
+    const cached = CommunityService.getDirectMessages(author.id);
+    setDirectMessages(cached);
+    CommunityService.markConversationAsRead(author.id);
+
+    try {
+      const directInfo = await CommunityService.getOrCreateDirectChat(author.id);
+      setActiveConvId(directInfo.conversationId);
+      const history = await CommunityService.fetchMessageHistory(directInfo.conversationId);
+      setDirectMessages(history);
+    } catch (e) {
+      console.warn("Lỗi tải lịch sử chat:", e);
+    }
+  };
+
+  const handleCloseDirectChat = () => {
+    if (activeConvId) {
+      socketService.leaveRoom(activeConvId);
+    }
+    setDirectChatTarget(null);
+    setActiveConvId("");
+    setDirectMessages([]);
   };
 
   const handleSendDirectMessage = async (text: string, imageUri?: string) => {
@@ -236,7 +277,10 @@ export default function CommunityView({ insetsTop }: { insetsTop: number }) {
       imageUri,
       activeConvId,
     );
-    setDirectMessages((prev) => [...prev, sent]);
+    setDirectMessages((prev) => {
+      if (prev.some((m) => m.id === sent.id)) return prev;
+      return [...prev, sent];
+    });
   };
 
   // Open community chat room
@@ -254,20 +298,27 @@ export default function CommunityView({ insetsTop }: { insetsTop: number }) {
 
     socketService.sendMessage(activeChatRoom.id, cleanText, imageUri, (res) => {
       if (res?.success && res.data) {
-        setRoomMessages((prev) => [
-          ...prev,
-          {
-            id: res.data.id || `m-${Date.now()}`,
-            sender: CURRENT_USER,
-            text: cleanText,
-            imageUri,
-            timestamp: new Date().toLocaleTimeString("vi-VN", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            isMe: true,
-          },
-        ]);
+        const msgId =
+          res.data.id ||
+          res.data._id ||
+          `m-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        setRoomMessages((prev) => {
+          if (prev.some((m) => m.id === msgId)) return prev;
+          return [
+            ...prev,
+            {
+              id: msgId,
+              sender: CURRENT_USER,
+              text: cleanText,
+              imageUri,
+              timestamp: new Date().toLocaleTimeString("vi-VN", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+              isMe: true,
+            },
+          ];
+        });
       }
     });
   };
@@ -275,7 +326,18 @@ export default function CommunityView({ insetsTop }: { insetsTop: number }) {
   return (
     <View style={styles.container}>
       {/* 1. Header with Title, Search Icon, Messenger Icon & Avatar */}
-      <View style={[styles.header, { paddingTop: insetsTop + 8 }]}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop:
+              Math.max(
+                insetsTop,
+                Platform.OS === "android" ? (StatusBar.currentHeight || 28) : 20,
+              ) + 8,
+          },
+        ]}
+      >
         <View style={styles.headerTop}>
           <View>
             <View style={styles.subtitleRow}>
@@ -380,7 +442,10 @@ export default function CommunityView({ insetsTop }: { insetsTop: number }) {
             colors={[BrandColors.primary]}
           />
         }
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: 110 + (insetsBottom || 0) },
+        ]}
       >
         {/* Modern Create Post Banner / Action Card */}
         <View style={styles.createPostCard}>
@@ -600,7 +665,7 @@ export default function CommunityView({ insetsTop }: { insetsTop: number }) {
         visible={!!directChatTarget}
         targetUser={directChatTarget}
         messages={directMessages}
-        onClose={() => setDirectChatTarget(null)}
+        onClose={handleCloseDirectChat}
         onSendMessage={handleSendDirectMessage}
       />
 

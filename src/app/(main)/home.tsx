@@ -9,6 +9,10 @@ import { BrandColors } from "@/constants/brandColors";
 import { ShoppingNoteModal, ShoppingReminderBanner } from "@/components/planner";
 import { DraggableAIAssistant } from "@/components/ai";
 import { CreateRecipeModal } from "@/components/recipe";
+import { NotificationModal } from "@/components/notifications/NotificationModal";
+import { InAppNotificationBanner } from "@/components/notifications/InAppNotificationBanner";
+import { GiftRewardsModal } from "@/components/rewards/GiftRewardsModal";
+import { notificationService } from "@/services/notificationService";
 import { CartService } from "@/services/cartService";
 import { PreferenceService, UserPreferences, CUISINE_OPTIONS } from "@/services/preferenceService";
 import { CategoryService } from "@/services/categoryService";
@@ -41,13 +45,16 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { user } = useAuth();
+  const { user, updateChefXP } = useAuth();
 
   const [activeTab, setActiveTab] = useState<
-    "home" | "fridge" | "scan" | "community" | "profile"
+    "home" | "fridge" | "planner" | "scan" | "community" | "profile"
   >("home");
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showShoppingNote, setShowShoppingNote] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showGiftModal, setShowGiftModal] = useState(false);
+  const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
   const [cartCount, setCartCount] = useState(() =>
     CartService.getItems().filter((i) => !i.bought).length
   );
@@ -56,7 +63,20 @@ export default function HomeScreen() {
     const unsubscribe = CartService.subscribe(() => {
       setCartCount(CartService.getItems().filter((i) => !i.bought).length);
     });
-    return unsubscribe;
+
+    // Tải số lượng thông báo chưa đọc và lắng nghe realtime
+    notificationService.getNotifications(1, 1).then((res) => {
+      setUnreadNotifCount(res.unreadCount);
+    });
+
+    const unsubscribeNotif = notificationService.subscribeUnreadCount((count) => {
+      setUnreadNotifCount(count);
+    });
+
+    return () => {
+      unsubscribe();
+      unsubscribeNotif();
+    };
   }, []);
 
   const [userPrefs, setUserPrefs] = useState<UserPreferences>(() =>
@@ -1415,25 +1435,42 @@ export default function HomeScreen() {
                 )}
               </TouchableOpacity>
 
+              {/* Weekly Meal Planner Quick Button */}
+              <TouchableOpacity
+                style={styles.circularIconBtn}
+                activeOpacity={0.75}
+                onPress={() => setActiveTab("planner")}
+              >
+                <Ionicons name="calendar-outline" size={19} color="#0284C7" />
+              </TouchableOpacity>
+
               {/* Gift / Recipe Rewards Box */}
               <TouchableOpacity
                 style={styles.circularIconBtn}
                 activeOpacity={0.75}
+                onPress={() => setShowGiftModal(true)}
               >
-                <Ionicons name="gift-outline" size={19} color="#334155" />
+                <Ionicons name="gift-outline" size={19} color="#EA580C" />
               </TouchableOpacity>
 
-              {/* Notification Bell with Badge */}
+              {/* Notification Bell with Realtime Badge */}
               <TouchableOpacity
                 style={styles.circularIconBtn}
                 activeOpacity={0.75}
+                onPress={() => setShowNotificationModal(true)}
               >
                 <Ionicons
-                  name="notifications-outline"
+                  name={unreadNotifCount > 0 ? "notifications" : "notifications-outline"}
                   size={20}
-                  color="#334155"
+                  color={unreadNotifCount > 0 ? "#FF5722" : "#334155"}
                 />
-                <View style={styles.notificationDot} />
+                {unreadNotifCount > 0 ? (
+                  <View style={styles.notifBadgeCircle}>
+                    <Text style={styles.cartBadgeCircleText}>
+                      {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
+                    </Text>
+                  </View>
+                ) : null}
               </TouchableOpacity>
             </View>
           </View>
@@ -2051,6 +2088,22 @@ export default function HomeScreen() {
         </ScrollView>
       )}
 
+      {/* 2.5. Weekly Meal Planner Content (SRS Module 15 & 16) */}
+      {activeTab === "planner" && (
+        <View style={{ flex: 1, paddingTop: insets.top + 8, paddingBottom: insets.bottom + 90 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 8, gap: 10 }}>
+            <TouchableOpacity
+              onPress={() => setActiveTab("home")}
+              style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#F1F5F9", justifyContent: "center", alignItems: "center" }}
+            >
+              <Ionicons name="arrow-back" size={20} color="#334155" />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: "#0F172A" }}>Thực Đơn & Kế Hoạch Tuần</Text>
+          </View>
+          <PlannerView insetsTop={0} />
+        </View>
+      )}
+
       {/* 3. Scan AI Tab Content (Module 7 & 25) */}
       {activeTab === "scan" && (
         <ScrollView
@@ -2058,23 +2111,20 @@ export default function HomeScreen() {
           contentContainerStyle={{ paddingBottom: insets.bottom + 90, paddingTop: insets.top + 8 }}
           showsVerticalScrollIndicator={false}
         >
-          <ShoppingReminderBanner onPress={() => setShowShoppingNote(true)} />
           <ScanAIView insetsTop={0} />
         </ScrollView>
       )}
 
       {/* 4. Community Tab Content */}
       {activeTab === "community" && (
-        <View style={{ flex: 1, paddingBottom: insets.bottom + 90 }}>
-          <ShoppingReminderBanner onPress={() => setShowShoppingNote(true)} />
-          <CommunityView insetsTop={insets.top} />
+        <View style={{ flex: 1 }}>
+          <CommunityView insetsTop={insets.top} insetsBottom={insets.bottom} />
         </View>
       )}
 
       {/* 5. Profile & Personalization Tab Content (Module 2 & 11) */}
       {activeTab === "profile" && (
         <View style={{ flex: 1, paddingBottom: insets.bottom + 90, paddingTop: insets.top + 8 }}>
-          <ShoppingReminderBanner onPress={() => setShowShoppingNote(true)} />
           <ProfileView insetsTop={0} />
         </View>
       )}
@@ -2400,8 +2450,26 @@ export default function HomeScreen() {
         onRecipeCreated={handleRecipeCreated}
       />
 
+      {/* Realtime Notification Center Modal */}
+      <NotificationModal
+        visible={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+      />
+
+      {/* Daily Check-in & Chef Rewards Center Modal */}
+      <GiftRewardsModal
+        visible={showGiftModal}
+        onClose={() => setShowGiftModal(false)}
+        onXpUpdated={(newXp, newLevel) => updateChefXP(newXp, newLevel)}
+      />
+
       {/* Floating Draggable AI Assistant Bubble */}
       <DraggableAIAssistant />
+
+      {/* Floating In-App Realtime Notification Banner */}
+      <InAppNotificationBanner
+        onPressNotification={() => setShowNotificationModal(true)}
+      />
     </View>
   );
 }
@@ -2519,6 +2587,20 @@ const styles = StyleSheet.create({
     height: 7,
     borderRadius: 3.5,
     backgroundColor: "#FF4D6D",
+  },
+  notifBadgeCircle: {
+    position: "absolute",
+    top: -3,
+    right: -3,
+    backgroundColor: "#EF4444",
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: "#FFFFFF",
   },
   cartBadgeCircle: {
     position: "absolute",

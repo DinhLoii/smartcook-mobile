@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 LogBox.ignoreLogs([
   'setLayoutAnimationEnabledExperimental is currently a no-op in the New Architecture.',
   'Cannot connect to Expo CLI',
+  'SafeAreaView has been deprecated',
 ]);
 
 SplashScreen.preventAutoHideAsync();
