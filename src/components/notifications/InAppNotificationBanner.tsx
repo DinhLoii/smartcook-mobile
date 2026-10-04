@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   PanResponder,
@@ -25,8 +25,8 @@ export const InAppNotificationBanner: React.FC<InAppNotificationBannerProps> = (
 }) => {
   const insets = useSafeAreaInsets();
   const [currentNotif, setCurrentNotif] = useState<AppNotification | null>(null);
-  const translateY = useRef(new Animated.Value(-150)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useMemo(() => new Animated.Value(-150), []);
+  const opacity = useMemo(() => new Animated.Value(0), []);
   const timeoutRef = useRef<any>(null);
 
   const hideBanner = () => {

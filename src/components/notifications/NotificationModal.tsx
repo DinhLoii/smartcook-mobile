@@ -25,6 +25,19 @@ interface NotificationModalProps {
 
 type TabKey = "all" | "community" | "fridge_expiry" | "reward";
 
+const formatNotificationTime = (isoString?: string, now?: number): string => {
+  if (!isoString || !now) return "Vừa xong";
+  const diffMs = now - new Date(isoString).getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  if (diffMins < 1) return "Vừa xong";
+  if (diffMins < 60) return `${diffMins} phút trước`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} giờ trước`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays} ngày trước`;
+  return new Date(isoString).toLocaleDateString("vi-VN");
+};
+
 export const NotificationModal: React.FC<NotificationModalProps> = ({
   visible,
   onClose,
@@ -34,12 +47,14 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<TabKey>("all");
+  const [nowTime, setNowTime] = useState<number>(0);
 
   const loadNotifications = async (showLoading = true) => {
     if (showLoading) setIsLoading(true);
     try {
       const res = await notificationService.getNotifications(1, 50);
       setNotifications(res.notifications);
+      setNowTime(Date.now());
     } catch (e) {
       console.error("Lỗi tải thông báo:", e);
     } finally {
@@ -49,9 +64,29 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   };
 
   useEffect(() => {
-    if (visible) {
-      loadNotifications(true);
-    }
+    if (!visible) return;
+    let isMounted = true;
+    notificationService
+      .getNotifications(1, 50)
+      .then((res) => {
+        if (isMounted) {
+          setNotifications(res.notifications);
+          setNowTime(Date.now());
+          setIsLoading(false);
+          setIsRefreshing(false);
+        }
+      })
+      .catch((e) => {
+        console.error("Lỗi tải thông báo:", e);
+        if (isMounted) {
+          setIsLoading(false);
+          setIsRefreshing(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [visible]);
 
   // Lắng nghe sự kiện thông báo mới realtime
@@ -143,18 +178,8 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     }
   };
 
-  const formatTime = (isoString?: string) => {
-    if (!isoString) return "Vừa xong";
-    const diffMs = Date.now() - new Date(isoString).getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    if (diffMins < 1) return "Vừa xong";
-    if (diffMins < 60) return `${diffMins} phút trước`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours} giờ trước`;
-    const diffDays = Math.floor(diffHours / 24);
-    if (diffDays < 7) return `${diffDays} ngày trước`;
-    return new Date(isoString).toLocaleDateString("vi-VN");
-  };
+  const formatTime = (isoString?: string) =>
+    formatNotificationTime(isoString, nowTime || undefined);
 
   return (
     <Modal

@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { BrandColors } from "@/constants/brandColors";
-import { ClaimedReward, RewardCatalogItem, RewardStatus } from "@/types";
+import { RewardCatalogItem, RewardStatus } from "@/types";
 import { rewardService } from "@/services/rewardService";
 import { triggerHaptic } from "@/utils/haptics";
 
@@ -35,22 +35,27 @@ export const GiftRewardsModal: React.FC<GiftRewardsModalProps> = ({
   const [redeemingId, setRedeemingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"redeem" | "my_rewards">("redeem");
 
-  const loadStatus = async () => {
-    setIsLoading(true);
-    try {
-      const data = await rewardService.getRewardStatus();
-      setStatusData(data);
-    } catch (e) {
-      console.error("Lỗi tải thông tin quà thưởng:", e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (visible) {
-      loadStatus();
-    }
+    if (!visible) return;
+    let isMounted = true;
+    rewardService
+      .getRewardStatus()
+      .then((data) => {
+        if (isMounted) {
+          setStatusData(data);
+          setIsLoading(false);
+        }
+      })
+      .catch((e) => {
+        console.error("Lỗi tải thông tin quà thưởng:", e);
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [visible]);
 
   // Thực hiện điểm danh nhận XP hôm nay
