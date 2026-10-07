@@ -1,0 +1,135 @@
+%% SmartCook Mobile - System Architecture
+%% Scope: mobile application and its external integration boundaries.
+%% Verified against src/app, src/components, src/contexts, src/services,
+%% src/utils/tokenStorage.ts and src/config/env.ts.
+%% Backend internals and web application are outside this diagram's scope.
+%% Local sample data and memory caches are fallbacks, not full offline sync.
+
+flowchart TB
+    User["SmartCook User"]
+
+    subgraph Mobile["SmartCook Mobile - iOS and Android"]
+        direction TB
+
+        subgraph Runtime["Application Runtime and Navigation"]
+            App["React Native / Expo<br/>expo-router entry"]
+            Root["Root Layout<br/>GestureHandlerRootView / ThemeProvider"]
+            Router["Expo Router Stack<br/>Welcome / Auth / Main"]
+            Guard["Main Layout Auth Guard<br/>Wait for session; redirect to login if unauthenticated"]
+        end
+
+        subgraph UI["Screens and Feature Components"]
+            AuthUI["Login / Register / Onboarding Survey"]
+            KitchenUI["Home / Explore / Recipe Detail / Cooking Mode<br/>Fridge / Weekly Planner / Shopping List"]
+            SocialUI["Community Feed / Posts / Comments<br/>Direct Chat / Chat Rooms"]
+            AccountUI["Profile / Cooking History / Rewards<br/>Notifications"]
+            AIUI["AI Ingredient Scan / Scan History<br/>Draggable AI Assistant"]
+        end
+
+        subgraph State["Client State and Local Storage"]
+            Auth["AuthContext<br/>User / Session / Chef XP"]
+            Memory["React State and Service Memory<br/>Community / Chat / Scan History / Cart<br/>Favorites / Location Cache"]
+            TokenStorage["tokenStorage<br/>Save / Restore / Clear Session"]
+            SecureStore[("Expo SecureStore<br/>Access and Refresh Tokens on Native")]
+            AsyncStorage[("AsyncStorage<br/>Cached User Profile<br/>Token Fallback for Web Runtime")]
+            Fallback["Bundled Assets and Sample Data<br/>Recipes / Stores / Community / Cart / Scan History"]
+        end
+
+        subgraph Services["Mobile Service Layer"]
+            AuthService["authService<br/>Login / Register / Survey / Profile / Logout"]
+            KitchenService["recipeService / categoryService / fridgeService<br/>cookingHistoryService / plannerService"]
+            SocialService["communityService<br/>Posts / Comments / Conversations / Message History"]
+            AccountService["rewardService / notificationService"]
+            AIService["aiService / ScanHistoryService<br/>Scan / Assistant Chat / Scan History"]
+            StoreService["storeService<br/>Nearby Stores / Location / Directions"]
+        end
+
+        subgraph Network["Network Integration"]
+            Config["ENV Configuration<br/>API_BASE_URL / SOCKET_BASE_URL"]
+            HTTP["Axios apiClient<br/>JSON and Multipart Requests / Bearer JWT"]
+            Refresh["401 Token Refresh<br/>Pending Request Queue / Retry<br/>Clear Session on Failure"]
+            Socket["Socket.IO Client<br/>JWT Authentication / Reconnect / Rejoin Rooms<br/>Messages / Typing / In-app Notifications"]
+        end
+
+        subgraph Device["Device and OS Integration"]
+            Camera["expo-image-picker<br/>Camera / Photo Library"]
+            Location["expo-location<br/>GPS / Reverse Geocoding"]
+            Speech["expo-speech<br/>Cooking Instructions TTS"]
+            Haptics["expo-haptics<br/>Feedback and Notification Vibration"]
+            Linking["React Native Linking<br/>Open Map Directions"]
+        end
+    end
+
+    subgraph External["External Systems"]
+        REST["SmartCook Backend REST API /api/v1<br/>Auth / Recipes / Fridge / History / Planner<br/>Community / Chat / AI / Stores / Rewards / Notifications"]
+        Gateway["SmartCook Backend Socket.IO Gateway"]
+        Maps["Google Maps / Apple Maps"]
+    end
+
+    User --> App --> Root --> Router
+    Root --> Auth
+    Router --> AuthUI
+    Router --> Guard
+    Auth --> Guard
+    Guard --> KitchenUI
+    KitchenUI --> SocialUI
+    KitchenUI --> AccountUI
+    KitchenUI --> AIUI
+
+    AuthUI --> Auth
+    AccountUI --> Auth
+    Auth --> AuthService
+    Auth <--> TokenStorage
+    AuthService --> TokenStorage
+    TokenStorage <--> SecureStore
+    TokenStorage <--> AsyncStorage
+
+    KitchenUI --> KitchenService
+    SocialUI --> SocialService
+    AccountUI --> AccountService
+    AIUI --> AIService
+    KitchenUI --> StoreService
+    KitchenUI <--> Memory
+    SocialUI <--> Memory
+    AIUI <--> Memory
+    Fallback -.-> Memory
+    Fallback -.-> KitchenService
+    Fallback -.-> StoreService
+
+    AuthService --> HTTP
+    KitchenService --> HTTP
+    SocialService --> HTTP
+    AccountService --> HTTP
+    AIService --> HTTP
+    StoreService --> HTTP
+    Config --> HTTP
+    Config --> Socket
+    TokenStorage -->|Access token| HTTP
+    TokenStorage -->|Access token| Socket
+    HTTP <-->|REST requests and responses| REST
+    HTTP -->|401 response| Refresh
+    Refresh <-->|Refresh token endpoint| REST
+    Refresh <--> TokenStorage
+    Refresh -->|Retry queued requests| HTTP
+    Refresh -.->|Session expired event| Auth
+    SocialService <--> Socket
+    Socket -->|new_notification| AccountService
+    Socket <-->|WebSocket with polling fallback| Gateway
+
+    AIUI --> Camera
+    SocialUI --> Camera
+    KitchenUI --> Camera
+    Camera -->|Selected image URI for upload| AIService
+    StoreService <--> Location
+    KitchenUI --> Speech
+    AccountService --> Haptics
+    StoreService --> Linking --> Maps
+
+    classDef client fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef storage fill:#fff7ed,stroke:#ea580c,color:#7c2d12
+    classDef integration fill:#f0fdf4,stroke:#16a34a,color:#14532d
+    classDef external fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95
+    class App,Root,Router,Guard,AuthUI,KitchenUI,SocialUI,AccountUI,AIUI client
+    class Auth,Memory,TokenStorage,SecureStore,AsyncStorage,Fallback storage
+    class AuthService,KitchenService,SocialService,AccountService,AIService,StoreService,Config,HTTP,Refresh,Socket,Camera,Location,Speech,Haptics,Linking integration
+    class REST,Gateway,Maps external
