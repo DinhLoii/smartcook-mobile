@@ -1,0 +1,13 @@
+%% Hình 8. State timer; ghi hoàn thành là thao tác riêng.
+stateDiagram-v2
+    [*] --> SanSang
+    SanSang --> DangDem: Start
+    DangDem --> TamDung: Pause
+    TamDung --> DangDem: Resume
+    DangDem --> HetGio: Time = 0
+    DangDem --> SanSang: Reset
+    TamDung --> SanSang: Reset
+    HetGio --> SanSang: Reset
+    SanSang --> RoiManHinh: Exit
+    HetGio --> RoiManHinh: Exit
+    RoiManHinh --> [*]

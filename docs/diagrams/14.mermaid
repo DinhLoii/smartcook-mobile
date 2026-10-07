@@ -1,0 +1,40 @@
+%% Hình 14. OTP, scan, notification và dữ liệu tham chiếu.
+erDiagram
+    USERS {
+        ObjectId _id PK
+        string email UK
+        number chefExp
+        object checkIn
+        object claimedRewards
+    }
+    PASSWORDRESETOTPS {
+        ObjectId _id PK
+        string email FK "logical email link"
+        string otpHash
+        datetime expiresAt
+    }
+    SCANHISTORIES {
+        ObjectId _id PK
+        ObjectId userId FK
+        string imageUrl
+        object ingredients
+        object suggestedRecipe
+    }
+    NOTIFICATIONS {
+        ObjectId _id PK
+        ObjectId userId FK
+        boolean isRead
+    }
+    STORES {
+        ObjectId _id PK
+        string name
+        object location "GeoJSON Point"
+    }
+    SYSTEMSETTINGS {
+        ObjectId _id PK
+        string key UK
+        object aiConfig
+    }
+    USERS ||--o{ PASSWORDRESETOTPS : requests_by_email
+    USERS ||--o{ SCANHISTORIES : owns
+    USERS ||--o{ NOTIFICATIONS : receives

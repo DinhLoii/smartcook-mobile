@@ -1,0 +1,16 @@
+%% Hình 1. SmartCook và các tác nhân bên ngoài.
+flowchart LR
+    Guest["Khách web"] --> Web["SmartCook Web"]
+    User["Người dùng"] --> Mobile["SmartCook Mobile"]
+    User --> Web
+    Admin["Admin"] --> Web
+    Mobile <-->|"REST / Socket.IO"| Backend["SmartCook Backend"]
+    Web <-->|"REST / Socket.IO"| Backend
+    Backend <--> DB[("MongoDB")]
+    Backend <--> AI["Gemini AI"]
+    Backend <--> Media["Cloudinary"]
+    Backend --> Mail["SMTP / OTP"]
+    Backend --> Google["Google Identity"]
+    Mobile -->|"OAuth"| Google
+    Web -->|"OAuth"| Google
+    Mobile --> Maps["Google Maps / Apple Maps"]

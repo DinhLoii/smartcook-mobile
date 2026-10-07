@@ -1,0 +1,14 @@
+%% Hình 5. Bản đồ tác nhân–use case bằng Mermaid flowchart.
+flowchart LR
+    Guest["Khách web"] --> Auth["UC-01: Tài khoản"]
+    Guest --> Explore["UC-02: Khám phá"]
+    User["User"] --> Auth
+    User --> Explore
+    User --> Fridge["UC-03: Kho / Match"]
+    User --> AI["UC-04 / UC-05: Scan / AI"]
+    User --> Cooking["UC-06: Nấu / History"]
+    User --> Plan["UC-07: Planner / Shopping"]
+    User --> Social["UC-08 / UC-09: Community / Chat"]
+    User --> Profile["UC-10: Profile / Rewards"]
+    Admin["Admin"] --> Manage["UC-11: Quản trị"]
+    Admin --> Report["UC-12: Kiểm duyệt"]

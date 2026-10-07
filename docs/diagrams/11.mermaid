@@ -1,0 +1,12 @@
+%% Hình 11. Flow kiểm duyệt report.
+flowchart LR
+    User["User gửi report"] --> Check["Validate target/reason"]
+    Check --> Pending["pending"]
+    Pending --> Review["Admin xem report/target"]
+    Review --> Decision{"Quyết định"}
+    Decision --> Dismiss["dismissed"]
+    Decision --> Resolve["reviewed / resolved"]
+    Decision --> Action["action_taken / thao tác target"]
+    Dismiss --> Audit["Lưu admin/time/notes"]
+    Resolve --> Audit
+    Action --> Audit

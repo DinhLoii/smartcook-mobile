@@ -1,0 +1,19 @@
+%% Hình 3. Kiến trúc mobile rút gọn.
+flowchart TB
+    Entry["Expo Router Entry"] --> Root["Root Layout / Theme / Gesture Handler"]
+    Root --> Router["Welcome / Auth / Main Stack"]
+    Router --> UI["Screens và Feature Views"]
+    Auth["AuthContext / Main Auth Guard"] --> Router
+    UI <--> State["React State / Service Memory"]
+    UI --> Service["Auth / Recipe / Fridge / Planner / AI / Community / Rewards Services"]
+    Auth <--> Store["tokenStorage"]
+    Store <--> Secure[("SecureStore: native tokens")]
+    Store <--> Async[("AsyncStorage: user; web tokens")]
+    Service --> HTTP["Axios / JWT / 401 refresh queue"]
+    Store --> HTTP
+    Service <--> Socket["Socket.IO Client"]
+    Store --> Socket
+    HTTP <--> API["Backend REST"]
+    Socket <--> Gateway["Backend Socket Gateway"]
+    UI --> Device["Camera / GPS / TTS / Haptics"]
+    Sample["Local samples / assets"] -.-> State

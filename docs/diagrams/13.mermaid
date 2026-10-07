@@ -1,0 +1,49 @@
+%% Hình 13. Posts, chat và report.
+erDiagram
+    USERS {
+        ObjectId _id PK
+        string role
+    }
+    POSTS {
+        ObjectId _id PK
+        ObjectId author FK
+        ObjectId recipeId FK "optional"
+        map reactions
+        string status
+    }
+    COMMENTS {
+        ObjectId _id PK
+        ObjectId postId FK
+        ObjectId author FK
+        ObjectId parentCommentId FK "optional"
+    }
+    CONVERSATIONS {
+        ObjectId _id PK
+        string type
+        ObjectId participants FK "array"
+    }
+    MESSAGES {
+        ObjectId _id PK
+        ObjectId conversationId FK
+        ObjectId sender FK
+        ObjectId readBy FK "array"
+    }
+    REPORTS {
+        ObjectId _id PK
+        ObjectId reporterId FK
+        string targetType
+        ObjectId targetId FK "polymorphic"
+        ObjectId resolvedBy FK "optional"
+    }
+    USERS ||--o{ POSTS : publishes
+    POSTS ||--o{ COMMENTS : receives
+    USERS ||--o{ COMMENTS : writes
+    COMMENTS o|--o{ COMMENTS : parent
+    USERS }o--o{ CONVERSATIONS : participates
+    CONVERSATIONS ||--o{ MESSAGES : contains
+    USERS ||--o{ MESSAGES : sends
+    USERS ||--o{ REPORTS : submits
+    USERS o|--o{ REPORTS : resolves_as_admin
+    POSTS o|--o{ REPORTS : possible_target
+    COMMENTS o|--o{ REPORTS : possible_target
+    USERS o|--o{ REPORTS : possible_target

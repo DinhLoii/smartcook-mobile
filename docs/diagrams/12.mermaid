@@ -1,0 +1,62 @@
+%% Hình 12. Recipes, inventory, planner và shopping.
+erDiagram
+    USERS {
+        ObjectId _id PK
+        string email UK
+        string role
+        object preferences
+    }
+    CATEGORIES {
+        ObjectId _id PK
+        string code UK
+    }
+    INGREDIENTS {
+        ObjectId _id PK
+        string name
+        string category "enum or matching code"
+        object aliases
+    }
+    RECIPES {
+        ObjectId _id PK
+        ObjectId authorId FK
+        string categoryCode FK
+        object ingredients
+        object steps
+        object nutrition
+    }
+    USERFRIDGES {
+        ObjectId _id PK
+        ObjectId userId FK, UK
+        object items
+    }
+    COOKING_HISTORIES {
+        ObjectId _id PK
+        ObjectId userId FK
+        ObjectId recipeId FK
+        number xpEarned
+    }
+    MEALPLANS {
+        ObjectId _id PK
+        ObjectId userId FK
+        datetime weekStartDate "unique with userId"
+        object days
+    }
+    CARTITEMS {
+        ObjectId _id PK
+        ObjectId userId FK
+        ObjectId recipeId FK "optional"
+        boolean bought
+        boolean syncedToFridge
+    }
+    USERS o|--o{ RECIPES : authors
+    USERS }o--o{ RECIPES : favorites
+    CATEGORIES o|--o{ RECIPES : categoryCode
+    CATEGORIES o|--o{ INGREDIENTS : logical_code_when_matching
+    USERS ||--o| USERFRIDGES : owns
+    INGREDIENTS o|--o{ USERFRIDGES : referenced_in_items
+    USERS ||--o{ COOKING_HISTORIES : records
+    RECIPES o|--o{ COOKING_HISTORIES : logical_recipe_ref
+    USERS ||--o{ MEALPLANS : plans
+    RECIPES }o--o{ MEALPLANS : embedded_recipe_refs
+    USERS ||--o{ CARTITEMS : owns
+    RECIPES o|--o{ CARTITEMS : source
