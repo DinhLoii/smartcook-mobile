@@ -1,0 +1,26 @@
+%% Hình 7. Sequence scan và xác nhận kho.
+sequenceDiagram
+    actor U as Người dùng
+    participant M as Mobile Scan
+    participant B as Backend AI
+    participant C as Cloudinary
+    participant G as Gemini
+    participant D as MongoDB
+    U->>M: Chụp/chọn ảnh
+    M->>B: POST /ai/scan-ingredients
+    B->>C: Upload ảnh
+    C-->>B: imageUrl
+    B->>G: Phân tích ảnh
+    alt Provider thành công
+        G-->>B: Ingredients/pins/suggestion
+    else Provider lỗi
+        B->>B: Fallback hiện có
+        Note over B,M: Cần nhãn nguồn fallback rõ
+    end
+    B->>D: Lưu ScanHistory
+    B-->>M: Kết quả scan
+    M-->>U: Hiển thị để xác nhận
+    U->>M: Chọn nguyên liệu
+    M->>B: POST /fridge/items
+    B->>D: Cập nhật kho user
+    B-->>M: Kho đã cập nhật

@@ -1,0 +1,21 @@
+%% Hình 10. Sequence chat và kiểm tra quyền.
+sequenceDiagram
+    actor U as Người gửi
+    participant C as Client
+    participant R as REST Chat
+    participant S as Socket Gateway
+    participant D as MongoDB
+    participant P as Client người nhận
+    U->>C: Mở chat đối tác
+    C->>R: POST /chat/direct
+    R->>D: Tìm/tạo Conversation
+    R-->>C: conversationId
+    C->>S: join_room với JWT
+    S->>S: Kiểm tra quyền
+    C->>R: GET messages
+    R-->>C: History có quyền
+    U->>C: Gửi nội dung
+    C->>S: send_message
+    S->>D: Lưu qua service
+    S-->>C: Acknowledgement
+    S-->>P: new_message

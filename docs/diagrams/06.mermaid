@@ -1,0 +1,22 @@
+%% Hình 6. Sequence đăng nhập mobile.
+sequenceDiagram
+    actor U as Người dùng
+    participant M as Mobile/AuthContext
+    participant B as Backend Auth
+    participant D as MongoDB
+    participant S as Local Storage
+    U->>M: Email và password
+    M->>B: POST /auth/login
+    B->>D: Kiểm tra user/password/isActive
+    alt Hợp lệ
+        B-->>M: User và tokens
+        M->>S: Lưu phiên
+        alt Survey hoàn tất
+            M-->>U: Home
+        else Chưa hoàn tất
+            M-->>U: Onboarding Survey
+        end
+    else Không hợp lệ
+        B-->>M: Lỗi xác thực
+        M-->>U: Báo lỗi, không tạo phiên
+    end

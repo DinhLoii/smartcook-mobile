@@ -1,0 +1,25 @@
+%% Hình 2. Tầng ứng dụng, dữ liệu và tích hợp.
+flowchart TB
+    subgraph Clients["Tầng trình bày"]
+        Mobile["React Native / Expo / Expo Router"]
+        Web["React / Vite / React Router: user và admin"]
+    end
+    subgraph Backend["Backend chung"]
+        REST["Express REST /api/v1"]
+        Guard["JWT / RBAC / Validation / Upload"]
+        Controller["Controllers"]
+        Service["Business Services"]
+        Repo["Repositories và Mongoose Models"]
+        Socket["Socket.IO: chat / typing / notifications"]
+        Cache["Redis hoặc memory cache"]
+    end
+    Mongo[("MongoDB: 18 model collection")]
+    Provider["Gemini / Cloudinary / Google Identity / SMTP"]
+    Mobile --> REST
+    Web --> REST
+    REST --> Guard --> Controller --> Service --> Repo --> Mongo
+    Service <--> Cache
+    Service <--> Provider
+    Mobile <--> Socket
+    Web <--> Socket
+    Socket --> Service

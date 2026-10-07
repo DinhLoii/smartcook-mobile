@@ -1,0 +1,18 @@
+%% Hình 4. User/admin web dùng chung lớp tích hợp.
+flowchart TB
+    Browser["Trình duyệt"] --> Routes["React / BrowserRouter / Lazy Routes"]
+    Routes --> Public["Showcase / Recipes / Community / Kitchen / Scan"]
+    Routes --> User["ProtectedUserRoute: Profile"]
+    Routes --> Admin["AdminLayout: role admin"]
+    Auth["Zustand Auth Store"] --> User
+    Auth --> Admin
+    Public --> State["Zustand / TanStack Query / Local State"]
+    User --> State
+    Admin --> State
+    State <--> Local[("localStorage: auth / cart theo user")]
+    Public --> API["API Modules / Axios JWT Refresh"]
+    User --> API
+    Admin --> API
+    API <--> REST["Backend REST"]
+    State <--> Socket["Socket.IO Service"]
+    Socket <--> Gateway["Backend Socket Gateway"]

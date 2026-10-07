@@ -1,0 +1,339 @@
+%% SmartCook Mobile - Logical Client Domain ERD
+%% Like web_domain_erd.mermaid, this models TypeScript DTOs and client state,
+%% NOT physical MongoDB collections. Backend owns persistent domain data.
+%% Sources: src/types/*.ts; src/contexts/AuthContext.tsx; src/utils/tokenStorage.ts;
+%% src/services/{planner,cart,community,scanHistory,ai,store,recipe}Service.ts;
+%% src/data/mockStores.ts.
+%% PK denotes a DTO identifier; FK denotes an explicit logical reference.
+%% Ownership without a userId field is inferred from authenticated API context.
+%% Nested DTOs are shown separately only where useful for relationships.
+%% Optional DTO fields are annotated; this is a selected-field domain overview.
+
+erDiagram
+    MOBILE_USER {
+        string id PK
+        string email
+        string firstName "optional"
+        string lastName "optional"
+        string fullName "optional"
+        string avatar "optional"
+        string role "optional"
+        number chefExp "optional"
+        string level "optional"
+        object preferences "optional UserPreferences"
+    }
+
+    AUTH_SESSION_STATE {
+        string accessToken
+        string refreshToken
+        boolean isAuthenticated "derived from AuthContext.user"
+        boolean isLoading
+        string tokenPersistence "SecureStore native; AsyncStorage web"
+        string userPersistence "AsyncStorage"
+    }
+
+    CATEGORY_DTO {
+        string id PK
+        string code
+        string name
+        string icon "optional"
+        string color "optional"
+        number order "optional"
+        boolean isActive "optional"
+    }
+
+    RECIPE_DTO {
+        string id PK
+        string author
+        string authorId FK "optional"
+        string title
+        string category
+        string categoryCode FK "optional logical CategoryItem.code link"
+        number calories
+        number minutes
+        number stepsCount
+        string servings
+        string difficulty
+        string price
+        number rating
+        number reviewCount
+        number fridgeMatchPercent
+        object image "local asset or remote URI"
+        object ingredients "RecipeIngredient array"
+        object steps "RecipeStep array"
+        object nutrition "RecipeNutrition"
+        boolean isFavorite "optional"
+    }
+
+    MASTER_INGREDIENT_DTO {
+        string _id PK
+        string name
+        string normalizedName
+        string category FK "logical category code"
+        string defaultUnit "optional"
+        string storageLocation "optional"
+        number shelfLifeDays "optional"
+        object aliases "string array"
+    }
+
+    USER_FRIDGE_DTO {
+        string _id PK
+        string userId FK
+        object items "FridgeItem array"
+        string updatedAt
+    }
+
+    FRIDGE_ITEM_DTO {
+        string _id PK "embedded item identifier"
+        string ingredientId FK "optional"
+        string name
+        string normalizedName
+        string amount "optional"
+        string category "optional"
+        string storageLocation "chilled frozen pantry; optional"
+        string expiryDate "optional"
+        string note "optional"
+        string addedAt "optional"
+    }
+
+    COOKING_HISTORY_DTO {
+        string _id PK
+        string userId FK
+        string recipeId FK
+        string recipeName
+        string image "optional"
+        number durationMinutes
+        number servings "optional"
+        object usedIngredients "optional string array"
+        number calories "optional"
+        number rating "optional"
+        string cookedAt
+        number xpEarned
+    }
+
+    SCAN_HISTORY_STATE {
+        string id PK
+        string title
+        string scannedAt
+        object image "local asset or remote URI"
+        number accuracy
+        object ingredients "ScanDetectedIngredient array"
+        object pins "ScanPin array"
+        object suggestedRecipe "AI snapshot; id may be generated locally"
+        string persistence "memory cache; backend history via aiService"
+    }
+
+    WEEKLY_PLAN_DTO {
+        string _id PK
+        string weekStartDate
+        number totalWeekCalories
+        object days "PlannerDay array"
+    }
+
+    PLANNER_DAY_DTO {
+        string dayOfWeek
+        string date
+        number dailyCalories
+        number mealsCount
+        object meals "PlannerMealSlot array"
+    }
+
+    PLANNER_MEAL_SLOT_DTO {
+        string _id "optional embedded identifier"
+        string slot "breakfast lunch dinner snack"
+        string time
+        number calories
+        boolean isCooked
+        string notes "optional"
+        string customTitle "optional"
+        object recipe "optional recipe summary with id"
+    }
+
+    SHOPPING_ITEM_DTO {
+        string _id PK
+        string id "optional alias"
+        string name
+        string amount
+        number price
+        string category
+        string recipeTitle "optional; no recipeId in this DTO"
+        boolean bought
+        boolean isAutoGenerated
+    }
+
+    CART_ITEM_STATE {
+        string id PK
+        string name
+        string amount
+        number price
+        string recipeTitle "optional"
+        string recipeId FK "optional"
+        boolean bought
+        string addedAt
+        string persistence "CartService memory only; sample data"
+    }
+
+    COMMUNITY_AUTHOR_DTO {
+        string id PK "user identity or local fallback id"
+        string name
+        object avatar "local asset or remote URI"
+        string badge "optional"
+        boolean isChef "optional"
+    }
+
+    COMMUNITY_POST_STATE {
+        string id PK
+        object author "CommunityAuthor"
+        string dishName
+        string content
+        object images "image array"
+        object tags "string array"
+        number likesCount
+        boolean isLiked
+        boolean isSaved "toggleSavePost updates memory only"
+        number commentsCount
+        object comments "CommunityComment array"
+        string createdAt
+        string recipeId FK "optional"
+    }
+
+    COMMUNITY_COMMENT_DTO {
+        string id PK
+        object author "CommunityAuthor"
+        string content
+        string createdAt
+        number likesCount "optional"
+    }
+
+    DIRECT_CONVERSATION_STATE {
+        string id PK "backend conversation id or fallback target user id"
+        string conversationId "runtime field added by fetchConversations"
+        object user "partner CommunityAuthor"
+        string lastMessage
+        string lastMessageTime
+        number unreadCount
+        boolean isOnline
+    }
+
+    CHAT_ROOM_STATE {
+        string id PK
+        string title
+        string description
+        string iconName
+        number activeMembers
+        string lastMessage
+        string lastMessageTime
+        number unreadCount
+        boolean isAiBot "optional"
+        object tags "string array"
+    }
+
+    CHAT_MESSAGE_STATE {
+        string id PK
+        object sender "CommunityAuthor"
+        string text
+        string imageUri "optional"
+        string timestamp
+        boolean isMe
+    }
+
+    NOTIFICATION_DTO {
+        string id PK
+        string title
+        string body
+        string type "system community fridge_expiry reward planner"
+        object data "optional mixed payload"
+        boolean isRead
+        string createdAt
+    }
+
+    REWARD_STATUS_DTO {
+        number chefExp
+        string level
+        number streakDays
+        boolean hasCheckedInToday
+        object streakRewards "number array"
+        object catalog "RewardCatalogItem array"
+        object claimedRewards "ClaimedReward array"
+    }
+
+    REWARD_CATALOG_DTO {
+        string id PK
+        string title
+        string brand
+        string description
+        string discountValue
+        number xpCost
+        string type "voucher recipe_vip badge"
+        string icon
+        string badgeColor
+    }
+
+    CLAIMED_REWARD_DTO {
+        string id PK
+        string title
+        string description
+        string code
+        string discountValue
+        string type "voucher recipe_vip badge"
+        string claimedAt
+        string expiresAt
+        boolean isUsed
+    }
+
+    STORE_DTO {
+        string id PK
+        string name
+        string brand "optional"
+        string address
+        number latitude
+        number longitude
+        string openHours "optional"
+        string phone "optional"
+    }
+
+    %% Auth session exists only for the current signed-in user.
+    MOBILE_USER ||--o| AUTH_SESSION_STATE : current_session
+    MOBILE_USER o|--o{ RECIPE_DTO : authors_when_authorId_present
+    MOBILE_USER }o--o{ RECIPE_DTO : favorites
+    CATEGORY_DTO o|--o{ RECIPE_DTO : classifies_by_code
+    CATEGORY_DTO o|--o{ MASTER_INGREDIENT_DTO : groups_by_code
+    MOBILE_USER ||--o| USER_FRIDGE_DTO : owns
+    USER_FRIDGE_DTO ||--o{ FRIDGE_ITEM_DTO : embeds
+    MASTER_INGREDIENT_DTO o|--o{ FRIDGE_ITEM_DTO : referenced_by_ingredientId
+    MOBILE_USER ||--o{ COOKING_HISTORY_DTO : records
+    RECIPE_DTO ||--o{ COOKING_HISTORY_DTO : cooked_as
+
+    %% No recipe FK is asserted for AI suggestions: they can be generated snapshots.
+    MOBILE_USER ||--o{ SCAN_HISTORY_STATE : loads_via_authenticated_API
+    MOBILE_USER ||--o{ WEEKLY_PLAN_DTO : loads_via_authenticated_API
+    WEEKLY_PLAN_DTO ||--o{ PLANNER_DAY_DTO : embeds
+    PLANNER_DAY_DTO ||--o{ PLANNER_MEAL_SLOT_DTO : embeds
+    RECIPE_DTO o|--o{ PLANNER_MEAL_SLOT_DTO : optional_recipe_summary
+    MOBILE_USER ||--o{ SHOPPING_ITEM_DTO : owns_via_authenticated_API
+    %% CART_ITEM_STATE is a separate global memory store, not a per-user API cart.
+    RECIPE_DTO o|--o{ CART_ITEM_STATE : optional_source
+
+    %% CommunityAuthor is a user projection; mock identities need not match real users.
+    MOBILE_USER o|--o{ COMMUNITY_AUTHOR_DTO : projected_as_when_real_user
+    COMMUNITY_AUTHOR_DTO ||--o{ COMMUNITY_POST_STATE : publishes
+    RECIPE_DTO o|--o{ COMMUNITY_POST_STATE : shared_in
+    COMMUNITY_POST_STATE ||--o{ COMMUNITY_COMMENT_DTO : contains
+    COMMUNITY_AUTHOR_DTO ||--o{ COMMUNITY_COMMENT_DTO : writes
+    %% postId comes from the API route; parentCommentId is request-only,
+    %% so neither is invented as a CommunityComment DTO attribute.
+    MOBILE_USER ||--o{ DIRECT_CONVERSATION_STATE : loads_current_conversations
+    COMMUNITY_AUTHOR_DTO ||--o{ DIRECT_CONVERSATION_STATE : partner
+    MOBILE_USER }o--o{ CHAT_ROOM_STATE : joins
+    %% Messages are stored in CommunityService.messages[conversationId].
+    %% A message belongs to either a direct conversation or a room, not both.
+    DIRECT_CONVERSATION_STATE o|--o{ CHAT_MESSAGE_STATE : indexes_direct_messages
+    CHAT_ROOM_STATE o|--o{ CHAT_MESSAGE_STATE : indexes_room_messages
+    COMMUNITY_AUTHOR_DTO ||--o{ CHAT_MESSAGE_STATE : sends
+
+    MOBILE_USER ||--o{ NOTIFICATION_DTO : receives_via_authenticated_API
+    MOBILE_USER ||--o| REWARD_STATUS_DTO : loads_current_status
+    REWARD_STATUS_DTO }o--o{ REWARD_CATALOG_DTO : includes_available_catalog
+    REWARD_STATUS_DTO ||--o{ CLAIMED_REWARD_DTO : includes_claimed_rewards
+    %% STORE_DTO is independent reference data queried by location;
+    %% storeService falls back to MOCK_STORES. No user/store FK exists.

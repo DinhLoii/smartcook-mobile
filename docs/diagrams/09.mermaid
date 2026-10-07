@@ -1,0 +1,16 @@
+%% Hình 9. Flow planner–shopping–fridge.
+flowchart TD
+    Open["Mở tuần"] --> Load["Tải/tạo MealPlan"]
+    Load --> Edit["Chọn ngày / slot / recipe"]
+    Edit --> Save["Lưu và tính calories"]
+    Save --> List["Mở shopping list"]
+    List --> Names["Gom tên nguyên liệu chuẩn hóa"]
+    Names --> Exclude["Loại tên khớp kho"]
+    Exclude --> Cart["Upsert CartItem theo user"]
+    Cart --> Buy["Đánh dấu bought"]
+    Buy --> Sync["Sync to Fridge"]
+    Sync --> Check{"bought và chưa synced?"}
+    Check -->|"Có"| Add["Thêm kho / đánh dấu synced"]
+    Check -->|"Không"| Zero["syncedCount = 0"]
+    Add --> Refresh["Tải lại kho/cart"]
+    Zero --> Refresh
