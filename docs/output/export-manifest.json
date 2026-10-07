@@ -1,0 +1,95 @@
+{
+  "documentVersion": "3.0",
+  "reviewDate": "2026-10-06",
+  "source": "docs/SmartCook_SRS.md",
+  "figures": [
+    {
+      "index": 1,
+      "caption": "Hình 1. SmartCook và các tác nhân bên ngoài.",
+      "width": 1085,
+      "height": 655
+    },
+    {
+      "index": 2,
+      "caption": "Hình 2. Tầng ứng dụng, dữ liệu và tích hợp.",
+      "width": 971,
+      "height": 965
+    },
+    {
+      "index": 3,
+      "caption": "Hình 3. Kiến trúc mobile rút gọn.",
+      "width": 1262,
+      "height": 865
+    },
+    {
+      "index": 4,
+      "caption": "Hình 4. User/admin web dùng chung lớp tích hợp.",
+      "width": 998,
+      "height": 759
+    },
+    {
+      "index": 5,
+      "caption": "Hình 5. Bản đồ tác nhân–use case bằng Mermaid flowchart.",
+      "width": 471,
+      "height": 1082
+    },
+    {
+      "index": 6,
+      "caption": "Hình 6. Sequence đăng nhập mobile.",
+      "width": 1176,
+      "height": 773
+    },
+    {
+      "index": 7,
+      "caption": "Hình 7. Sequence scan và xác nhận kho.",
+      "width": 1293,
+      "height": 969
+    },
+    {
+      "index": 8,
+      "caption": "Hình 8. State timer; ghi hoàn thành là thao tác riêng.",
+      "width": 405,
+      "height": 537
+    },
+    {
+      "index": 9,
+      "caption": "Hình 9. Flow planner–shopping–fridge.",
+      "width": 515,
+      "height": 1601
+    },
+    {
+      "index": 10,
+      "caption": "Hình 10. Sequence chat và kiểm tra quyền.",
+      "width": 1250,
+      "height": 779
+    },
+    {
+      "index": 11,
+      "caption": "Hình 11. Flow kiểm duyệt report.",
+      "width": 1701,
+      "height": 308
+    },
+    {
+      "index": 12,
+      "caption": "Hình 12. Recipes, inventory, planner và shopping.",
+      "width": 1961,
+      "height": 1015
+    },
+    {
+      "index": 13,
+      "caption": "Hình 13. Posts, chat và report.",
+      "width": 1597,
+      "height": 1306
+    },
+    {
+      "index": 14,
+      "caption": "Hình 14. OTP, scan, notification và dữ liệu tham chiếu.",
+      "width": 1460,
+      "height": 648
+    }
+  ],
+  "requirements": 48,
+  "nonfunctionalRequirements": 15,
+  "useCases": 12,
+  "acceptanceScenarios": 13
+}

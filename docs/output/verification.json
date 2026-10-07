@@ -1,0 +1,499 @@
+{
+  "documentOnly": true,
+  "functionalRequirements": 48,
+  "docxImages": 14,
+  "pdfPages": 52,
+  "toc": [
+    {
+      "heading": "1. Giới thiệu và quy ước",
+      "index": 1,
+      "page": 3
+    },
+    {
+      "heading": "2. Tổng quan và phạm vi",
+      "index": 2,
+      "page": 5
+    },
+    {
+      "heading": "3. Kiến trúc hệ thống",
+      "index": 3,
+      "page": 7
+    },
+    {
+      "heading": "4. Yêu cầu chức năng",
+      "index": 4,
+      "page": 14
+    },
+    {
+      "heading": "5. Use case và luồng nghiệp vụ",
+      "index": 5,
+      "page": 18
+    },
+    {
+      "heading": "6. Dữ liệu và ERD",
+      "index": 6,
+      "page": 32
+    },
+    {
+      "heading": "7. Giao diện và tích hợp",
+      "index": 7,
+      "page": 40
+    },
+    {
+      "heading": "8. Yêu cầu phi chức năng",
+      "index": 8,
+      "page": 43
+    },
+    {
+      "heading": "9. Quy tắc nghiệp vụ",
+      "index": 9,
+      "page": 44
+    },
+    {
+      "heading": "10. Kiểm thử và nghiệm thu",
+      "index": 10,
+      "page": 45
+    },
+    {
+      "heading": "11. Ma trận truy vết",
+      "index": 11,
+      "page": 47
+    },
+    {
+      "heading": "12. Giới hạn và hướng mở rộng",
+      "index": 12,
+      "page": 49
+    },
+    {
+      "heading": "13. Tham chiếu và sơ đồ",
+      "index": 13,
+      "page": 52
+    }
+  ],
+  "possibleBlankPages": [],
+  "landscapePages": [
+    7,
+    10,
+    21,
+    29,
+    31,
+    33,
+    37
+  ],
+  "legacyDiagrams": [
+    {
+      "file": "smartcook-backend/admin_erd.mermaid",
+      "valid": true
+    },
+    {
+      "file": "smartcook-backend/backend_architecture.mermaid",
+      "valid": true
+    },
+    {
+      "file": "smartcook-backend/erd_diagram.mermaid",
+      "valid": true
+    },
+    {
+      "file": "smartcook-backend/system_architecture.mermaid",
+      "valid": true
+    },
+    {
+      "file": "smartcook-backend/technologies_architecture.mermaid",
+      "valid": true
+    },
+    {
+      "file": "smartcook-backend/user_erd.mermaid",
+      "valid": true
+    },
+    {
+      "file": "smartcook-web/web_admin_architecture.mermaid",
+      "valid": true
+    },
+    {
+      "file": "smartcook-web/web_architecture.mermaid",
+      "valid": true
+    },
+    {
+      "file": "smartcook-web/web_domain_erd.mermaid",
+      "valid": true
+    },
+    {
+      "file": "smartcook-web/web_user_architecture.mermaid",
+      "valid": true
+    },
+    {
+      "file": "smartcook-mobile/mobile_domain_erd.mermaid",
+      "valid": true
+    },
+    {
+      "file": "smartcook-mobile/mobile_system_architecture.mermaid",
+      "valid": true
+    }
+  ],
+  "pages": [
+    {
+      "page": 1,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 838,
+      "excerpt": "SOFTWARE REQUIREMENTS SPECIFICATION  SMARTCOOK-MOBILE  Ứng dụng trợ lý nấu ăn thông minh — Mobile, Web và Backend  Thông tin   Nội dung  Học phần   SDN302 + MMA301  Học k"
+    },
+    {
+      "page": 2,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 924,
+      "excerpt": "Kiểm soát tài liệu  Phiên bản   Thời điểm   Nội dung  Bản nguồn   09/2026   Danh sách 25 module và mô tả màn hình mobile.  3.0   06/10/2026   Chuẩn hóa phạm vi, yêu cầu, "
+    },
+    {
+      "page": 3,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1765,
+      "excerpt": "1. Giới thiệu và quy ước  1.1 Mục đích  SRS thống nhất hành vi cần có của SmartCook giữa nhóm phát triển, kiểm thử và người đánh giá. Yêu cầu phải có mã, phạm vi và điều "
+    },
+    {
+      "page": 4,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 441,
+      "excerpt": "Thuật ngữ   Định nghĩa  DTO   Dữ liệu trao đổi/hiển thị; không phải collection độc lập.  XP / JWT / RBAC   Điểm kinh nghiệm / token xác thực / phân quyền theo role.  In-a"
+    },
+    {
+      "page": 5,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1644,
+      "excerpt": "2. Tổng quan và phạm vi  2.1 Bối cảnh và mục tiêu  SmartCook giúp người dùng chọn món, tận dụng nguyên liệu, theo dõi bước nấu, lập kế hoạch tuần, chuẩn bị mua sắm và chi"
+    },
+    {
+      "page": 6,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1208,
+      "excerpt": "Tác nhân   Quyền  Admin   User có role admin; truy cập web admin và API quản trị; không có collection Admin riêng.  Dịch vụ bên ngoài   Nhận yêu cầu theo giao diện tích h"
+    },
+    {
+      "page": 7,
+      "width": 841.91998,
+      "height": 594.95996,
+      "characters": 360,
+      "excerpt": "3. Kiến trúc hệ thống  3.1 Bối cảnh hệ thống  Hình 1. SmartCook và các tác nhân bên ngoài.  REST / Socket.IO  REST / Socket.IO  OAuth  OAuth  Khách web  SmartCook Web  Ng"
+    },
+    {
+      "page": 8,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 492,
+      "excerpt": "3.2 Kiến trúc tổng thể  Hình 2. Tầng ứng dụng, dữ liệu và tích hợp.  Backend chung  Tầng trình bày  React Native / Expo / Expo Router  React / Vite / React Router: user v"
+    },
+    {
+      "page": 9,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 303,
+      "excerpt": "Backend dùng controller–service–repository/model; một số service truy cập model trực tiếp. Redis là cache, không phải persistence chính; không giả định có Redis adapter c"
+    },
+    {
+      "page": 10,
+      "width": 841.91998,
+      "height": 594.95996,
+      "characters": 560,
+      "excerpt": "3.3 Mobile  Hình 3. Kiến trúc mobile rút gọn.  Expo Router Entry  Root Layout / Theme / Gesture Handler  Welcome / Auth / Main Stack  Screens và Feature Views  AuthContex"
+    },
+    {
+      "page": 11,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 288,
+      "excerpt": "CartService mobile là memory cart; shopping list trong PlannerView gọi backend. Không mô tả chúng như một cart đã đồng bộ. AuthContext là nguồn phiên; PreferenceService c"
+    },
+    {
+      "page": 12,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 448,
+      "excerpt": "3.4 Web  Hình 4. User/admin web dùng chung lớp tích hợp.  Trình duyệt  React / BrowserRouter / Lazy Routes  Showcase / Recipes / Community / Kitchen / Scan  ProtectedUser"
+    },
+    {
+      "page": 13,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1355,
+      "excerpt": "Kitchen/Scan trên web có tuyến công khai; thao tác dữ liệu riêng vẫn cần auth API. Không suy ra mọi page trong thư mục user đều có route guard. Marketing, hero banner và "
+    },
+    {
+      "page": 14,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 2111,
+      "excerpt": "4. Yêu cầu chức năng  Mỗi dòng là yêu cầu có thể kiểm chứng. API/trạng thái triển khai được truy vết tại mục 7 và 11. Tiêu chí là điều kiện cần đạt, kể cả những phần đang"
+    },
+    {
+      "page": 15,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 2280,
+      "excerpt": "Mã / ưu tiên   Yêu cầu   Tiêu chí chấp nhận  FR-012 / P1   Phải lưu/bỏ favorite recipe riêng theo user.  Với ID thật, lưu favoriteRecipeIds và còn sau reload; user khác k"
+    },
+    {
+      "page": 16,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 2147,
+      "excerpt": "4.4 Planner và mua sắm  Mã / ưu tiên   Yêu cầu   Tiêu chí chấp nhận  FR-027 / P1   Phải xem thực đơn tuần và thêm/sửa/xóa meal slot.  7 ngày, chuẩn hóa thứ Hai; sáng/trưa"
+    },
+    {
+      "page": 17,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1348,
+      "excerpt": "Mã / ưu tiên   Yêu cầu   Tiêu chí chấp nhận  FR-041 / P1   Phải cập nhật XP/level từ hoạt động được hỗ trợ.  Nấu hoàn thành hiện +50 XP; client dùng response; thống nhất "
+    },
+    {
+      "page": 18,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 817,
+      "excerpt": "5. Use case và luồng nghiệp vụ  5.1 Danh mục use case  Mã   Tác nhân   Mục tiêu   Yêu cầu  UC-01   Khách/User   Tài khoản và survey   FR-001–FR-007  UC-02   User/khách we"
+    },
+    {
+      "page": 19,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 358,
+      "excerpt": "Hình 5. Bản đồ tác nhân–use case bằng Mermaid flowchart.  Khách web   UC-01: Tài khoản  UC-02: Khám phá  User  UC-03: Kho / Match  UC-04 / UC-05: Scan / AI  UC-06: Nấu / "
+    },
+    {
+      "page": 20,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 698,
+      "excerpt": "5.2 UC-01 — Đăng nhập và khảo sát  Tiền điều kiện:   Backend sẵn sàng; có account hoặc đăng ký mới.   Kích hoạt:   Chọn login.   Hậu điều kiện:   Có phiên hợp lệ, mở đúng"
+    },
+    {
+      "page": 21,
+      "width": 841.91998,
+      "height": 594.95996,
+      "characters": 453,
+      "excerpt": "Hình 6. Sequence đăng nhập mobile.  Local Storage MongoDB Backend Auth Mobile/AuthContext  Local Storage MongoDB Backend Auth Mobile/AuthContext  alt   [Survey hoàn tất] "
+    },
+    {
+      "page": 22,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1337,
+      "excerpt": "5.3 UC-02/UC-03 — Khám phá và kho  Tiền điều kiện:   Recipe tồn tại; kho/favorite cần phiên.   Hậu điều kiện:   Recipe/kho/match đúng user.  1. User mở Explore, chọn sear"
+    },
+    {
+      "page": 23,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 538,
+      "excerpt": "Hình 7. Sequence scan và xác nhận kho.  MongoDB Gemini Cloudinary Backend AI Mobile Scan  MongoDB Gemini Cloudinary Backend AI Mobile Scan  Cần nhãn nguồn fallback rõ  al"
+    },
+    {
+      "page": 24,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1138,
+      "excerpt": "5.5 UC-05 — Trợ lý AI  Tiền điều kiện:   Phiên hợp lệ, câu hỏi có nội dung. Client gửi message/history; backend lấy kho/preferences user, gọi provider và trả replyText/su"
+    },
+    {
+      "page": 25,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 220,
+      "excerpt": "Hình 8. State timer; ghi hoàn thành là thao tác riêng.  Start  Pause Resume   Time = 0  Reset  Reset   Reset  Exit  Exit  SanSang  DangDem  TamDung   HetGio  RoiManHinh  "
+    },
+    {
+      "page": 26,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 894,
+      "excerpt": "Luồng lưu: Confirm finish → POST cooking-history → server success → history/XP UI. Timer hiện không bảo đảm hoạt động khi app bị OS đóng/dừng nền.  5.7 UC-07 — Planner, s"
+    },
+    {
+      "page": 27,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 393,
+      "excerpt": "Hình 9. Flow planner–shopping–fridge.  Có   Không  Mở tuần  Tải/tạo MealPlan  Chọn ngày / slot / recipe  Lưu và tính calories  Mở shopping list  Gom tên nguyên liệu chuẩn"
+    },
+    {
+      "page": 28,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 719,
+      "excerpt": "5.8 UC-08/UC-09 — Community và chat  Tiền điều kiện:   Login để ghi nội dung/chat.   Hậu điều kiện:   Nội dung/tin thật lưu và hiển thị đúng quyền.  User tạo post/ảnh; ba"
+    },
+    {
+      "page": 29,
+      "width": 841.91998,
+      "height": 594.95996,
+      "characters": 448,
+      "excerpt": "Hình 10. Sequence chat và kiểm tra quyền.  Client người nhận MongoDB Socket Gateway REST Chat Client  Client người nhận MongoDB Socket Gateway REST Chat Client  Người gửi"
+    },
+    {
+      "page": 30,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 917,
+      "excerpt": "5.9 UC-10 — Profile, notification và rewards  Tiền điều kiện:   Login. User tải profile/reward status; sửa thông tin; đọc/xóa notification. Check-in kiểm tra ngày; redeem"
+    },
+    {
+      "page": 31,
+      "width": 841.91998,
+      "height": 594.95996,
+      "characters": 261,
+      "excerpt": "Hình 11. Flow kiểm duyệt report.  User gửi report   Validate target/reason   pending   Admin xem report/target   Quyết định  dismissed  reviewed / resolved  action_taken "
+    },
+    {
+      "page": 32,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 622,
+      "excerpt": "6. Dữ liệu và ERD  6.1 Nguyên tắc mô hình  Source backend có 18 model tương ứng collection trong ERD hiện có. Đây là đối chiếu source, không phải xác minh database produc"
+    },
+    {
+      "page": 33,
+      "width": 841.91998,
+      "height": 594.95996,
+      "characters": 1109,
+      "excerpt": "6.2 Nhóm bếp  Hình 12. Recipes, inventory, planner và shopping.  authors   favorites  categoryCode  logical_code_when_matching  owns  referenced_in_items  records  logica"
+    },
+    {
+      "page": 34,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 289,
+      "excerpt": "UserFridge có thể tạo lười nên user có 0/1 kho. History hiện chấp nhận recipe mock, có thể gán ObjectId thiếu đích; recipe link không được coi là toàn vẹn cưỡng chế, xem "
+    },
+    {
+      "page": 35,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 906,
+      "excerpt": "6.3 Nhóm cộng đồng  Hình 13. Posts, chat và report.  publishes  receives  writes  parent  participates  contains  sends  submits   resolves_as_admin  possible_target  pos"
+    },
+    {
+      "page": 36,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 192,
+      "excerpt": "Report target là một post/comment/recipe/user tùy targetType; cạnh possible_target không yêu cầu có tất cả. Recipe là target ngoài hình này.  SMARTCOOK • SC-SRS-001 • v3."
+    },
+    {
+      "page": 37,
+      "width": 841.91998,
+      "height": 594.95996,
+      "characters": 752,
+      "excerpt": "6.4 Nhóm hỗ trợ  Hình 14. OTP, scan, notification và dữ liệu tham chiếu.  requests_by_email   owns   receives  USERS  ObjectId   _id   PK  string   email   UK  number   c"
+    },
+    {
+      "page": 38,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 2061,
+      "excerpt": "Stores/SystemSettings độc lập, không gán user FK giả. Reward catalog khai báo trong service; claimedRewards/checkIn nhúng User, không có collection Rewards riêng.  6.5 Từ"
+    },
+    {
+      "page": 39,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 559,
+      "excerpt": "Collection/model   Dữ liệu và liên kết   Ràng buộc/lưu ý  systemsettings / SystemSetting  Key/app/provider/aiConfig.   Key unique; admin API.  6.6 Vòng đời dữ liệu  User/"
+    },
+    {
+      "page": 40,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1932,
+      "excerpt": "7. Giao diện và tích hợp  7.1 Màn hình mobile  Màn hình/view   Nội dung   Trạng thái cần có  Welcome/Auth   Splash, login/register/Google, survey/Home.  Session loading, "
+    },
+    {
+      "page": 41,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1754,
+      "excerpt": "Nhóm   Endpoint đại diện   Quyền  Auth   POST /auth/register, /login, /google, /refresh-token  Public + rate limit/validate.  OTP   POST /auth/forgot-password, /verify- o"
+    },
+    {
+      "page": 42,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1340,
+      "excerpt": "Nhóm   Endpoint đại diện   Quyền  Reports   POST /reports; GET /reports, /reports/:id; PATCH /reports/:id  User gửi; admin đọc/xử lý.  Admin   /admin/dashboard, /users, /"
+    },
+    {
+      "page": 43,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 2181,
+      "excerpt": "8. Yêu cầu phi chức năng  Ngưỡng hiệu năng là mục tiêu nghiệm thu đề xuất, chưa benchmark. Nhóm phải chốt máy, dataset, thiết bị và ngưỡng trước khi phê duyệt.  Mã   Yêu "
+    },
+    {
+      "page": 44,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1681,
+      "excerpt": "9. Quy tắc nghiệp vụ  Mã   Quy tắc  BR-001   Backend xác nhận danh tính/role. Admin là User role admin; client không tự gán quyền.  BR-002   Preferences là ngữ cảnh gợi ý"
+    },
+    {
+      "page": 45,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1754,
+      "excerpt": "10. Kiểm thử và nghiệm thu  10.1 Điều kiện kiểm thử  Dùng DB test, tài khoản guest/user A/user B/admin, MongoDB ID thật và dataset xác định. Ghi provider thật/mock có nhã"
+    },
+    {
+      "page": 46,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 559,
+      "excerpt": "10.3 Công cụ và biên bản  Backend có build/E2E phases/security/admin/cache scripts; mobile có type-check/lint/E2E; web có build/lint/integration/chat/community scripts. Đ"
+    },
+    {
+      "page": 47,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 2028,
+      "excerpt": "11. Ma trận truy vết  B/M/W = backend/mobile/web. Đường dẫn nêu bằng chứng chính, không phải mọi file.  Yêu cầu   Use case / kiểm tra  Source chính   Trạng thái  FR-001–F"
+    },
+    {
+      "page": 48,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1230,
+      "excerpt": "Yêu cầu   Use case / kiểm tra  Source chính   Trạng thái  FR-033–FR-034   UC-08 / AT-08   B community; M CommunityService/modals; W CommunityPage  Có mã nguồn; fallback/l"
+    },
+    {
+      "page": 49,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1686,
+      "excerpt": "12. Giới hạn và hướng mở rộng  12.1 Khoảng cách quan sát  Mã   Phát hiện   Tác động  G-01   Forgot password mobile chỉ Alert, backend OTP có.  Chưa nghiệm thu reset mobil"
+    },
+    {
+      "page": 50,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1752,
+      "excerpt": "Module cũ   Giữ trong SRS   Hướng mở rộng / phần cần hoàn thiện  4. Categories   FR-010, FR-045   Subcategories theo dữ liệu thật, không cố định tùy ý.  5. Recipe   FR-01"
+    },
+    {
+      "page": 51,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 560,
+      "excerpt": "12.3 Quyết định cần chốt  Mã   Nội dung   Chủ thể  OI-01   Baseline P1/P2 và mức parity mobile/web.  Nhóm/giảng viên  OI-02   Bảng XP/level thống nhất; XP tích lũy hay đư"
+    },
+    {
+      "page": 52,
+      "width": 594.95996,
+      "height": 841.91998,
+      "characters": 1606,
+      "excerpt": "13. Tham chiếu và sơ đồ  13.1 Nguồn  •   Bản SRS người dùng cung cấp .  •   Bản Markdown trước chỉnh sửa .  •   ISO/IEC/IEEE 29148:2018 — thông tin tiêu chuẩn .  •   Expo"
+    }
+  ]
+}
