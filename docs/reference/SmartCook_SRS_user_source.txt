@@ -1,0 +1,246 @@
+
+SOFTWARE REQUIREMENT SPECIFICATION (SRS)
+Project Name: SMARTCOOK-MOBILE
+
+SDN302 + MMA301
+Group Member
+Dinh Van Loi       -    QE190167 (Leader)
+Duong Anh Dao  -    QE190037
+Nguyen Van Quy -    QE190031
+Nguyen Le Nhat  -    QE190011 
+Supervisor 
+Huynh Vang
+Capstone Project code
+- FALL26
+
+- Quy Nhon, 09/2026 -
+
+SOFTWARE REQUIREMENTS SPECIFICATION (SRS)
+Project: SMARTCOOK-MOBILE
+I. THÔNG TIN DỰ ÁN & TỔNG QUAN
+1.1 Thông tin chung dự án
+
+Thuộc tính
+Nội dung chi tiết
+Tên dự án
+SmartCook – Ứng dụng trợ lý nấu ăn thông minh
+Phiên bản
+2.4.0 (Cập nhật Tháng 9/2026)
+Nền tảng triển khai
+Mobile Application (iOS & Android)
+Frontend Framework
+React Native (Expo SDK 57), Expo Router
+Ngôn ngữ lập trình
+TypeScript
+Backend & Database
+Node.js, MongoDB, RESTful API, AI Vision API Integration
+Định hướng sản phẩm
+Smart Cooking / Personalization / Meal Planning / AI Assistant
+
+1.2 Bối cảnh & Vấn đề cần giải quyết
+
+
+STT
+Vấn đề của người dùng
+Giải pháp của SmartCook
+1
+Mất thời gian đắn đo "Hôm nay ăn gì?"
+Gợi ý món ăn cá nhân hóa dựa trên hồ sơ sở thích, khẩu vị và thói quen hàng ngày.
+2
+Có nguyên liệu nhưng không biết nấu món gì
+Module "bếp của tôi?" & Scan AI tự động gợi ý công thức phù hợp từ nguyên liệu có sẵn.
+3
+Công thức không phù hợp nhu cầu cá nhân
+Khảo sát Onboarding lọc công thức theo dị ứng, chế độ ăn (Eat Clean, Ăn chay), khẩu phần và ngân sách.
+4
+Bất tiện khi thao tác theo dõi các bước nấu
+Cooking Mode hỗ trợ đếm ngược Timer từng bước, Timeline rõ ràng và hướng dẫn bằng giọng nói (Voice).
+5
+Khó khăn trong việc kiểm soát dinh dưỡng & kế hoạch mua sắm
+Smart Meal Planner tự động lên thực đơn tuần và tạo Shopping List tối ưu hóa chi phí.
+
+1.3 Mục tiêu dự án
+Tối ưu hóa thời gian tìm kiếm và khám phá món ăn cho người dùng.
+Tận dụng triệt để nguyên liệu có sẵn trong tủ lạnh, giảm thiểu lãng phí thực phẩm.
+Cung cấp trải nghiệm nấu ăn tương tác trực quan với Cooking Mode và Smart Timer.
+Hỗ trợ quản lý dinh dưỡng (Calories, Macros) và ngân sách ăn uống hiệu quả.
+Tự động hóa việc lập kế hoạch bữa ăn tuần và danh sách mua sắm thông minh.
+Áp dụng công nghệ AI (Vision & Recommendation) nâng cao tính cá nhân hóa ứng dụng.
+1.4 Đối tượng sử dụng
+1.4.1 Cá nhân (Sinh viên, Người đi làm, Người sống một mình)
+Nhu cầu nấu ăn nhanh gọn, tiết kiệm thời gian, chi phí hợp lý và công thức cho 1-2 người.
+1.4.2 Gia đình
+Nhu cầu lập thực đơn phong phú theo tuần, quản lý chi phí đi chợ và nấu cho nhiều người.
+1.4.3 Người quan tâm sức khỏe & Chế độ ăn
+Nhu cầu kiểm soát chính xác Calories, Protein, Carbs, Fat; theo đuổi các chế độ Eat Clean, Keto, Low-carb, Ăn chay.
+1.4.4 Phụ huynh
+Nhu cầu tìm kiếm các món ăn giàu dinh dưỡng, dễ ăn, ít gia vị phù hợp với sự phát triển của trẻ em.
+II. KIẾN TRÚC HỆ THỐNG & CÔNG NGHỆ
+2.1 Stack công nghệ
+Mobile Frontend Framework: React Native kết hợp Expo SDK 57.
+Ngôn ngữ lập trình: TypeScript (đảm bảo type safety toàn bộ dự án).
+Luồng điều hướng (Navigation): Expo Router (File-based routing).
+Giao diện người dùng (UI Components): React Native StyleSheet, Expo LinearGradient, @expo/vector-icons (Ionicons).
+Backend Architecture: Node.js, Express framework, MongoDB Database.
+Dịch vụ tích hợp AI: AI Vision API (nhận diện hình ảnh nguyên liệu), AI Recommendation Engine.
+2.2 Cấu trúc thư mục mã nguồn
+
+src/
+├── app/                         # Expo Router App Directory
+│   ├── _layout.tsx              # Root Layout Configuration
+│   ├── index.tsx                # Splash & Auth Check Screen
+│   ├── login.tsx                # Màn hình Đăng nhập
+│   ├── register.tsx             # Màn hình Đăng ký
+│   ├── onboarding-survey.tsx    # Màn hình Khảo sát Accordion 6 câu hỏi
+│   ├── home.tsx                 # Màn hình Chính tích hợp Bottom Tabs
+│   ├── explore.tsx              # Màn hình Khám phá & Tìm kiếm
+│   ├── recipe-detail.tsx        # Màn hình Chi tiết Công thức
+│   └── cooking-mode.tsx         # Màn hình Hướng dẫn nấu từng bước
+├── components/                  # UI Components
+│   ├── features/                # Sub-views chính nhúng trong Home Tab
+│   │   ├── FridgeView.tsx       # View "Tôi có gì trong tủ lạnh?"
+│   │   ├── ProfileView.tsx      # View Hồ sơ & Cài đặt cá nhân
+│   │   ├── PlannerView.tsx      # View Lập thực đơn Meal Planner
+│   │   └── ScanAIView.tsx       # View Quét nguyên liệu qua Camera AI
+│   ├── common/                  # Modals & Shared UI Components
+│   │   ├── CookingHistoryModal.tsx
+│   │   ├── ShoppingNoteModal.tsx
+│   │   ├── NearbyStoreCard.tsx
+│   │   └── ShoppingReminderBanner.tsx
+│   └── ui/                      # Base UI Elements (Buttons, Inputs, Cards)
+├── services/                    # Business Logic & State Services
+│   ├── preferenceService.ts     # Quản lý hồ sơ sở thích & cá nhân hóa
+│   ├── cookingHistoryService.ts # Quản lý lịch sử món đã nấu
+│   ├── cartService.ts           # Quản lý danh sách đi chợ Shopping List
+│   └── storeService.ts          # Quản lý vị trí cửa hàng gần nhất
+├── constants/                   # Colors, Typography, App Configs
+├── types/                       # TypeScript Interfaces & Type Definitions
+└── data/                        # Mock Data & Local Datasets
+2.3 Mô hình Tầng Service & Observer Pattern
+PreferenceService: Quản lý và phân phối hồ sơ sở thích (khẩu vị, chế độ ăn, dị ứng, khẩu phần). Sử dụng Observer Pattern để thông báo đến các View chủ động cập nhật dữ liệu khi có thay đổi.
+CookingHistoryService: Quản lý lịch sử nấu ăn của người dùng (Thêm, Xóa, Xóa tất cả). Cung cấp phương thức subscribe để cập nhật realtime UI trên CookingHistoryModal.
+CartService: Quản lý danh sách nguyên liệu cần mua, tự động tính toán bù trừ với nguyên liệu hiện có trong tủ lạnh.
+StoreService: Quản lý và truy xuất dữ liệu vị trí các siêu thị, cửa hàng thực phẩm gần nhất.
+III. ĐẶC TẢ YÊU CẦU CHỨC NĂNG (25 MODULES)
+3.1 Module 1 – Authentication & Account
+
+1. Đăng ký tài khoản: Cho phép người dùng tạo tài khoản bằng Email, Mật khẩu và Tên hiển thị.
+2. Đăng nhập: Xác thực người dùng bằng tài khoản đã đăng ký.
+3. Đăng xuất: Đăng xuất an toàn khỏi ứng dụng, hiển thị hộp thoại xác nhận trước khi thực hiện.
+4. Quên mật khẩu: Gửi liên kết khôi phục mật khẩu bảo mật qua Email.
+5. Quản lý tài khoản: Cho phép chỉnh sửa Avatar, Tên hiển thị, Email và Mật khẩu.
+3.2 Module 2 – Onboarding Survey (Khảo sát người dùng)
+
+Giao diện dạng Accordion gồm 6 câu hỏi thu gọn/mở rộng linh hoạt, hiển thị tóm tắt lựa chọn trực tiếp trên tiêu đề câu hỏi:
+Câu 1 (Ẩm thực yêu thích): Multi-select (Món Việt, Món Á, Eat Clean, Món Âu, Nấu <20 phút, Tiết kiệm, Ăn chay, Tráng miệng).
+Câu 2 (Khẩu vị): Multi-select (Đậm đà, Thanh đạm, Cay nồng, Ngọt thanh, Chua cay, Béo ngậy).
+Câu 3 (Dị ứng / Kiêng khem): Multi-select (Không ăn cay, Dị ứng đậu phộng, Dị ứng hải sản vỏ cứng, Không nạp lactose, Ăn chay).
+Câu 4 (Khẩu phần nấu): Single-select (1 người, 2 người, 3-4 người, 5+ người).
+Câu 5 (Thời gian nấu tối đa): Single-select (<15 phút, 15-30 phút, 30-45 phút, >45 phút).
+Câu 6 (Mục tiêu ăn uống): Single-select (Healthy & Cân bằng, Giảm cân & Đốt mỡ, Tăng cơ & Giàu đạm, Tối ưu ngân sách).
+Hành vi hệ thống: Hỗ trợ nút "Bỏ qua" khi lần đầu sử dụng. Cho phép xem lại và "Chỉnh sửa" từ trang Profile bất kỳ lúc nào.
+3.3 Module 3 – Home (Trang chủ)
+
+
+1. Greeting: Hiển thị lời chào thông minh cá nhân hóa theo buổi trong ngày (Sáng/Trưa/Tối) kèm tên người dùng.
+2. Quick Actions: Phím tắt truy cập nhanh: "Tôi có gì trong tủ lạnh?", "Scan AI", "Gợi ý cho tôi", "Meal Planner".
+3. Categories: Danh mục gợi ý phân loại đa dạng.
+4. Recommended for You: Danh sách công thức đề xuất riêng dựa trên Onboarding Survey.
+5. Trending: Các món ăn đang hot và được nấu nhiều nhất trong cộng đồng.
+3.4 Module 4 – Categories (Danh mục món ăn)
+
+Phân loại món ăn theo các tiêu chí chính: Gia đình, Sức khỏe, Trẻ em, Cá nhân, Nhanh & Tiện lợi, Tiết kiệm, Tiệc & Dịp đặc biệt, Chế độ ăn chay, Ẩm thực vùng miền, Đồ uống & Tráng miệng. Hỗ trợ Subcategories và Bộ lọc nâng cao.
+3.5 Module 5 – Recipe (Chi tiết công thức)
+
+Hiển thị đầy đủ thông tin chi tiết của một công thức bao gồm: Tên món, Hình ảnh đại diện, Mô tả ngắn, Thời gian chuẩn bị & Thời gian nấu, Độ khó (Dễ/Trung bình/Khó), Khẩu phần ăn, Danh sách nguyên liệu và định lượng, Các bước thực hiện chi tiết, Bảng thành phần dinh dưỡng, Chi phí ước tính, Phân loại Categories & Tags.
+3.6 Module 6 – "Tôi có gì trong tủ lạnh?" (FridgeView)
+
+1. Chọn nguyên liệu: Giao diện Accordion chọn nguyên liệu theo nhóm hoặc tìm qua thanh tìm kiếm nhanh.
+2. Thuật toán khớp công thức: Tính toán và sắp xếp kết quả theo tỷ lệ % khớp nguyên liệu (từ 100% đến 60%).
+3. Cảnh báo thiếu nguyên liệu: Hiển thị chi tiết các nguyên liệu còn thiếu cho mỗi công thức.
+4. Quản lý: Tích hợp nút "Xóa tất cả" và lối vào "Lịch sử nấu" (CookingHistoryModal).
+3.7 Module 7 – Scan AI (Nhận diện nguyên liệu bằng Camera)
+
+Sử dụng Camera thiết bị chụp ảnh nguyên liệu hoặc bên trong tủ lạnh. Tích hợp module IngredientRecognitionService kết nối AI Vision API để nhận diện tự động nguyên liệu, cho phép người dùng kiểm tra/chỉnh sửa danh sách trước khi tự động điền vào FridgeView.
+3.8 Module 8 – Smart Recommendation (Gợi ý thông minh)
+Hệ thống tự động phân tích đa chiều: Nguyên liệu sẵn có, Sở thích cá nhân, Lịch sử nấu, Mục tiêu sức khỏe, Thời gian chuẩn bị và Ngân sách. Lớp Recommendation học máy nâng cao tự điều chỉnh điểm số đề xuất dựa trên tương tác thực tế (Xem, Like, Save, Cook, Search).
+3.9 Module 9 – Cooking Mode (Chế độ hướng dẫn nấu từng bước)
+
+Giao diện full-screen hiển thị tiến trình nấu trực quan (BƯỚC X/Y). Cung cấp các nút điều hướng: Start, Pause, Skip, Previous. Hỗ trợ hiển thị mốc thời gian Timeline và tích hợp tính năng đọc hướng dẫn bằng giọng nói (Voice Instruction).
+3.10 Module 10 – Smart Timer (Bộ đếm thời gian thông minh)
+Tích hợp bộ đếm ngược thời gian riêng cho từng bước nấu (VD: Ướp 15 phút, Chiên 7 phút). Tự động tạo timeline toàn bộ quá trình nấu và gửi Push Notification ngay khi kết thúc thời gian của mỗi bước.
+3.11 Module 11 – Nutrition (Quản lý & Báo cáo Dinh dưỡng)
+Hiển thị chi tiết bảng giá trị dinh dưỡng của từng món (Calories, Protein, Carbs, Fat, Fiber, Sugar). Cho phép người dùng thiết lập Daily Goal (Mục tiêu ngày) và theo dõi tổng dung nạp dinh dưỡng qua các bữa Sáng, Trưa, Tối.
+3.12 Module 12 – Smart Meal Planner (Lập kế hoạch bữa ăn)
+
+Cho phép người dùng tạo thực đơn tự động theo 7 ngày hoặc 14 ngày dựa trên các tham số: Mục tiêu (Giảm cân, Tăng cơ, Healthy), Số người ăn và Ngân sách tối đa. Hỗ trợ tùy chỉnh thay thế món thủ công cho từng bữa ăn.
+3.13 Module 13 – Shopping List (Danh sách đi chợ)
+
+Tự động trích xuất danh sách nguyên liệu cần mua từ Meal Planner và phân nhóm thông minh (Thịt, Rau củ, Gia vị, Khác). Tự động loại trừ nguyên liệu đã có sẵn trong FridgeView, hỗ trợ đánh dấu hoàn thành, thêm ghi chú (ShoppingNoteModal), xem gợi ý cửa hàng gần đó (NearbyStoreCard) và đặt thông báo nhắc nhở đi chợ.
+3.14 Module 14 – Inventory (Quản lý tủ lạnh & Khai báo kho)
+Quản lý danh sách nguyên liệu thực tế có trong bếp (My Kitchen) bao gồm số lượng, đơn vị, ngày mua và hạn sử dụng. Hỗ trợ tính năng cảnh báo thông minh khi nguyên liệu sắp hết hạn.
+3.15 Module 15 – Cost Calculation (Tính toán & Lọc chi phí)
+Tự động tính toán tổng chi phí nguyên liệu ước tính cho từng công thức dựa trên giá thị trường. Cung cấp bộ lọc theo tầm giá: Dưới 20K, 20K-30K, 30K-50K và Trên 50K.
+3.16 Module 16 – Personalization Engine (Hệ thống cá nhân hóa)
+Hệ thống ghi nhận và phân tích hành vi người dùng (Xem món, Lượt thích, Lưu công thức, Lịch sử nấu, Tìm kiếm, Đánh giá) để liên tục tối ưu hóa thuật toán đề xuất món ăn hiển thị trên trang Home.
+3.17 Module 17 – Rating & Review (Đánh giá & Nhận xét)
+Cho phép người dùng đánh giá công thức sau khi nấu theo các tiêu chí: Hương vị, Độ dễ nấu, Chi phí và Thành phẩm. Cho phép viết bình luận và tải ảnh chụp thành phẩm thực tế.
+3.18 Module 18 – Cooking History (Lịch sử đã nấu)
+
+Quản lý toàn bộ danh sách các món đã hoàn thành qua CookingHistoryModal. Hỗ trợ lọc theo mốc thời gian (Tất cả, Hôm nay, Tuần này), xem thống kê loại món ăn, phím tắt "Nấu lại" để mở nhanh Recipe Detail và tùy chọn xóa lịch sử.
+3.19 Module 19 – Recipe Remix & Ingredient Substitution (Biến đổi công thức & Thay thế nguyên liệu)
+Cho phép người dùng tùy biến công thức gốc (VD: Thay thịt lợn bằng thịt gà, giảm ớt khi không ăn cay) hoặc nhận gợi ý các nguyên liệu có thể thay thế tương đương (VD: Thay Bơ bằng Dầu Olive) mà vẫn đảm bảo hương vị món ăn.
+3.20 Module 20 – Trending (Món ăn thịnh hành)
+Bảng xếp hạng tự động các công thức phổ biến nhất dựa trên thuật toán tổng hợp: Lượt xem, Lượt thích, Lượt lưu, Số lần nấu thành công và Đánh giá trung bình từ cộng đồng.
+3.21 Module 21 – Smart Search (Tìm kiếm thông minh NLN)
+Hỗ trợ tìm kiếm từ khóa truyền thống và Tìm kiếm truy vấn tự nhiên (Natural Language Processing). Phân tích các câu truy vấn phức tạp (VD: "Món dưới 30 phút có thịt gà", "Món healthy dưới 500 calories", "Món cho 2 người dưới 100k") thành bộ lọc điều kiện chính xác.
+3.22 Module 22 – Favorites & Collection (Yêu thích & Bộ sưu tập)
+Cho phép lưu công thức yêu thích và tổ chức thành các bộ sưu tập cá nhân hóa (Bữa sáng, Bữa trưa, Bữa tối, Món Healthy, Món Tiệc) giúp dễ dàng truy cập lại.
+3.23 Module 23 – Notification (Hệ thống thông báo Push)
+Quản lý các loại thông báo push: Cảnh báo Smart Timer khi nấu, Nhắc nhở chuẩn bị bữa ăn (Meal Reminder), Nhắc nhở đi chợ (Shopping Reminder), Thông báo công thức mới và Gợi ý mẹo nấu ăn cá nhân hóa.
+3.24 Module 24 – AI Recipe Generator (Tạo công thức tự động bằng AI)
+Tính năng AI nâng cao: Người dùng nhập danh sách nguyên liệu, thời gian có sẵn, ngân sách và mục tiêu dinh dưỡng. AI Generative Engine sẽ tự động khởi tạo công thức hoàn chỉnh (Tên món, Định lượng chi tiết, Các bước nấu, Dinh dưỡng, Chi phí) tương thích hoàn toàn với hệ thống.
+3.25 Module 25 – User Profile & Settings (Hồ sơ & Cài đặt)
+
+Quản lý thông tin tài khoản, danh hiệu thành viên, cấu hình thông số Onboarding Survey, cài đặt ngôn ngữ hiển thị, trung tâm hỗ trợ trợ giúp và đăng xuất khỏi thiết bị.
+IV. MÔ TẢ GIAO DIỆN CÁC MÀN HÌNH CHÍNH
+4.1 Màn hình 1 – Đăng nhập / Đăng ký (Auth Screen)
+
+
+Giao diện xác thực với hình nền mờ nghệ thuật, Form đăng nhập/đăng ký nằm ở trung tâm màn hình, bao gồm nút chuyển đổi tab Đăng ký/Đăng nhập linh hoạt và liên kết "Quên mật khẩu".
+4.2 Màn hình 2 – Onboarding Survey
+
+Thiết kế dạng Accordion với 6 thẻ Card câu hỏi. Thẻ tự động mở rộng khi chọn và thu gọn hiển thị tóm tắt lựa chọn ngay tiêu đề. Sử dụng Chip UI nhỏ gọn, hiện đại.
+4.3 Màn hình 3 – Home (Trang chủ)
+
+
+Bố cục gồm Thanh Tab điều hướng phía dưới. Phần thân chứa Lời chào (Greeting), Lưới phím tắt nhanh (Quick Actions), Danh mục theo biểu tượng (Categories), Danh sách cuộn ngang món đề xuất cá nhân và Danh sách Trending.
+4.4 Màn hình 4 Recipe (Chi tiết công thức)
+
+4.5 Màn hình 5 Cooking Mode (Chế độ hướng dẫn nấu từng bước)
+
+
+4.6 Màn hình 6 – FridgeView ("Nguyên Liệu")
+
+Header chứa tiêu đề, phím tắt Modal Lịch sử và nút "Xóa tất cả". Danh sách nguyên liệu thiết kế Accordion phân nhóm. Kết quả hiển thị thẻ món ăn kèm chỉ số % khớp và nhãn nguyên liệu còn thiếu.
+4.7 Màn hình 7 – Cooking History Modal
+
+Modal trượt từ dưới lên (Bottom Sheet).Header gồm tiêu đề và nút xóa tất cả. Phía trên có thanh Filter Pills (Tất cả, Hôm nay, Tuần này). Danh sách hiển thị ảnh thumbnail, tên món, thời gian và nút hành động "Nấu lại".
+4.8 Màn hình 8 Shopping List (Danh sách đi chợ)
+
+4.9 Màn hình 9 – ScanAI View
+
+
+Giao diện Camera chuyên dụng với khung Overlay hướng dẫn góc chụp. Sau khi chụp, hiển thị màn hình xem trước danh sách nguyên liệu nhận diện bằng AI kèm nút xác nhận/chỉnh sửa.
+4.10 Màn hình 10 Smart Meal Planner (Lập kế hoạch bữa ăn)
+
+
+4.11 Màn hình 11 User Profile & Settings (Hồ sơ & Cài đặt)
+
+
+4.12 Màn hình 12 Create food Modal 
+
+
+
+
+
