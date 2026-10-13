@@ -5,6 +5,8 @@ import React, {
   useState,
 } from "react";
 import authService from "@/services/authService";
+import { CartService } from "@/services/cartService";
+import socketService from "@/services/socketService";
 import { onSessionExpired } from "@/services/apiClient";
 import { tokenStorage } from "@/utils/tokenStorage";
 import {
@@ -54,6 +56,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (isMounted) {
           if (token && storedUser) {
             setUser(storedUser);
+            socketService.connect(token).catch(() => {});
+            CartService.fetchServerItems().catch(() => {});
             // Silently fetch fresh user profile from backend in background
             authService
               .getMe()
@@ -85,6 +89,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const unsubscribe = onSessionExpired(() => {
       if (isMounted) {
         setUser(null);
+        socketService.disconnect();
+        CartService.clearLocal();
       }
     });
 
@@ -97,12 +103,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = async (payload: LoginPayload): Promise<StoredUser> => {
     const data = await authService.login(payload);
     setUser(data.user);
+    socketService.connect().catch(() => {});
+    CartService.fetchServerItems().catch(() => {});
     return data.user;
   };
 
   const loginWithGoogle = async (idToken: string): Promise<StoredUser> => {
     const data = await authService.loginWithGoogle(idToken);
     setUser(data.user);
+    socketService.connect().catch(() => {});
+    CartService.fetchServerItems().catch(() => {});
     return data.user;
   };
 
@@ -119,6 +129,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       await authService.logout();
     } finally {
       setUser(null);
+      socketService.disconnect();
+      CartService.clearLocal();
     }
   };
 

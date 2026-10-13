@@ -3,3 +3,5 @@ export * from "./AuthWaveFooter";
 export * from "./AuthWaveHeader";
 export * from "./SocialAuthButtons";
 export * from "./SuccessModal";
+export * from "./ForgotPasswordModal";
+
