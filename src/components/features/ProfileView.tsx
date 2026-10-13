@@ -22,11 +22,15 @@ import {
 
 import { useAuth } from "@/contexts/AuthContext";
 import { EditProfileModal } from "./EditProfileModal";
+import { FavoriteRecipesModal } from "@/components/recipe";
+import { NotificationModal } from "@/components/notifications/NotificationModal";
 
 export default function ProfileView({ insetsTop }: ProfileViewProps) {
   const router = useRouter();
   const { user, logout, updateProfile } = useAuth();
   const [isEditProfileVisible, setIsEditProfileVisible] = useState(false);
+  const [isFavoritesModalVisible, setIsFavoritesModalVisible] = useState(false);
+  const [isNotificationModalVisible, setIsNotificationModalVisible] = useState(false);
 
   // Local preferences state fallback when user has not synced preferences from server
   const [localPreferences, setLocalPreferences] = useState<UserPreferences>(() =>
@@ -276,7 +280,7 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
 
         <TouchableOpacity
           style={styles.settingRow}
-          onPress={() => handleMenuClick("Bộ sưu tập món đã lưu")}
+          onPress={() => setIsFavoritesModalVisible(true)}
           activeOpacity={0.7}
         >
           <Text style={styles.settingText}>Bộ sưu tập công thức đã lưu</Text>
@@ -286,7 +290,7 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
 
         <TouchableOpacity
           style={styles.settingRow}
-          onPress={() => handleMenuClick("Thông báo & Giờ nấu ăn")}
+          onPress={() => setIsNotificationModalVisible(true)}
           activeOpacity={0.7}
         >
           <Text style={styles.settingText}>Thông báo & Giờ nấu ăn</Text>
@@ -334,6 +338,24 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
         onSave={async (payload) => {
           await updateProfile(payload);
         }}
+      />
+
+      {/* 8. FAVORITE RECIPES MODAL */}
+      <FavoriteRecipesModal
+        visible={isFavoritesModalVisible}
+        onClose={() => setIsFavoritesModalVisible(false)}
+        onSelectRecipe={(recipeId) => {
+          router.push({
+            pathname: "/recipe-detail",
+            params: { id: recipeId },
+          });
+        }}
+      />
+
+      {/* 9. NOTIFICATION MODAL */}
+      <NotificationModal
+        visible={isNotificationModalVisible}
+        onClose={() => setIsNotificationModalVisible(false)}
       />
     </ScrollView>
   );

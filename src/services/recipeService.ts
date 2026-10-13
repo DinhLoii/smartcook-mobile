@@ -173,6 +173,101 @@ class RecipeServiceClass {
   }
 
   /**
+   * Cập nhật công thức món ăn (PUT /recipes/:id)
+   */
+  async updateRecipe(id: string, formData: FormData): Promise<Recipe> {
+    const response = await apiClient.put<{
+      success: boolean;
+      data: any;
+      message: string;
+    }>(`/recipes/${id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      timeout: 30000,
+    });
+
+    if (response.data?.success && response.data.data) {
+      const updated = this.normalizeRecipe(response.data.data);
+      const idx = this.customRecipes.findIndex((r) => r.id === id);
+      if (idx !== -1) {
+        this.customRecipes[idx] = updated;
+      }
+      this.notify();
+      return updated;
+    }
+
+    throw new Error(response.data?.message || "Không thể cập nhật công thức món ăn");
+  }
+
+  /**
+   * Xóa công thức món ăn (DELETE /recipes/:id)
+   */
+  async deleteRecipe(id: string): Promise<boolean> {
+    const isMongoId = /^[0-9a-fA-F]{24}$/.test(id);
+    if (isMongoId) {
+      try {
+        await apiClient.delete(`/recipes/${id}`);
+      } catch (error) {
+        console.warn(`Lỗi xóa công thức ${id} trên Backend:`, error);
+      }
+    }
+
+    this.customRecipes = this.customRecipes.filter((r) => r.id !== id);
+    this.notify();
+    return true;
+  }
+
+  /**
+   * Lấy danh sách công thức thịnh hành (GET /recipes/trending)
+   */
+  async getTrendingRecipes(limit: number = 10): Promise<Recipe[]> {
+    try {
+      const response = await apiClient.get<{
+        success: boolean;
+        data: any[];
+      }>("/recipes/trending", { params: { limit } });
+
+      if (response.data?.success && Array.isArray(response.data.data)) {
+        return response.data.data.map(this.normalizeRecipe);
+      }
+    } catch (error) {
+      console.warn("Lỗi tải công thức thịnh hành từ Backend, fallback cục bộ:", error);
+    }
+
+    // Fallback: Lấy các món có rating cao nhất từ local
+    return [...RECIPES_DATA]
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, limit);
+  }
+
+  /**
+   * Lấy danh sách các món ăn đã yêu thích
+   */
+  async getFavoriteRecipes(): Promise<Recipe[]> {
+    try {
+      // 1. Lấy thông tin profile để có danh sách ID yêu thích mới nhất từ Backend
+      const profileRes = await apiClient.get<{
+        success: boolean;
+        data: { favoriteRecipeIds?: string[] };
+      }>("/auth/me");
+
+      const serverFavIds = profileRes.data?.data?.favoriteRecipeIds || [];
+      serverFavIds.forEach((id) => this.localFavoriteIds.add(id));
+    } catch (e) {
+      // Khi offline dùng localFavoriteIds
+    }
+
+    // 2. Tải toàn bộ công thức và lọc theo favorite
+    const { recipes } = await this.getRecipes({ limit: 50 });
+    const favorites = recipes.filter(
+      (r) => r.isFavorite || this.localFavoriteIds.has(r.id)
+    );
+
+    return favorites;
+  }
+
+  /**
    * Lấy danh sách món tự tạo offline/cục bộ
    */
   getCustomRecipes(): Recipe[] {

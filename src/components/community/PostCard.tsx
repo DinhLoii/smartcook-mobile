@@ -3,14 +3,17 @@ import { CommunityAuthor, CommunityPost } from "@/types";
 import { hapticSelection } from "@/utils/haptics";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image as ExpoImage } from "expo-image";
-import React from "react";
+import React, { useState } from "react";
 import {
+  Alert,
   Image,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { ReportModal } from "@/components/common/ReportModal";
+import communityService from "@/services/communityService";
 
 interface PostCardProps {
   post: CommunityPost;
@@ -31,14 +34,52 @@ export default function PostCard({
   onShare,
   onTagPress,
 }: PostCardProps) {
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [userReaction, setUserReaction] = useState<string | null>(
+    (post as any).userReaction || null
+  );
+
   const handleToggleLike = () => {
     void hapticSelection();
     onLike(post.id);
   };
 
+  const handleLongPressLike = () => {
+    void hapticSelection();
+    setShowReactionPicker(!showReactionPicker);
+  };
+
+  const handleSelectReaction = (type: "like" | "love" | "haha" | "wow" | "sad" | "angry") => {
+    setUserReaction(type);
+    setShowReactionPicker(false);
+    void hapticSelection();
+    communityService.reactToPost(post.id, type);
+  };
+
   const handleToggleSave = () => {
     onSave?.(post.id);
   };
+
+  const handleMorePress = () => {
+    Alert.alert(
+      "Tùy chọn bài viết",
+      `Bài viết của ${post.author.name}`,
+      [
+        {
+          text: "🚩 Báo cáo vi phạm",
+          style: "destructive",
+          onPress: () => setShowReportModal(true),
+        },
+        {
+          text: "Chia sẻ bài viết",
+          onPress: () => onShare?.(post),
+        },
+        { text: "Đóng", style: "cancel" },
+      ]
+    );
+  };
+
 
   return (
     <View style={styles.cardContainer}>
@@ -103,7 +144,7 @@ export default function PostCard({
         <TouchableOpacity
           style={styles.moreButton}
           activeOpacity={0.6}
-          onPress={() => onShare?.(post)}
+          onPress={handleMorePress}
         >
           <Ionicons name="ellipsis-horizontal" size={18} color="#94A3B8" />
         </TouchableOpacity>
@@ -148,10 +189,33 @@ export default function PostCard({
         </View>
       )}
 
-      {/* Action Footer: Like, Comment (with explicit label & icon), Save, Share */}
+      {/* Floating Reaction Picker Bar */}
+      {showReactionPicker && (
+        <View style={styles.reactionPickerBar}>
+          {[
+            { type: "like" as const, emoji: "👍" },
+            { type: "love" as const, emoji: "❤️" },
+            { type: "haha" as const, emoji: "😂" },
+            { type: "wow" as const, emoji: "😮" },
+            { type: "sad" as const, emoji: "😢" },
+            { type: "angry" as const, emoji: "😡" },
+          ].map((r) => (
+            <TouchableOpacity
+              key={r.type}
+              style={styles.reactionEmojiBtn}
+              onPress={() => handleSelectReaction(r.type)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.reactionEmojiText}>{r.emoji}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {/* Action Footer: Like, Comment, Save, Share */}
       <View style={styles.actionRow}>
         <View style={styles.actionLeft}>
-          {/* Like Button */}
+          {/* Like / Reaction Button */}
           <TouchableOpacity
             style={[
               styles.actionPillBtn,
@@ -159,12 +223,24 @@ export default function PostCard({
             ]}
             activeOpacity={0.7}
             onPress={handleToggleLike}
+            onLongPress={handleLongPressLike}
+            delayLongPress={300}
           >
-            <Ionicons
-              name={post.isLiked ? "heart" : "heart-outline"}
-              size={18}
-              color={post.isLiked ? "#EF4444" : "#475569"}
-            />
+            <Text style={{ fontSize: 16 }}>
+              {userReaction === "love"
+                ? "❤️"
+                : userReaction === "haha"
+                ? "😂"
+                : userReaction === "wow"
+                ? "😮"
+                : userReaction === "sad"
+                ? "😢"
+                : userReaction === "angry"
+                ? "😡"
+                : post.isLiked
+                ? "❤️"
+                : "🤍"}
+            </Text>
             <Text
               style={[
                 styles.actionPillText,
@@ -175,7 +251,7 @@ export default function PostCard({
             </Text>
           </TouchableOpacity>
 
-          {/* Comment Button (Explicit label so user sees it clearly) */}
+          {/* Comment Button */}
           <TouchableOpacity
             style={styles.actionPillBtn}
             activeOpacity={0.7}
@@ -236,9 +312,19 @@ export default function PostCard({
           <Text style={styles.viewMoreCommentsText}>Xem tất cả bình luận →</Text>
         </TouchableOpacity>
       )}
+
+      {/* Report Modal */}
+      <ReportModal
+        visible={showReportModal}
+        targetType="post"
+        targetId={post.id}
+        targetTitle={post.dishName}
+        onClose={() => setShowReportModal(false)}
+      />
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   cardContainer: {
@@ -468,5 +554,30 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: BrandColors.primary,
     marginTop: 2,
+  },
+  reactionPickerBar: {
+    flexDirection: "row",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    position: "absolute",
+    bottom: 50,
+    left: 10,
+    zIndex: 100,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    gap: 6,
+  },
+  reactionEmojiBtn: {
+    padding: 4,
+  },
+  reactionEmojiText: {
+    fontSize: 20,
   },
 });
