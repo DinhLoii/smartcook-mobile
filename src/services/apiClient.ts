@@ -20,6 +20,7 @@ export const apiClient = axios.create({
 // Event listener for unauthorized session expiration
 type UnauthorizedCallback = () => void;
 let unauthorizedListeners: UnauthorizedCallback[] = [];
+let isNotifyingExpired = false;
 
 export const onSessionExpired = (callback: UnauthorizedCallback): (() => void) => {
   unauthorizedListeners.push(callback);
@@ -29,13 +30,21 @@ export const onSessionExpired = (callback: UnauthorizedCallback): (() => void) =
 };
 
 const notifySessionExpired = () => {
-  unauthorizedListeners.forEach((cb) => {
-    try {
-      cb();
-    } catch (e) {
-      console.error("Error in session expired listener", e);
-    }
-  });
+  if (isNotifyingExpired) return;
+  isNotifyingExpired = true;
+  try {
+    unauthorizedListeners.forEach((cb) => {
+      try {
+        cb();
+      } catch (e) {
+        console.error("Error in session expired listener", e);
+      }
+    });
+  } finally {
+    setTimeout(() => {
+      isNotifyingExpired = false;
+    }, 1500);
+  }
 };
 
 // Queue for pending requests while refreshing token
@@ -77,7 +86,14 @@ apiClient.interceptors.response.use(
     };
 
     // If no response or not 401, reject immediately
-    if (!error.response || error.response.status !== 401 || !originalRequest) {
+    if (!error.response) {
+      console.warn(
+        `[apiClient Network Error] Cannot reach endpoint: ${error.config?.baseURL || ""}${error.config?.url || ""}. Message: ${error.message}`
+      );
+      return Promise.reject(error);
+    }
+
+    if (error.response.status !== 401 || !originalRequest) {
       return Promise.reject(error);
     }
 
@@ -88,6 +104,13 @@ apiClient.interceptors.response.use(
       requestUrl.includes("/auth/register") ||
       requestUrl.includes("/auth/refresh-token")
     ) {
+      return Promise.reject(error);
+    }
+
+    // If no refresh token exists, user is an unauthenticated guest or logged out.
+    // Do not attempt refresh, do not throw 'No refresh token available', and do not trigger cascade.
+    const refreshToken = await tokenStorage.getRefreshToken();
+    if (!refreshToken) {
       return Promise.reject(error);
     }
 
@@ -116,11 +139,6 @@ apiClient.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      const refreshToken = await tokenStorage.getRefreshToken();
-      if (!refreshToken) {
-        throw new Error("No refresh token available");
-      }
-
       // Call refresh token endpoint directly with fresh axios to prevent interceptor loop
       const res = await axios.post(`${ENV.API_BASE_URL}/auth/refresh-token`, {
         refreshToken,
