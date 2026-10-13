@@ -22,7 +22,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -54,12 +54,15 @@ export default function HomeScreen() {
   const [showShoppingNote, setShowShoppingNote] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showGiftModal, setShowGiftModal] = useState(false);
+  const [plannerSubTab, setPlannerSubTab] = useState<"calendar" | "shopping" | "rewards">("calendar");
   const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
   const [cartCount, setCartCount] = useState(() =>
     CartService.getItems().filter((i) => !i.bought).length
   );
 
   useEffect(() => {
+    CartService.fetchServerItems().catch(() => {});
+
     const unsubscribe = CartService.subscribe(() => {
       setCartCount(CartService.getItems().filter((i) => !i.bought).length);
     });
@@ -212,8 +215,24 @@ export default function HomeScreen() {
     });
   };
 
+  interface HeroSlideItem {
+    id: string;
+    recipeId: string;
+    titlePrefix: string;
+    highlight: string;
+    titleSuffix: string;
+    subtitle: string;
+    actionText: string;
+    tagBadge: "hot" | "popular";
+    image: any;
+    gradientColors: readonly [string, string, string];
+    highlightColor: string;
+    btnGradient: readonly [string, string];
+    badgeColor: string;
+  }
+
   // 5 Dishes data for Hero Carousel with corresponding info
-  const heroSlides = [
+  const heroSlides: HeroSlideItem[] = [
     {
       id: "slide-1",
       recipeId: "dish-1",
@@ -222,11 +241,11 @@ export default function HomeScreen() {
       titleSuffix: " nguyên liệu có sẵn",
       subtitle: "Thịt gà • Cà chua • Bơ • Gạo",
       actionText: "Xem chi tiết →",
-      tagBadge: "hot" as const,
+      tagBadge: "hot",
       image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
-      gradientColors: ["#FFF0EB", "#FFE2D7", "#FED7AA"] as const,
+      gradientColors: ["#FFF0EB", "#FFE2D7", "#FED7AA"],
       highlightColor: "#FF4D6D",
-      btnGradient: ["#FF4D6D", "#FF7043"] as const,
+      btnGradient: ["#FF4D6D", "#FF7043"],
       badgeColor: "#E65100",
     },
     {
@@ -237,11 +256,11 @@ export default function HomeScreen() {
       titleSuffix: " chỉ 380 kcal",
       subtitle: "Cá hồi • Quả bơ • Xà lách • Olive",
       actionText: "Xem chi tiết →",
-      tagBadge: "popular" as const,
+      tagBadge: "popular",
       image: require("@/assets/images/salad-salmon.jpg"),
-      gradientColors: ["#F0FDF4", "#DCFCE7", "#BBF7D0"] as const,
+      gradientColors: ["#F0FDF4", "#DCFCE7", "#BBF7D0"],
       highlightColor: "#059669",
-      btnGradient: ["#059669", "#10B981"] as const,
+      btnGradient: ["#059669", "#10B981"],
       badgeColor: "#047857",
     },
     {
@@ -252,11 +271,11 @@ export default function HomeScreen() {
       titleSuffix: " cho cả nhà",
       subtitle: "Thịt bò • Măng tây • Bơ tỏi • Tiêu",
       actionText: "Xem chi tiết →",
-      tagBadge: "hot" as const,
+      tagBadge: "hot",
       image: require("@/assets/images/steak-asparagus.jpg"),
-      gradientColors: ["#FFF5EB", "#FFE5D6", "#FED7AA"] as const,
+      gradientColors: ["#FFF5EB", "#FFE5D6", "#FED7AA"],
       highlightColor: "#EA580C",
-      btnGradient: ["#EA580C", "#F97316"] as const,
+      btnGradient: ["#EA580C", "#F97316"],
       badgeColor: "#C2410C",
     },
     {
@@ -267,11 +286,11 @@ export default function HomeScreen() {
       titleSuffix: "",
       subtitle: "Mỳ Ý • Bò bằm • Cà chua bi • Phô mai",
       actionText: "Xem chi tiết →",
-      tagBadge: "popular" as const,
+      tagBadge: "popular",
       image: require("@/assets/images/pasta-bolognese.jpg"),
-      gradientColors: ["#FFF0EB", "#FFE0D3", "#FED7AA"] as const,
+      gradientColors: ["#FFF0EB", "#FFE0D3", "#FED7AA"],
       highlightColor: "#E11D48",
-      btnGradient: ["#E11D48", "#FB7185"] as const,
+      btnGradient: ["#E11D48", "#FB7185"],
       badgeColor: "#BE123C",
     },
     {
@@ -282,14 +301,50 @@ export default function HomeScreen() {
       titleSuffix: "",
       subtitle: "Ức gà • Mật ong • Hạt mè • Ớt cay",
       actionText: "Xem chi tiết →",
-      tagBadge: "hot" as const,
+      tagBadge: "hot",
       image: require("@/assets/images/crispy-chicken.jpg"),
-      gradientColors: ["#FFF7ED", "#FFEDD5", "#FED7AA"] as const,
+      gradientColors: ["#FFF7ED", "#FFEDD5", "#FED7AA"],
       highlightColor: "#D97706",
-      btnGradient: ["#D97706", "#F59E0B"] as const,
+      btnGradient: ["#D97706", "#F59E0B"],
       badgeColor: "#B45309",
     },
   ];
+
+  const [trendingSlides, setTrendingSlides] = useState<HeroSlideItem[]>(heroSlides);
+
+  useEffect(() => {
+    RecipeService.getTrendingRecipes(5)
+      .then((items) => {
+        if (items && items.length > 0) {
+          const mapped: HeroSlideItem[] = items.map((r, idx) => ({
+            id: `trending-${r.id}`,
+            recipeId: r.id,
+            titlePrefix: `${r.title.slice(0, 22)}${r.title.length > 22 ? "..." : ""} `,
+            highlight: `${r.minutes}p`,
+            titleSuffix: ` • ${r.difficulty}`,
+            subtitle:
+              r.ingredients?.slice(0, 4).map((i) => i.name).join(" • ") ||
+              r.sub ||
+              "Công thức thịnh hành",
+            actionText: "Xem chi tiết →",
+            tagBadge: idx % 2 === 0 ? "hot" : "popular",
+            image: typeof r.image === "string" ? { uri: r.image } : r.image,
+            gradientColors:
+              idx % 2 === 0
+                ? ["#FFF0EB", "#FFE2D7", "#FED7AA"]
+                : ["#F0FDF4", "#DCFCE7", "#BBF7D0"],
+            highlightColor: idx % 2 === 0 ? "#FF4D6D" : "#059669",
+            btnGradient:
+              idx % 2 === 0
+                ? ["#FF4D6D", "#FF7043"]
+                : ["#059669", "#10B981"],
+            badgeColor: idx % 2 === 0 ? "#E65100" : "#047857",
+          }));
+          setTrendingSlides(mapped);
+        }
+      })
+      .catch((err) => console.warn("Lỗi tải trending recipes:", err));
+  }, []);
 
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const currentHeroIndexRef = useRef<number>(0);
@@ -330,11 +385,11 @@ export default function HomeScreen() {
     }, delayMs);
   };
 
-  // Auto-sliding animation cycling continuously through 5 dishes
+  // Auto-sliding animation cycling continuously through trending dishes
   useEffect(() => {
     const timer = setInterval(() => {
       if (!isUserInteractingRef.current) {
-        const nextIndex = (currentHeroIndexRef.current + 1) % heroSlides.length;
+        const nextIndex = (currentHeroIndexRef.current + 1) % trendingSlides.length;
         scrollToSlide(nextIndex);
       }
     }, 3500);
@@ -345,11 +400,11 @@ export default function HomeScreen() {
         clearTimeout(interactionTimeoutRef.current);
       }
     };
-  }, [HERO_CARD_WIDTH, heroSlides.length]);
+  }, [HERO_CARD_WIDTH, trendingSlides.length]);
 
   const handleNextSlide = () => {
     pauseAutoScroll();
-    const nextIndex = (currentHeroIndexRef.current + 1) % heroSlides.length;
+    const nextIndex = (currentHeroIndexRef.current + 1) % trendingSlides.length;
     scrollToSlide(nextIndex);
     resumeAutoScrollAfterDelay(4000);
   };
@@ -357,7 +412,7 @@ export default function HomeScreen() {
   const handlePrevSlide = () => {
     pauseAutoScroll();
     const prevIndex =
-      (currentHeroIndexRef.current - 1 + heroSlides.length) % heroSlides.length;
+      (currentHeroIndexRef.current - 1 + trendingSlides.length) % trendingSlides.length;
     scrollToSlide(prevIndex);
     resumeAutoScrollAfterDelay(4000);
   };
@@ -367,6 +422,96 @@ export default function HomeScreen() {
     scrollToSlide(index);
     resumeAutoScrollAfterDelay(4000);
   };
+
+  const renderHeroItem = useCallback(
+    ({ item }: { item: (typeof trendingSlides)[0] }) => (
+      <TouchableOpacity
+        style={[
+          styles.heroCardContainer,
+          { width: HERO_CARD_WIDTH },
+        ]}
+        activeOpacity={0.92}
+        onPress={() => handleOpenRecipe(item.recipeId)}
+      >
+        <LinearGradient
+          colors={item.gradientColors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroCardGradient}
+        >
+          {/* Left Content Column */}
+          <View style={styles.heroCardLeft}>
+            <Text style={styles.heroCardTitle} numberOfLines={2}>
+              {item.titlePrefix}
+              <Text
+                style={[
+                  styles.heroCardHighlight,
+                  { color: item.highlightColor },
+                ]}
+              >
+                {item.highlight}
+              </Text>
+              {item.titleSuffix}
+            </Text>
+
+            <Text style={styles.heroCardSubtitle} numberOfLines={1}>
+              {item.subtitle}
+            </Text>
+
+            <View style={styles.heroBtnRow}>
+              {/* Action Pill Button with Sunset Coral Gradient */}
+              <TouchableOpacity
+                style={styles.heroActionButton}
+                activeOpacity={0.85}
+                onPress={() => handleOpenRecipe(item.recipeId)}
+              >
+                <LinearGradient
+                  colors={item.btnGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.heroActionGradient}
+                >
+                  <Text style={styles.heroActionText}>
+                    {item.actionText}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <View
+                style={[
+                  styles.heroTagBadgeBtn,
+                  item.tagBadge === "popular"
+                    ? styles.heroTagBadgePopular
+                    : styles.heroTagBadgeHot,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.heroTagBadgeBtnText,
+                    item.tagBadge === "popular"
+                      ? styles.heroTagTextPopular
+                      : styles.heroTagTextHot,
+                  ]}
+                >
+                  {item.tagBadge === "popular" ? "⭐ Popular" : "🔥 Hot"}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Right Floating Appetizing Dish Image */}
+          <View style={styles.heroImageWrapper}>
+            <Image
+              source={item.image}
+              style={styles.heroDishImage}
+              resizeMode="cover"
+            />
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+    ),
+    [HERO_CARD_WIDTH]
+  );
 
   // Categories from SRS Module 4 with live sync from Backend
   const [categories, setCategories] = useState([
@@ -1367,6 +1512,7 @@ export default function HomeScreen() {
               onRefresh={() => {
                 setIsRefreshing(true);
                 fetchRecipes(false);
+                CartService.fetchServerItems().catch(() => {});
               }}
               colors={["#FF5722"]}
               tintColor="#FF5722"
@@ -1435,22 +1581,17 @@ export default function HomeScreen() {
                 )}
               </TouchableOpacity>
 
-              {/* Weekly Meal Planner Quick Button */}
+
+              {/* Meal Planner & Chef Rewards */}
               <TouchableOpacity
                 style={styles.circularIconBtn}
                 activeOpacity={0.75}
-                onPress={() => setActiveTab("planner")}
+                onPress={() => {
+                  setPlannerSubTab("rewards");
+                  setActiveTab("planner");
+                }}
               >
                 <Ionicons name="calendar-outline" size={19} color="#0284C7" />
-              </TouchableOpacity>
-
-              {/* Gift / Recipe Rewards Box */}
-              <TouchableOpacity
-                style={styles.circularIconBtn}
-                activeOpacity={0.75}
-                onPress={() => setShowGiftModal(true)}
-              >
-                <Ionicons name="gift-outline" size={19} color="#EA580C" />
               </TouchableOpacity>
 
               {/* Notification Bell with Realtime Badge */}
@@ -1599,7 +1740,7 @@ export default function HomeScreen() {
             <View style={[styles.heroCardOuter, { width: HERO_CARD_WIDTH }]}>
               <FlatList
                 ref={heroListRef}
-                data={heroSlides}
+                data={trendingSlides}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 snapToInterval={HERO_CARD_WIDTH}
@@ -1607,9 +1748,10 @@ export default function HomeScreen() {
                 decelerationRate="fast"
                 bounces={false}
                 keyExtractor={(item) => item.id}
-                initialNumToRender={5}
-                maxToRenderPerBatch={5}
-                windowSize={5}
+                initialNumToRender={2}
+                maxToRenderPerBatch={2}
+                windowSize={3}
+                removeClippedSubviews={false}
                 getItemLayout={(_, index) => ({
                   length: HERO_CARD_WIDTH,
                   offset: HERO_CARD_WIDTH * index,
@@ -1620,103 +1762,18 @@ export default function HomeScreen() {
                 onMomentumScrollEnd={(e) => {
                   const offsetX = e.nativeEvent.contentOffset.x;
                   const newIdx = Math.round(offsetX / HERO_CARD_WIDTH);
-                  if (newIdx >= 0 && newIdx < heroSlides.length) {
+                  if (newIdx >= 0 && newIdx < trendingSlides.length) {
                     updateSlideIndex(newIdx);
                   }
                   resumeAutoScrollAfterDelay(3500);
                 }}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[
-                      styles.heroCardContainer,
-                      { width: HERO_CARD_WIDTH },
-                    ]}
-                    activeOpacity={0.92}
-                    onPress={() => handleOpenRecipe(item.recipeId)}
-                  >
-                    <LinearGradient
-                      colors={item.gradientColors}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.heroCardGradient}
-                    >
-                      {/* Left Content Column */}
-                      <View style={styles.heroCardLeft}>
-                        <Text style={styles.heroCardTitle} numberOfLines={2}>
-                          {item.titlePrefix}
-                          <Text
-                            style={[
-                              styles.heroCardHighlight,
-                              { color: item.highlightColor },
-                            ]}
-                          >
-                            {item.highlight}
-                          </Text>
-                          {item.titleSuffix}
-                        </Text>
-
-                        <Text style={styles.heroCardSubtitle} numberOfLines={1}>
-                          {item.subtitle}
-                        </Text>
-
-                        <View style={styles.heroBtnRow}>
-                          {/* Action Pill Button with Sunset Coral Gradient */}
-                          <TouchableOpacity
-                            style={styles.heroActionButton}
-                            activeOpacity={0.85}
-                            onPress={() => handleOpenRecipe(item.recipeId)}
-                          >
-                            <LinearGradient
-                              colors={item.btnGradient}
-                              start={{ x: 0, y: 0 }}
-                              end={{ x: 1, y: 0 }}
-                              style={styles.heroActionGradient}
-                            >
-                              <Text style={styles.heroActionText}>
-                                {item.actionText}
-                              </Text>
-                            </LinearGradient>
-                          </TouchableOpacity>
-
-                          <View
-                            style={[
-                              styles.heroTagBadgeBtn,
-                              item.tagBadge === "popular"
-                                ? styles.heroTagBadgePopular
-                                : styles.heroTagBadgeHot,
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.heroTagBadgeBtnText,
-                                item.tagBadge === "popular"
-                                  ? styles.heroTagTextPopular
-                                  : styles.heroTagTextHot,
-                              ]}
-                            >
-                              {item.tagBadge === "popular" ? "⭐ Popular" : "🔥 Hot"}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-
-                      {/* Right Floating Appetizing Dish Image */}
-                      <View style={styles.heroImageWrapper}>
-                        <Image
-                          source={item.image}
-                          style={styles.heroDishImage}
-                          resizeMode="cover"
-                        />
-                      </View>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                )}
+                renderItem={renderHeroItem}
               />
             </View>
 
-            {/* Pagination Indicators (5 Dots / Active Pill) */}
+            {/* Pagination Indicators (Dots / Active Pill) */}
             <View style={styles.heroPaginationRow}>
-              {heroSlides.map((slide, index) => {
+              {trendingSlides.map((slide, index) => {
                 const isActive = index === currentHeroIndex;
                 return (
                   <TouchableOpacity
@@ -2100,7 +2157,11 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <Text style={{ fontSize: 18, fontWeight: "800", color: "#0F172A" }}>Thực Đơn & Kế Hoạch Tuần</Text>
           </View>
-          <PlannerView insetsTop={0} />
+          <PlannerView
+            insetsTop={0}
+            initialSubTab={plannerSubTab}
+            onXpUpdated={(newXp, newLevel) => updateChefXP(newXp, newLevel)}
+          />
         </View>
       )}
 

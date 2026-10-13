@@ -7,6 +7,7 @@ import {
   plannerService,
   WeeklyPlanResponse,
 } from "@/services/plannerService";
+import { CartService } from "@/services/cartService";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -14,6 +15,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Clipboard,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -25,13 +27,33 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { RewardCatalogItem, RewardStatus } from "@/types";
+import { rewardService } from "@/services/rewardService";
+import { triggerHaptic } from "@/utils/haptics";
 
-export default function PlannerView({ insetsTop }: { insetsTop: number }) {
+export interface PlannerViewProps {
+  insetsTop: number;
+  initialSubTab?: "calendar" | "shopping" | "rewards";
+  onXpUpdated?: (newXp: number, newLevel: string) => void;
+}
+
+export default function PlannerView({
+  insetsTop,
+  initialSubTab = "calendar",
+  onXpUpdated,
+}: PlannerViewProps) {
   const router = useRouter();
 
-  const [activeSubTab, setActiveSubTab] = useState<"calendar" | "shopping">(
-    "calendar"
+  const [activeSubTab, setActiveSubTab] = useState<"calendar" | "shopping" | "rewards">(
+    initialSubTab
   );
+
+  useEffect(() => {
+    if (initialSubTab) {
+      setActiveSubTab(initialSubTab);
+    }
+  }, [initialSubTab]);
+
   const [selectedDay, setSelectedDay] = useState("Thứ 2");
 
   // Dynamic Week Days based on current week's Monday
@@ -196,16 +218,18 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
   };
 
   // ================= SHOPPING LIST STATE =================
-  const [shoppingItems, setShoppingItems] = useState([
-    { id: "s-1", name: "Thịt thăn bò Tenderloin", amount: "500g", category: "Thịt & Cá", price: "95.000đ", bought: false },
-    { id: "s-2", name: "Phi lê cá hồi Nauy", amount: "400g", category: "Thịt & Cá", price: "80.000đ", bought: false },
-    { id: "s-3", name: "Măng tây xanh tươi", amount: "200g", category: "Rau củ", price: "25.000đ", bought: true },
-    { id: "s-4", name: "Cà chua bi hữu cơ", amount: "300g", category: "Rau củ", price: "18.000đ", bought: false },
-    { id: "s-5", name: "Bơ lạt Anchor", amount: "100g", category: "Bơ & Gia vị", price: "28.000đ", bought: true },
-    { id: "s-6", name: "Phô mai Parmesan", amount: "50g", category: "Bơ & Gia vị", price: "35.000đ", bought: false },
-  ]);
-  const [estimatedCost, setEstimatedCost] = useState<number>(245000);
-  const [excludedCount, setExcludedCount] = useState<number>(3);
+  const [shoppingItems, setShoppingItems] = useState<
+    Array<{
+      id: string;
+      name: string;
+      amount: string;
+      category: string;
+      price: string;
+      bought: boolean;
+    }>
+  >([]);
+  const [estimatedCost, setEstimatedCost] = useState<number>(0);
+  const [excludedCount, setExcludedCount] = useState<number>(0);
   const [isSyncingFridge, setIsSyncingFridge] = useState(false);
 
   // Add Item Modal state
@@ -275,9 +299,9 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
         style: "destructive",
         onPress: async () => {
           setShoppingItems((prev) => prev.filter((i) => i.id !== id));
-          if (id && !id.startsWith("s-")) {
-            await plannerService.removeCartItem(id);
-          }
+          CartService.removeItem(id, name);
+          const target = id && !id.startsWith("s-") ? id : name;
+          await plannerService.removeCartItem(target);
         },
       },
     ]);
@@ -350,63 +374,248 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
 
   const unboughtCount = shoppingItems.filter((s) => !s.bought).length;
 
+  // Chef Rewards & Daily Check-in States
+  const [rewardStatus, setRewardStatus] = useState<RewardStatus | null>(null);
+  const [isLoadingRewards, setIsLoadingRewards] = useState(false);
+  const [isClaimingCheckIn, setIsClaimingCheckIn] = useState(false);
+  const [redeemingRewardId, setRedeemingRewardId] = useState<string | null>(null);
+  const [rewardsSubTab, setRewardsSubTab] = useState<"catalog" | "my_rewards">("catalog");
+
+  const fetchRewardStatus = async () => {
+    try {
+      setIsLoadingRewards(true);
+      const data = await rewardService.getRewardStatus();
+      if (data) {
+        setRewardStatus(data);
+      }
+    } catch (e) {
+      console.warn("fetchRewardStatus failed:", e);
+    } finally {
+      setIsLoadingRewards(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSubTab === "rewards" && !rewardStatus) {
+      void fetchRewardStatus();
+    }
+  }, [activeSubTab, rewardStatus]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void fetchRewardStatus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const todayRewardXp = useMemo(() => {
+    const streak = rewardStatus?.streakDays ?? 0;
+    const rewards = rewardStatus?.streakRewards || [15, 20, 25, 30, 40, 50, 100];
+    return rewards[streak] || 15;
+  }, [rewardStatus]);
+
+  const handleCheckIn = async () => {
+    if (rewardStatus?.hasCheckedInToday || isClaimingCheckIn) return;
+    try {
+      setIsClaimingCheckIn(true);
+      const res = await rewardService.checkInToday();
+      triggerHaptic("success");
+
+      setRewardStatus((prev) =>
+        prev
+          ? {
+              ...prev,
+              chefExp: res.chefExp,
+              level: res.level,
+              streakDays: res.streakDays,
+              hasCheckedInToday: true,
+            }
+          : null
+      );
+
+      if (onXpUpdated) {
+        onXpUpdated(res.chefExp, res.level);
+      }
+
+      Alert.alert(
+        "🎉 Điểm Danh Thành Công!",
+        `Bạn nhận được +${res.xpGained} XP!\nChuỗi hiện tại: ${res.streakDays} ngày liên tiếp.\nTổng kinh nghiệm: ${res.chefExp} XP (${res.level}).`
+      );
+    } catch (err: any) {
+      Alert.alert(
+        "Thông báo",
+        err.response?.data?.message || err.message || "Điểm danh không thành công"
+      );
+    } finally {
+      setIsClaimingCheckIn(false);
+    }
+  };
+
+  const handleRedeem = (item: RewardCatalogItem) => {
+    if (!rewardStatus) return;
+
+    if (rewardStatus.chefExp < item.xpCost) {
+      Alert.alert(
+        "Chưa đủ điểm Chef XP",
+        `Bạn cần ${item.xpCost} XP để đổi phần quà này (Hiện có: ${rewardStatus.chefExp} XP). Nấu ăn và điểm danh mỗi ngày để tích thêm XP nhé!`
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Xác nhận đổi quà",
+      `Bạn có muốn dùng ${item.xpCost} XP để đổi "${item.title}" không?`,
+      [
+        { text: "Để sau", style: "cancel" },
+        {
+          text: "Đổi ngay",
+          style: "default",
+          onPress: async () => {
+            setRedeemingRewardId(item.id);
+            try {
+              const res = await rewardService.redeemReward(item.id);
+              triggerHaptic("success");
+
+              setRewardStatus((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      chefExp: res.remainingExp,
+                      claimedRewards: [res.reward, ...prev.claimedRewards],
+                    }
+                  : null
+              );
+
+              if (onXpUpdated && rewardStatus) {
+                onXpUpdated(res.remainingExp, rewardStatus.level);
+              }
+
+              Alert.alert(
+                "🎁 Đổi Quà Thành Công!",
+                `Mã ưu đãi của bạn: [${res.reward.code}]. Bạn có thể xem lại mã trong tab 'Quà Của Tôi'.`,
+                [
+                  {
+                    text: "Xem mã quà",
+                    onPress: () => setRewardsSubTab("my_rewards"),
+                  },
+                  { text: "Đóng" },
+                ]
+              );
+            } catch (err: any) {
+              Alert.alert(
+                "Lỗi đổi quà",
+                err.response?.data?.message || "Không thể đổi phần quà này."
+              );
+            } finally {
+              setRedeemingRewardId(null);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleCopyCode = (code: string) => {
+    Clipboard.setString(code);
+    triggerHaptic("selection");
+    Alert.alert("Đã sao chép", `Mã ưu đãi [${code}] đã được sao chép vào bộ nhớ tạm!`);
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insetsTop + 8 }]}>
+      <View style={[styles.header, { paddingTop: insetsTop + 4 }]}>
         <View>
-          <Text style={styles.headerSubtitle}>KẾ HOẠCH BỮA ĂN</Text>
-          <Text style={styles.headerTitle}>Thực Đơn &amp; Đi Chợ</Text>
+          <Text style={styles.headerSubtitle}>
+            {activeSubTab === "calendar"
+              ? "KẾ HOẠCH BỮA ĂN"
+              : activeSubTab === "shopping"
+              ? "DANH SÁCH MUA SẮM"
+              : "HỘP QUÀ & TÍCH ĐIỂM"}
+          </Text>
+          <Text style={styles.headerTitle}>
+            {activeSubTab === "calendar"
+              ? "Thực Đơn Tuần"
+              : activeSubTab === "shopping"
+              ? "Danh Sách Đi Chợ"
+              : "Thưởng Chef"}
+          </Text>
         </View>
+      </View>
 
-        {/* Sub-tab Switcher: Lịch Ăn vs Danh Sách Đi Chợ */}
-        <View style={styles.subTabPillGroup}>
-          <TouchableOpacity
+      {/* 3-Tab Segmented Switcher */}
+      <View style={styles.subTabSegmentContainer}>
+        <TouchableOpacity
+          style={[
+            styles.subTabSegmentBtn,
+            activeSubTab === "calendar" && styles.subTabSegmentBtnActive,
+          ]}
+          onPress={() => setActiveSubTab("calendar")}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name="calendar"
+            size={14}
+            color={activeSubTab === "calendar" ? "#EA580C" : "#64748B"}
+          />
+          <Text
             style={[
-              styles.subTabPill,
-              activeSubTab === "calendar" && styles.subTabPillActive,
+              styles.subTabSegmentText,
+              activeSubTab === "calendar" && styles.subTabSegmentTextActive,
             ]}
-            onPress={() => setActiveSubTab("calendar")}
-            activeOpacity={0.8}
           >
-            <Ionicons
-              name="calendar"
-              size={13}
-              color={activeSubTab === "calendar" ? "#FFFFFF" : "#64748B"}
-            />
-            <Text
-              style={[
-                styles.subTabText,
-                activeSubTab === "calendar" && styles.subTabTextActive,
-              ]}
-            >
-              Lịch Ăn
-            </Text>
-          </TouchableOpacity>
+            Lịch Ăn
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
+        <TouchableOpacity
+          style={[
+            styles.subTabSegmentBtn,
+            activeSubTab === "shopping" && styles.subTabSegmentBtnActive,
+          ]}
+          onPress={() => setActiveSubTab("shopping")}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name="cart"
+            size={14}
+            color={activeSubTab === "shopping" ? "#EA580C" : "#64748B"}
+          />
+          <Text
             style={[
-              styles.subTabPill,
-              activeSubTab === "shopping" && styles.subTabPillActive,
+              styles.subTabSegmentText,
+              activeSubTab === "shopping" && styles.subTabSegmentTextActive,
             ]}
-            onPress={() => setActiveSubTab("shopping")}
-            activeOpacity={0.8}
           >
-            <Ionicons
-              name="cart"
-              size={13}
-              color={activeSubTab === "shopping" ? "#FFFFFF" : "#64748B"}
-            />
-            <Text
-              style={[
-                styles.subTabText,
-                activeSubTab === "shopping" && styles.subTabTextActive,
-              ]}
-            >
-              Đi Chợ ({unboughtCount})
-            </Text>
-          </TouchableOpacity>
-        </View>
+            Đi Chợ {unboughtCount > 0 ? `(${unboughtCount})` : ""}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.subTabSegmentBtn,
+            activeSubTab === "rewards" && styles.subTabSegmentBtnActive,
+          ]}
+          onPress={() => setActiveSubTab("rewards")}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name="gift"
+            size={14}
+            color={activeSubTab === "rewards" ? "#EA580C" : "#64748B"}
+          />
+          <Text
+            style={[
+              styles.subTabSegmentText,
+              activeSubTab === "rewards" && styles.subTabSegmentTextActive,
+            ]}
+          >
+            Thưởng Chef
+          </Text>
+          {rewardStatus && !rewardStatus.hasCheckedInToday && (
+            <View style={styles.rewardsBadgeDot} />
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* VIEW 1: WEEKLY CALENDAR MEAL PLAN */}
@@ -880,6 +1089,345 @@ export default function PlannerView({ insetsTop }: { insetsTop: number }) {
           />
         </ScrollView>
       )}
+
+      {/* VIEW 3: CHEF REWARDS & CHECK-IN */}
+      {activeSubTab === "rewards" && (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 40 }}
+        >
+          {isLoadingRewards && !rewardStatus ? (
+            <View style={styles.rewardsLoadingBox}>
+              <ActivityIndicator size="large" color="#EA580C" />
+              <Text style={styles.rewardsLoadingText}>Đang tải hộp quà & điểm thưởng...</Text>
+            </View>
+          ) : (
+            <>
+              {/* 1. Chef Level & Daily Check-in Card */}
+              <View style={styles.chefStatusCard}>
+                {/* Top: Rank badge + XP count + Streak flame */}
+                <View style={styles.chefCardTopRow}>
+                  <View style={styles.chefCardLeft}>
+                    <View style={styles.chefRankBadge}>
+                      <Ionicons name="ribbon" size={13} color="#D97706" />
+                      <Text style={styles.chefRankText}>{rewardStatus?.level || "Tập sự"}</Text>
+                    </View>
+                    <View style={styles.chefXpRow}>
+                      <Ionicons name="sparkles" size={20} color="#F59E0B" />
+                      <Text style={styles.chefXpNumber}>{rewardStatus?.chefExp ?? 0}</Text>
+                      <Text style={styles.chefXpUnit}>XP</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.streakFlamePill}>
+                    <Ionicons name="flame" size={18} color="#EA580C" />
+                    <Text style={styles.streakFlameNum}>{rewardStatus?.streakDays ?? 0}</Text>
+                    <Text style={styles.streakFlameLabel}>ngày liên tiếp</Text>
+                  </View>
+                </View>
+
+                {/* Middle: 7-Day Streak Tracker */}
+                <View style={styles.streakTrackerSection}>
+                  <View style={styles.streakTrackerHeader}>
+                    <Text style={styles.streakTrackerTitle}>Chuỗi điểm danh 7 ngày</Text>
+                    <Text style={styles.streakTrackerStatus}>
+                      {rewardStatus?.hasCheckedInToday
+                        ? "Đã điểm danh hôm nay ✓"
+                        : "Chưa điểm danh hôm nay"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.streakPillRow}>
+                    {(rewardStatus?.streakRewards || [15, 20, 25, 30, 40, 50, 100]).map(
+                      (xpReward, index) => {
+                        const dayNum = index + 1;
+                        const streak = rewardStatus?.streakDays ?? 0;
+                        const isPassed = rewardStatus?.hasCheckedInToday
+                          ? dayNum <= streak
+                          : dayNum < streak + 1;
+                        const isToday =
+                          !rewardStatus?.hasCheckedInToday && dayNum === streak + 1;
+
+                        return (
+                          <View
+                            key={`streak-${dayNum}`}
+                            style={[
+                              styles.streakDayBox,
+                              isPassed && styles.streakDayBoxPassed,
+                              isToday && styles.streakDayBoxToday,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.streakDayLabel,
+                                isToday && styles.streakDayLabelToday,
+                              ]}
+                            >
+                              N{dayNum}
+                            </Text>
+                            <View style={styles.streakDayIcon}>
+                              {isPassed ? (
+                                <Ionicons name="checkmark-circle" size={17} color="#10B981" />
+                              ) : dayNum === 7 ? (
+                                <Ionicons name="gift" size={15} color="#D97706" />
+                              ) : (
+                                <Ionicons
+                                  name="sparkles"
+                                  size={13}
+                                  color={isToday ? "#EA580C" : "#94A3B8"}
+                                />
+                              )}
+                            </View>
+                            <Text
+                              style={[
+                                styles.streakDayXp,
+                                isToday && styles.streakDayXpToday,
+                              ]}
+                            >
+                              +{xpReward}
+                            </Text>
+                          </View>
+                        );
+                      }
+                    )}
+                  </View>
+                </View>
+
+                {/* 1-Tap Check-in Button */}
+                <TouchableOpacity
+                  style={[
+                    styles.checkInBtnWrapper,
+                    rewardStatus?.hasCheckedInToday && styles.checkInBtnDisabled,
+                  ]}
+                  activeOpacity={0.8}
+                  disabled={rewardStatus?.hasCheckedInToday || isClaimingCheckIn}
+                  onPress={handleCheckIn}
+                >
+                  {isClaimingCheckIn ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : rewardStatus?.hasCheckedInToday ? (
+                    <View style={styles.checkedInRow}>
+                      <Ionicons name="checkmark-circle" size={18} color="#10B981" />
+                      <Text style={styles.checkedInText}>
+                        Đã điểm danh hôm nay (Quay lại vào ngày mai)
+                      </Text>
+                    </View>
+                  ) : (
+                    <LinearGradient
+                      colors={["#FF7A00", "#FF5722"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.checkInGradientBtn}
+                    >
+                      <Ionicons name="gift-outline" size={18} color="#FFFFFF" />
+                      <Text style={styles.checkInGradientText}>
+                        Điểm danh nhận ngay +{todayRewardXp} XP
+                      </Text>
+                    </LinearGradient>
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              {/* 2. Rewards Sub-segment: Đổi Voucher vs Quà Của Tôi */}
+              <View style={styles.rewardsSegmentRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.rewardsSegmentBtn,
+                    rewardsSubTab === "catalog" && styles.rewardsSegmentBtnActive,
+                  ]}
+                  onPress={() => setRewardsSubTab("catalog")}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name="pricetags-outline"
+                    size={14}
+                    color={rewardsSubTab === "catalog" ? "#EA580C" : "#64748B"}
+                  />
+                  <Text
+                    style={[
+                      styles.rewardsSegmentText,
+                      rewardsSubTab === "catalog" && styles.rewardsSegmentTextActive,
+                    ]}
+                  >
+                    Đổi Voucher ({rewardStatus?.catalog.length || 0})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.rewardsSegmentBtn,
+                    rewardsSubTab === "my_rewards" && styles.rewardsSegmentBtnActive,
+                  ]}
+                  onPress={() => setRewardsSubTab("my_rewards")}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name="wallet-outline"
+                    size={14}
+                    color={rewardsSubTab === "my_rewards" ? "#EA580C" : "#64748B"}
+                  />
+                  <Text
+                    style={[
+                      styles.rewardsSegmentText,
+                      rewardsSubTab === "my_rewards" && styles.rewardsSegmentTextActive,
+                    ]}
+                  >
+                    Quà Của Tôi ({rewardStatus?.claimedRewards.length || 0})
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* 3. Catalog List */}
+              {rewardsSubTab === "catalog" && (
+                <View style={styles.voucherListSection}>
+                  {(rewardStatus?.catalog || []).map((item) => {
+                    const canAfford = (rewardStatus?.chefExp ?? 0) >= item.xpCost;
+                    const isRedeeming = redeemingRewardId === item.id;
+
+                    return (
+                      <View key={item.id} style={styles.voucherCard}>
+                        {/* Brand Icon Circle */}
+                        <View
+                          style={[
+                            styles.voucherBrandIcon,
+                            { backgroundColor: `${item.badgeColor}15` },
+                          ]}
+                        >
+                          <MaterialCommunityIcons
+                            name={
+                              item.icon === "cart"
+                                ? "cart"
+                                : item.icon === "basket"
+                                ? "basket"
+                                : item.icon === "star"
+                                ? "star"
+                                : "gift"
+                            }
+                            size={22}
+                            color={item.badgeColor}
+                          />
+                        </View>
+
+                        {/* Voucher Info */}
+                        <View style={styles.voucherInfoBox}>
+                          <View style={styles.voucherBrandRow}>
+                            <Text style={styles.voucherBrandLabel}>{item.brand}</Text>
+                            <View
+                              style={[
+                                styles.voucherValueBadge,
+                                { backgroundColor: `${item.badgeColor}15` },
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.voucherValueBadgeText,
+                                  { color: item.badgeColor },
+                                ]}
+                              >
+                                {item.discountValue}
+                              </Text>
+                            </View>
+                          </View>
+                          <Text style={styles.voucherTitle} numberOfLines={1}>
+                            {item.title}
+                          </Text>
+                          <Text style={styles.voucherDesc} numberOfLines={1}>
+                            {item.description}
+                          </Text>
+                        </View>
+
+                        {/* Fast Redeem Button */}
+                        <TouchableOpacity
+                          style={[
+                            styles.voucherRedeemBtn,
+                            !canAfford && styles.voucherRedeemBtnDisabled,
+                          ]}
+                          activeOpacity={0.8}
+                          disabled={isRedeeming}
+                          onPress={() => handleRedeem(item)}
+                        >
+                          {isRedeeming ? (
+                            <ActivityIndicator size="small" color="#FFFFFF" />
+                          ) : (
+                            <>
+                              <Ionicons
+                                name="sparkles"
+                                size={12}
+                                color={canAfford ? "#FFFFFF" : "#94A3B8"}
+                              />
+                              <Text
+                                style={[
+                                  styles.voucherRedeemBtnText,
+                                  !canAfford && styles.voucherRedeemBtnTextDisabled,
+                                ]}
+                              >
+                                {item.xpCost} XP
+                              </Text>
+                            </>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+
+              {/* 4. My Claimed Rewards */}
+              {rewardsSubTab === "my_rewards" && (
+                <View style={styles.claimedListSection}>
+                  {!rewardStatus?.claimedRewards ||
+                  rewardStatus.claimedRewards.length === 0 ? (
+                    <View style={styles.emptyClaimedBox}>
+                      <Ionicons name="ticket-outline" size={38} color="#CBD5E1" />
+                      <Text style={styles.emptyClaimedTitle}>
+                        Chưa có voucher nào
+                      </Text>
+                      <Text style={styles.emptyClaimedDesc}>
+                        Dùng điểm Chef XP tích lũy từ nấu ăn và điểm danh để đổi voucher siêu thị nhé!
+                      </Text>
+                    </View>
+                  ) : (
+                    rewardStatus.claimedRewards.map((reward) => (
+                      <View key={reward.id} style={styles.claimedCard}>
+                        <View style={styles.claimedCardHeader}>
+                          <View style={styles.claimedTag}>
+                            <Ionicons name="pricetag" size={12} color="#EA580C" />
+                            <Text style={styles.claimedTagText}>
+                              {reward.discountValue}
+                            </Text>
+                          </View>
+                          <Text style={styles.claimedExpiry}>
+                            HSD: {new Date(reward.expiresAt).toLocaleDateString("vi-VN")}
+                          </Text>
+                        </View>
+
+                        <Text style={styles.claimedCardTitle} numberOfLines={1}>
+                          {reward.title}
+                        </Text>
+
+                        {/* Monospace Code + 1-Tap Copy */}
+                        <View style={styles.claimedCodeRow}>
+                          <View style={styles.claimedCodeBox}>
+                            <Text style={styles.claimedCodeText}>{reward.code}</Text>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.claimedCopyBtn}
+                            activeOpacity={0.8}
+                            onPress={() => handleCopyCode(reward.code)}
+                          >
+                            <Ionicons name="copy-outline" size={14} color="#EA580C" />
+                            <Text style={styles.claimedCopyBtnText}>Sao chép</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    ))
+                  )}
+                </View>
+              )}
+            </>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -909,30 +1457,49 @@ const styles = StyleSheet.create({
     color: "#0F172A",
     marginTop: 2,
   },
-  subTabPillGroup: {
+  subTabSegmentContainer: {
     flexDirection: "row",
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#F1F5F9",
+    marginHorizontal: 16,
     padding: 3,
-    borderRadius: 20,
+    borderRadius: 14,
+    marginBottom: 14,
   },
-  subTabPill: {
+  subTabSegmentBtn: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 18,
+    justifyContent: "center",
+    paddingVertical: 9,
+    borderRadius: 11,
+    gap: 5,
+    position: "relative",
   },
-  subTabPillActive: {
-    backgroundColor: BrandColors.primary,
+  subTabSegmentBtnActive: {
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  subTabText: {
-    fontSize: 11.5,
+  subTabSegmentText: {
+    fontSize: 12.5,
+    fontWeight: "600",
+    color: "#64748B",
+  },
+  subTabSegmentTextActive: {
+    color: "#EA580C",
     fontWeight: "700",
-    color: "#475569",
   },
-  subTabTextActive: {
-    color: "#FFFFFF",
+  rewardsBadgeDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: "#EA580C",
+    position: "absolute",
+    top: 7,
+    right: 8,
   },
   weekPickerRow: {
     flexDirection: "row",
@@ -1284,6 +1851,415 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "700",
+  },
+
+  /* VIEW 3 REWARDS & CHEF STYLES */
+  rewardsLoadingBox: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+    gap: 12,
+  },
+  rewardsLoadingText: {
+    fontSize: 13,
+    color: "#64748B",
+    fontWeight: "600",
+  },
+  chefStatusCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 16,
+    marginHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  chefCardTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  chefCardLeft: {
+    gap: 4,
+  },
+  chefRankBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEF3C7",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    gap: 4,
+    alignSelf: "flex-start",
+  },
+  chefRankText: {
+    fontSize: 11.5,
+    fontWeight: "700",
+    color: "#B45309",
+  },
+  chefXpRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 4,
+  },
+  chefXpNumber: {
+    fontSize: 24,
+    fontWeight: "900",
+    color: "#0F172A",
+  },
+  chefXpUnit: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#EA580C",
+  },
+  streakFlamePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF7ED",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FFEDD5",
+    gap: 4,
+  },
+  streakFlameNum: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#EA580C",
+  },
+  streakFlameLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#C2410C",
+  },
+  streakTrackerSection: {
+    marginBottom: 14,
+  },
+  streakTrackerHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  streakTrackerTitle: {
+    fontSize: 12.5,
+    fontWeight: "700",
+    color: "#334155",
+  },
+  streakTrackerStatus: {
+    fontSize: 11.5,
+    fontWeight: "600",
+    color: "#10B981",
+  },
+  streakPillRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 5,
+  },
+  streakDayBox: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 7,
+    borderRadius: 10,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  streakDayBoxPassed: {
+    backgroundColor: "#ECFDF5",
+    borderColor: "#A7F3D0",
+  },
+  streakDayBoxToday: {
+    backgroundColor: "#FFF7ED",
+    borderColor: "#EA580C",
+    borderWidth: 1.5,
+  },
+  streakDayLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#64748B",
+    marginBottom: 2,
+  },
+  streakDayLabelToday: {
+    color: "#EA580C",
+  },
+  streakDayIcon: {
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  streakDayXp: {
+    fontSize: 9.5,
+    fontWeight: "700",
+    color: "#64748B",
+    marginTop: 2,
+  },
+  streakDayXpToday: {
+    color: "#EA580C",
+    fontWeight: "800",
+  },
+  checkInBtnWrapper: {
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+  checkInBtnDisabled: {
+    opacity: 0.9,
+  },
+  checkedInRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F0FDF4",
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+    paddingVertical: 12,
+    borderRadius: 14,
+    gap: 6,
+  },
+  checkedInText: {
+    fontSize: 12.5,
+    fontWeight: "700",
+    color: "#15803D",
+  },
+  checkInGradientBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 13,
+    borderRadius: 14,
+    gap: 8,
+  },
+  checkInGradientText: {
+    fontSize: 13.5,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  rewardsSegmentRow: {
+    flexDirection: "row",
+    backgroundColor: "#F1F5F9",
+    marginHorizontal: 16,
+    borderRadius: 12,
+    padding: 3,
+    marginBottom: 14,
+  },
+  rewardsSegmentBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 9,
+    borderRadius: 10,
+    gap: 6,
+  },
+  rewardsSegmentBtnActive: {
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  rewardsSegmentText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#64748B",
+  },
+  rewardsSegmentTextActive: {
+    color: "#EA580C",
+    fontWeight: "700",
+  },
+  voucherListSection: {
+    paddingHorizontal: 0,
+  },
+  voucherCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    padding: 12,
+    borderRadius: 16,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+    gap: 12,
+  },
+  voucherBrandIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  voucherInfoBox: {
+    flex: 1,
+  },
+  voucherBrandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 2,
+  },
+  voucherBrandLabel: {
+    fontSize: 10.5,
+    fontWeight: "800",
+    color: "#64748B",
+    letterSpacing: 0.5,
+  },
+  voucherValueBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 6,
+  },
+  voucherValueBadgeText: {
+    fontSize: 10.5,
+    fontWeight: "800",
+  },
+  voucherTitle: {
+    fontSize: 13.5,
+    fontWeight: "700",
+    color: "#0F172A",
+    marginBottom: 2,
+  },
+  voucherDesc: {
+    fontSize: 11,
+    color: "#94A3B8",
+  },
+  voucherRedeemBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#EA580C",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    gap: 4,
+  },
+  voucherRedeemBtnDisabled: {
+    backgroundColor: "#F1F5F9",
+  },
+  voucherRedeemBtnText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  voucherRedeemBtnTextDisabled: {
+    color: "#94A3B8",
+  },
+  claimedListSection: {
+    paddingHorizontal: 0,
+  },
+  emptyClaimedBox: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+    paddingHorizontal: 30,
+    gap: 8,
+  },
+  emptyClaimedTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#475569",
+  },
+  emptyClaimedDesc: {
+    fontSize: 12.5,
+    color: "#94A3B8",
+    textAlign: "center",
+    lineHeight: 18,
+  },
+  claimedCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 14,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  claimedCardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  claimedTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF7ED",
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    gap: 4,
+  },
+  claimedTagText: {
+    fontSize: 11.5,
+    fontWeight: "800",
+    color: "#EA580C",
+  },
+  claimedExpiry: {
+    fontSize: 11,
+    color: "#94A3B8",
+    fontWeight: "600",
+  },
+  claimedCardTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#0F172A",
+    marginBottom: 10,
+  },
+  claimedCodeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  claimedCodeBox: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderStyle: "dashed",
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  claimedCodeText: {
+    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+    fontSize: 13.5,
+    fontWeight: "700",
+    color: "#0F172A",
+    letterSpacing: 1,
+  },
+  claimedCopyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF7ED",
+    borderWidth: 1,
+    borderColor: "#FFEDD5",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    gap: 4,
+  },
+  claimedCopyBtnText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#EA580C",
   },
 });
 
