@@ -20,6 +20,7 @@ import {
   AuthInput,
   AuthWaveFooter,
   AuthWaveHeader,
+  ForgotPasswordModal,
   SocialAuthButtons,
 } from "@/components/auth";
 import { BrandColors } from "@/constants/brandColors";
@@ -38,6 +39,8 @@ export default function LoginScreen() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+
   const [serverError, setServerError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {},
@@ -143,12 +146,9 @@ export default function LoginScreen() {
   };
 
   const handleForgotPassword = () => {
-    Alert.alert(
-      "Forgot Password",
-      "Password reset instructions will be sent to your email address.",
-      [{ text: "OK" }],
-    );
+    setShowForgotPasswordModal(true);
   };
+
 
   const handleGoogleLogin = async () => {
     setServerError(null);
@@ -313,9 +313,19 @@ export default function LoginScreen() {
           <Text style={styles.loadingOverlayText}>Đang xác thực tài khoản Google...</Text>
         </View>
       )}
+
+      {/* Forgot Password Flow Modal */}
+      <ForgotPasswordModal
+        visible={showForgotPasswordModal}
+        onClose={() => setShowForgotPasswordModal(false)}
+        onSuccess={() => {
+          setServerError(null);
+        }}
+      />
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   screen: {

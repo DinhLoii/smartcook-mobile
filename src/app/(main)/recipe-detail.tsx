@@ -3,6 +3,8 @@ import { NearbyStoreCard, ShoppingNoteModal, ShoppingReminderBanner } from "@/co
 import { CartService } from "@/services/cartService";
 import { getRecipeById, RECIPES_DATA } from "@/data/recipesData";
 import { RecipeService } from "@/services/recipeService";
+import { CreateRecipeModal } from "@/components/recipe";
+import { useAuth } from "@/contexts/AuthContext";
 import { Recipe } from "@/types";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -27,6 +29,7 @@ export default function RecipeDetailScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { user } = useAuth();
 
   // Fetch recipe or fallback to first recipe
   const fallbackRecipe = useMemo(
@@ -35,6 +38,16 @@ export default function RecipeDetailScreen() {
   );
   const [recipe, setRecipe] = useState<Recipe>(fallbackRecipe);
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
+  const [showEditRecipeModal, setShowEditRecipeModal] = useState<boolean>(false);
+
+  const isAuthor = useMemo(() => {
+    if (!user) return false;
+    return (
+      (recipe.authorId && recipe.authorId === user.id) ||
+      (recipe.author && user.fullName && recipe.author.toLowerCase() === user.fullName.toLowerCase()) ||
+      user.role === "admin"
+    );
+  }, [user, recipe]);
 
   // Active Tab state: 'ingredients' | 'steps' | 'nutrition'
   const [activeTab, setActiveTab] = useState<"ingredients" | "steps" | "nutrition">("ingredients");
@@ -75,6 +88,47 @@ export default function RecipeDetailScreen() {
     } catch {
       setIsFavorite(!nextVal);
     }
+  };
+
+  const handleAuthorActions = () => {
+    Alert.alert(
+      "Quản lý món ăn",
+      `Bạn là tác giả món "${recipe.title}". Chọn thao tác muốn thực hiện:`,
+      [
+        {
+          text: "Chỉnh sửa công thức ✏️",
+          onPress: () => setShowEditRecipeModal(true),
+        },
+        {
+          text: "Xóa công thức 🗑️",
+          style: "destructive",
+          onPress: () => {
+            Alert.alert(
+              "Xác nhận xóa công thức",
+              `Bạn có chắc chắn muốn xóa "${recipe.title}"? Dữ liệu công thức sẽ bị xóa vĩnh viễn khỏi hệ thống.`,
+              [
+                { text: "Hủy", style: "cancel" },
+                {
+                  text: "Xóa vĩnh viễn",
+                  style: "destructive",
+                  onPress: async () => {
+                    try {
+                      await RecipeService.deleteRecipe(recipe.id);
+                      Alert.alert("Thành công", "Đã xóa công thức thành công.", [
+                        { text: "OK", onPress: () => router.back() },
+                      ]);
+                    } catch (err: any) {
+                      Alert.alert("Lỗi", err?.message || "Không thể xóa công thức");
+                    }
+                  },
+                },
+              ]
+            );
+          },
+        },
+        { text: "Đóng", style: "cancel" },
+      ]
+    );
   };
 
   // Active Timer step notification tracker
@@ -383,6 +437,17 @@ export default function RecipeDetailScreen() {
                   color={isFavorite ? "#EF4444" : "#FFFFFF"}
                 />
               </TouchableOpacity>
+
+              {/* Author Actions Button (Edit / Delete) */}
+              {isAuthor && (
+                <TouchableOpacity
+                  style={styles.circleButton}
+                  activeOpacity={0.7}
+                  onPress={handleAuthorActions}
+                >
+                  <Ionicons name="ellipsis-vertical" size={18} color="#FFFFFF" />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
 
@@ -1002,6 +1067,17 @@ export default function RecipeDetailScreen() {
           setTimeout(() => {
             scrollViewRef.current?.scrollToEnd({ animated: true });
           }, 200);
+        }}
+      />
+
+      {/* Edit Recipe Modal for author */}
+      <CreateRecipeModal
+        visible={showEditRecipeModal}
+        onClose={() => setShowEditRecipeModal(false)}
+        initialRecipe={recipe}
+        onRecipeCreated={(updated) => {
+          setRecipe(updated);
+          setShowEditRecipeModal(false);
         }}
       />
     </View>

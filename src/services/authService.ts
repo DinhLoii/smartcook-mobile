@@ -126,6 +126,30 @@ export const authService = {
   },
 
   /**
+   * Yêu cầu mã OTP khôi phục mật khẩu
+   */
+  async forgotPassword(email: string): Promise<string> {
+    const res = await apiClient.post<ApiResponse<null>>("/auth/forgot-password", { email });
+    return res.data?.message || "Mã xác thực OTP đã được gửi đến email của bạn.";
+  },
+
+  /**
+   * Xác thực mã OTP 6 chữ số
+   */
+  async verifyOtp(email: string, otp: string): Promise<boolean> {
+    const res = await apiClient.post<ApiResponse<any>>("/auth/verify-otp", { email, otp });
+    return res.data?.success ?? true;
+  },
+
+  /**
+   * Đặt lại mật khẩu mới với mã OTP
+   */
+  async resetPassword(payload: { email: string; otp: string; newPassword: string }): Promise<string> {
+    const res = await apiClient.post<ApiResponse<null>>("/auth/reset-password", payload);
+    return res.data?.message || "Đặt lại mật khẩu thành công!";
+  },
+
+  /**
    * Đăng xuất
    */
   async logout(): Promise<void> {
@@ -143,3 +167,4 @@ export const authService = {
 };
 
 export default authService;
+

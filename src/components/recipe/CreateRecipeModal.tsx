@@ -5,7 +5,7 @@ import { Recipe, RecipeIngredient, RecipeNutrition, RecipeStep } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -26,6 +26,7 @@ interface CreateRecipeModalProps {
   visible: boolean;
   onClose: () => void;
   onRecipeCreated?: (recipe: Recipe) => void;
+  initialRecipe?: Recipe | null;
 }
 
 const CATEGORIES = [
@@ -57,6 +58,7 @@ export default function CreateRecipeModal({
   visible,
   onClose,
   onRecipeCreated,
+  initialRecipe,
 }: CreateRecipeModalProps) {
   const insets = useSafeAreaInsets();
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -70,6 +72,38 @@ export default function CreateRecipeModal({
   const [difficulty, setDifficulty] = useState<"Dễ" | "Trung bình" | "Nâng cao">("Dễ");
   const [calories, setCalories] = useState("450");
   const [description, setDescription] = useState("");
+
+  // Sync state if initialRecipe changes
+  useEffect(() => {
+    if (visible && initialRecipe) {
+      setTitle(initialRecipe.title || "");
+      setCategory(initialRecipe.category || initialRecipe.categoryCode || "family");
+      setMinutes(String(initialRecipe.minutes || 25));
+      setDifficulty(initialRecipe.difficulty || "Dễ");
+      setCalories(String(initialRecipe.calories || 450));
+      setDescription(initialRecipe.description || initialRecipe.sub || "");
+      if (initialRecipe.ingredients && initialRecipe.ingredients.length > 0) {
+        setIngredients(initialRecipe.ingredients);
+      }
+      if (initialRecipe.steps && initialRecipe.steps.length > 0) {
+        setSteps(initialRecipe.steps);
+      }
+      if (initialRecipe.nutrition) {
+        setProtein(initialRecipe.nutrition.protein || "25g");
+        setCarbs(initialRecipe.nutrition.carbs || "45g");
+        setFat(initialRecipe.nutrition.fat || "12g");
+        setFiber(initialRecipe.nutrition.fiber || "6g");
+        setAdvice(initialRecipe.nutrition.advice || "");
+      }
+      if (initialRecipe.image) {
+        setSelectedImage(
+          typeof initialRecipe.image === "string"
+            ? { uri: initialRecipe.image }
+            : initialRecipe.image
+        );
+      }
+    }
+  }, [visible, initialRecipe]);
 
   // Step 2: Ingredients
   const [ingredients, setIngredients] = useState<RecipeIngredient[]>([
@@ -375,17 +409,24 @@ export default function CreateRecipeModal({
         } as any);
       }
 
-      const createdRecipe = await RecipeService.createRecipe(formData);
+      let savedRecipe: Recipe;
+      if (initialRecipe) {
+        savedRecipe = await RecipeService.updateRecipe(initialRecipe.id, formData);
+      } else {
+        savedRecipe = await RecipeService.createRecipe(formData);
+      }
       if (onRecipeCreated) {
-        onRecipeCreated(createdRecipe);
+        onRecipeCreated(savedRecipe);
       }
 
       Alert.alert(
         "Thành công! 🎉",
-        `Món "${createdRecipe.title}" đã được tạo thành công và đồng bộ lên hệ thống.`,
+        initialRecipe
+          ? `Món "${savedRecipe.title}" đã được cập nhật thành công.`
+          : `Món "${savedRecipe.title}" đã được tạo thành công và đồng bộ lên hệ thống.`,
         [
           {
-            text: "Xem ngay",
+            text: "Hoàn tất",
             onPress: () => {
               resetForm();
               onClose();

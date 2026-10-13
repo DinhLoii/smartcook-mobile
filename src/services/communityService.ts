@@ -485,6 +485,35 @@ class CommunityServiceClass {
   }
 
   /**
+   * React to post with specific emotion type (POST /api/v1/community/posts/:id/react)
+   */
+  async reactToPost(
+    postId: string,
+    reactionType: "like" | "love" | "haha" | "wow" | "sad" | "angry"
+  ): Promise<void> {
+    const post = this.posts.find((p) => p.id === postId);
+    if (!post) return;
+
+    post.isLiked = true;
+    (post as any).userReaction = reactionType;
+    this.notify();
+
+    try {
+      const res = await apiClient.post(`/community/posts/${postId}/react`, {
+        type: reactionType,
+      });
+      if (res.data?.success && res.data?.data) {
+        const backendData = res.data.data;
+        post.likesCount = backendData.totalReactions ?? post.likesCount;
+        this.notify();
+      }
+    } catch (e) {
+      console.warn("⚠️ [CommunityService] Lỗi react qua API:", e);
+    }
+  }
+
+
+  /**
    * Toggle saved state of post
    */
   toggleSavePost(postId: string): void {

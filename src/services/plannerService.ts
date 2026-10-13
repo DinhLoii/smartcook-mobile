@@ -130,7 +130,7 @@ export const plannerService = {
   ): Promise<ShoppingItemResponse | null> => {
     try {
       const res = await apiClient.patch<{ data: ShoppingItemResponse }>(
-        `/planner/shopping-list/${itemId}/bought`,
+        `/planner/shopping-list/${encodeURIComponent(itemId)}/bought`,
         { bought }
       );
       return res.data?.data || (res.data as any);
@@ -191,7 +191,7 @@ export const plannerService = {
    */
   removeCartItem: async (itemId: string): Promise<boolean> => {
     try {
-      await apiClient.delete(`/planner/shopping-list/${itemId}`);
+      await apiClient.delete(`/planner/shopping-list/${encodeURIComponent(itemId)}`);
       return true;
     } catch (e) {
       console.warn("plannerService.removeCartItem failed:", e);
@@ -212,6 +212,23 @@ export const plannerService = {
       return data?.deletedCount ?? 0;
     } catch (e) {
       console.warn("plannerService.clearBoughtItems failed:", e);
+      return 0;
+    }
+  },
+
+  /**
+   * Xóa tất cả các món trong giỏ đi chợ (bất kể trạng thái mua)
+   * DELETE /api/v1/planner/shopping-list/clear-all
+   */
+  clearAllCartItems: async (): Promise<number> => {
+    try {
+      const res = await apiClient.delete<{ data: { deletedCount: number } }>(
+        "/planner/shopping-list/clear-all"
+      );
+      const data = res.data?.data || (res.data as any);
+      return data?.deletedCount ?? 0;
+    } catch (e) {
+      console.warn("plannerService.clearAllCartItems failed:", e);
       return 0;
     }
   },

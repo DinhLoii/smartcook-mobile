@@ -24,6 +24,9 @@ export default function ShoppingNoteModal({
   const [items, setItems] = useState<CartItem[]>(CartService.getItems());
 
   useEffect(() => {
+    if (visible) {
+      CartService.fetchServerItems().catch(() => {});
+    }
     const unsubscribe = CartService.subscribe(() => {
       setItems(CartService.getItems());
     });
@@ -40,8 +43,15 @@ export default function ShoppingNoteModal({
     CartService.toggleBought(id);
   };
 
-  const handleDelete = (id: string) => {
-    CartService.removeItem(id);
+  const handleDelete = (id: string, name?: string) => {
+    setItems((prev) =>
+      prev.filter(
+        (i) =>
+          i.id !== id &&
+          (!name || i.name.toLowerCase().trim() !== name.toLowerCase().trim())
+      )
+    );
+    CartService.removeItem(id, name);
   };
 
   const handleConfirmDone = () => {
@@ -62,7 +72,10 @@ export default function ShoppingNoteModal({
         {
           text: "Xóa hết",
           style: "destructive",
-          onPress: () => CartService.clearAll(),
+          onPress: () => {
+            setItems([]);
+            CartService.clearAll();
+          },
         },
       ]
     );
@@ -144,14 +157,14 @@ export default function ShoppingNoteModal({
                       ~{item.price.toLocaleString("vi-VN")}đ
                     </Text>
 
-                    {/* Icon xóa nhỏ gọn */}
+                    {/* Icon xóa to rõ ràng, dễ bấm */}
                     <TouchableOpacity
                       style={styles.deleteBtn}
-                      activeOpacity={0.7}
-                      onPress={() => handleDelete(item.id)}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      activeOpacity={0.6}
+                      onPress={() => handleDelete(item.id, item.name)}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
-                      <Ionicons name="trash-outline" size={15} color="#94A3B8" />
+                      <Ionicons name="trash-outline" size={16} color="#EF4444" />
                     </TouchableOpacity>
                   </View>
                 );
@@ -347,8 +360,13 @@ const styles = StyleSheet.create({
     color: "#94A3B8",
   },
   deleteBtn: {
-    padding: 3,
-    marginLeft: 4,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "#FEE2E2",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 6,
   },
   footerSection: {
     marginTop: 10,

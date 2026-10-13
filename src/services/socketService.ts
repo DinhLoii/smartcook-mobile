@@ -1,6 +1,7 @@
 import { io, Socket } from "socket.io-client";
 import { ENV } from "@/config/env";
 import { tokenStorage } from "@/utils/tokenStorage";
+import { CartService } from "./cartService";
 
 export interface RealtimeMessage {
   id: string;
@@ -135,6 +136,15 @@ class SocketService {
             console.error("Lỗi khi xử lý notificationListener:", e);
           }
         });
+      });
+
+      // Realtime cart update listener (2-way sync across Web & Mobile)
+      this.socket.on("cart_updated", () => {
+        try {
+          CartService.fetchServerItems().catch(() => {});
+        } catch (e) {
+          console.error("Lỗi khi đồng bộ giỏ hàng từ socket:", e);
+        }
       });
 
       return this.socket;

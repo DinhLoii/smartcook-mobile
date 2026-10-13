@@ -2,6 +2,7 @@ import { BrandColors } from "@/constants/brandColors";
 import { useAuth } from "@/contexts/AuthContext";
 import { getRecipeById, RECIPES_DATA } from "@/data/recipesData";
 import { CookingHistoryService } from "@/services/cookingHistoryService";
+import RecipeService from "@/services/recipeService";
 import { Recipe } from "@/types";
 import { hapticLightImpact, hapticSuccess } from "@/utils/haptics";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -11,6 +12,7 @@ import * as Speech from "expo-speech";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   Modal,
@@ -33,8 +35,33 @@ export default function CookingModeScreen() {
   const { width } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const recipe: Recipe = getRecipeById(id as string) ?? RECIPES_DATA[0];
+  const fallbackRecipe: Recipe = getRecipeById(id as string) ?? RECIPES_DATA[0];
+  const [recipe, setRecipe] = useState<Recipe>(fallbackRecipe);
+  const [isLoadingRecipe, setIsLoadingRecipe] = useState<boolean>(!getRecipeById(id as string));
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadRecipe() {
+      if (!id) return;
+      try {
+        const remote = await RecipeService.getRecipeById(id);
+        if (isMounted && remote) {
+          setRecipe(remote);
+        }
+      } catch (err) {
+        console.warn("Lỗi tải món ăn trong CookingMode:", err);
+      } finally {
+        if (isMounted) setIsLoadingRecipe(false);
+      }
+    }
+    loadRecipe();
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
   const steps = recipe.steps;
+
 
   const { updateChefXP } = useAuth();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -585,6 +612,22 @@ export default function CookingModeScreen() {
   const displayStepIngredients =
     currentStepIngredients.length > 0 ? currentStepIngredients : recipe.ingredients.slice(0, 1);
 
+  if (isLoadingRecipe) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top, justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator size="large" color="#EA580C" />
+        <Text style={{ marginTop: 12, fontSize: 14, fontWeight: "600", color: "#64748B" }}>
+          Đang nạp công thức nấu ăn...
+        </Text>
+      </View>
+    );
+  }
+
+  const dishImageSource =
+    typeof recipe.image === "string"
+      ? { uri: recipe.image }
+      : recipe.image || require("@/assets/images/hero-teriyaki-bowl.jpg");
+
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <StatusBar style="dark" />
@@ -606,7 +649,7 @@ export default function CookingModeScreen() {
 
         {/* Center Dish Card */}
         <View style={styles.dishPillCard}>
-          <Image source={recipe.image} style={styles.dishThumbnail} resizeMode="cover" />
+          <Image source={dishImageSource} style={styles.dishThumbnail} resizeMode="cover" />
           <View style={styles.dishPillInfo}>
             <Text style={styles.dishPillTitle} numberOfLines={1}>
               {recipe.title}
