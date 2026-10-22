@@ -1,4 +1,5 @@
 import DraggableAIAssistant from "./DraggableAIAssistant";
+import CookingVoiceOverlay from "./CookingVoiceOverlay";
 
-export { DraggableAIAssistant };
+export { DraggableAIAssistant, CookingVoiceOverlay };
 export default DraggableAIAssistant;

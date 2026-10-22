@@ -8,7 +8,11 @@
     "scheme": "smartcookmobile",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "SmartCook cần truy cập microphone để bạn có thể nói chuyện rảnh tay với trợ lý bếp khi đang nấu ăn.",
+        "NSSpeechRecognitionUsageDescription": "SmartCook cần nhận diện giọng nói để hiểu các câu hỏi khi nấu ăn."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -17,6 +21,9 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -33,7 +40,15 @@
           "imageWidth": 76
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-audio",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "SmartCook cần truy cập ảnh bạn chọn để nhận diện món ăn và nguyên liệu.",
+          "cameraPermission": "SmartCook cần camera để chụp món ăn và nhận diện nguyên liệu."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

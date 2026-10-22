@@ -1,16 +1,22 @@
-import { BrandColors } from "@/constants/brandColors";
 import { useAuth } from "@/contexts/AuthContext";
 import { getRecipeById, RECIPES_DATA } from "@/data/recipesData";
 import { CookingHistoryService } from "@/services/cookingHistoryService";
-import RecipeService from "@/services/recipeService";
+import recipeService from "@/services/recipeService";
 import { Recipe } from "@/types";
 import { hapticLightImpact, hapticSuccess } from "@/utils/haptics";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Speech from "expo-speech";
+import { prepareCookingSpeech } from "@/utils/cookingSpeech";
+import { getCookingStepIndex } from "@/utils/cookingVoiceActions";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useCookingTimer } from "@/hooks/useCookingTimer";
+import { normalizeCookingNutrition } from "@/utils/cookingScope";
+import { cookingStepSeconds } from "@/utils/cookingTimer";
+import { useCookingVoice } from "@/hooks/useCookingVoice";
+import { CookingVoiceOverlay } from "@/components/ai/CookingVoiceOverlay";
 import {
   ActivityIndicator,
   Alert,
@@ -20,19 +26,17 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  useWindowDimensions,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Unified Default Voice ID - WaveNet Studio HD Female
-const UNIFIED_VOICE_ID = "vi-vn-x-gft-network";
+const UNIFIED_VOICE_ID = "default";
 let gUnifiedVoiceId = UNIFIED_VOICE_ID;
 
 export default function CookingModeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const fallbackRecipe: Recipe = getRecipeById(id as string) ?? RECIPES_DATA[0];
@@ -44,7 +48,7 @@ export default function CookingModeScreen() {
     async function loadRecipe() {
       if (!id) return;
       try {
-        const remote = await RecipeService.getRecipeById(id);
+        const remote = await recipeService.getRecipeById(id);
         if (isMounted && remote) {
           setRecipe(remote);
         }
@@ -64,7 +68,23 @@ export default function CookingModeScreen() {
 
 
   const { updateChefXP } = useAuth();
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const { state: timer, dispatch: dispatchTimer } = useCookingTimer(
+    steps.map((step) => cookingStepSeconds(step.timerMinutes)), String(recipe.id || id),
+  );
+  const currentStepIndex = timer.stepIndex;
+  const initialSeconds = timer.initialSeconds;
+  const timeLeft = timer.remainingSeconds;
+  const isTimerRunning = timer.status === "running";
+  const isAutoAdvance = timer.autoEnabled;
+  const autoAdvanceDelaySec = timer.delaySeconds;
+  const countdownLeftSec = timer.graceSeconds;
+  const isCountdownActive = timer.graceDeadlineMs !== null;
+  const completedSteps = timer.completedSteps;
+  const completionRecordedRef = useRef(false);
+  const expiryNotifiedRef = useRef(false);
+  useEffect(() => {
+    completionRecordedRef.current = false;
+  }, [id]);
   const [isVoiceActive, setIsVoiceActive] = useState(false); // Opt-in: do not speak automatically
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -72,21 +92,8 @@ export default function CookingModeScreen() {
   const [leveledUp, setLeveledUp] = useState(false);
   const [newLevel, setNewLevel] = useState("");
 
-  // Auto-advance setup state (OFF by default until user activates)
-  const [isAutoAdvance, setIsAutoAdvance] = useState(false);
-  const [autoAdvanceDelaySec, setAutoAdvanceDelaySec] = useState(30);
-  const [countdownLeftSec, setCountdownLeftSec] = useState(30);
-  const [isCountdownActive, setIsCountdownActive] = useState(false);
-
-  // Track completed steps and checked ingredients
-  const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>({});
   const [checkedIngredients, setCheckedIngredients] = useState<Record<number, boolean>>({});
-
-  // Current Step & Timer State - Setup timer default to 0 phút (00:00)
   const currentStep = steps[currentStepIndex] ?? steps[0];
-  const [initialSeconds, setInitialSeconds] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
 
   // Split detailed step description into distinct clear action items
   const getStepActionBullets = (desc: string): string[] => {
@@ -102,8 +109,6 @@ export default function CookingModeScreen() {
   const speechTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstMountRef = useRef<boolean>(true);
   const isVoiceActiveRef = useRef<boolean>(false);
-  const isAutoAdvanceRef = useRef<boolean>(false);
-  const autoAdvanceDelaySecRef = useRef<number>(30);
   const currentStepIndexRef = useRef<number>(0);
 
   const [availableVoices, setAvailableVoices] = useState<Speech.Voice[]>([]);
@@ -113,11 +118,60 @@ export default function CookingModeScreen() {
   const [showVoiceSettingsModal, setShowVoiceSettingsModal] = useState<boolean>(false);
   const [isTestingVoice, setIsTestingVoice] = useState<boolean>(false);
 
+  // AI Voice Cooking Companion
+  const [showVoiceOverlay, setShowVoiceOverlay] = useState<boolean>(false);
+
+  const cookingVoice = useCookingVoice({
+    recipeTitle: recipe.title,
+    recipeContext: {
+      servings: String(recipe.servings || ""),
+      nutrition: recipe.cookingNutrition === undefined ? normalizeCookingNutrition(recipe.nutrition) : recipe.cookingNutrition ?? undefined,
+      ingredients: recipe.ingredients.slice(0, 40).map((item) => ({ name: item.name.slice(0, 120), amount: item.amount.slice(0, 100) })),
+      steps: steps.slice(0, 30).map((step) => ({
+        stepNumber: step.stepNumber, title: step.title.slice(0, 160), description: step.description.slice(0, 1600), timerMinutes: step.timerMinutes,
+      })),
+    },
+    currentStep: {
+      stepNumber: steps[currentStepIndex]?.stepNumber || currentStepIndex + 1,
+      title: steps[currentStepIndex]?.title || `Bước ${currentStepIndex + 1}`,
+      description: steps[currentStepIndex]?.description || "",
+    },
+    stepTimer: {
+      targetMinutes: initialSeconds / 60,
+      elapsedSeconds: initialSeconds > 0 ? initialSeconds - timeLeft : 0,
+      remainingSeconds: timeLeft,
+      isRunning: isTimerRunning,
+      isOverdue: timer.status === "expired",
+      overdueSeconds: 0,
+    },
+    selectedVoiceId,
+    speechRate,
+    onExtendTimer: (seconds: number) => {
+      dispatchTimer({ type: "adjust", seconds, resume: true });
+      void hapticSuccess();
+    },
+    onReduceTimer: (seconds: number) => {
+      dispatchTimer({ type: "adjust", seconds: -seconds });
+      void hapticSuccess();
+    },
+    onNextStep: () => {
+      handleNextStep();
+    },
+    onPrevStep: () => {
+      handlePrevStep();
+    },
+    onGoToStep: (stepNumber: number) => {
+      const index = getCookingStepIndex(steps, stepNumber);
+      if (index >= 0 && index !== currentStepIndexRef.current) handleSelectStep(index);
+    },
+    onRepeatStep: () => {
+      speakText(steps[currentStepIndex]?.description || steps[currentStepIndex]?.title || "");
+    },
+  });
+
   useEffect(() => {
     currentStepIndexRef.current = currentStepIndex;
     isVoiceActiveRef.current = isVoiceActive;
-    isAutoAdvanceRef.current = isAutoAdvance;
-    autoAdvanceDelaySecRef.current = autoAdvanceDelaySec;
     selectedVoiceIdRef.current = selectedVoiceId;
   }, [
     autoAdvanceDelaySec,
@@ -129,54 +183,12 @@ export default function CookingModeScreen() {
 
   // Curated Voice Presets with descriptions
   const VOICE_OPTIONS = [
-    {
-      id: "vi-vn-x-gft-network",
-      name: "Nữ WaveNet Studio",
-      desc: "Giọng AI studio trong trẻo, tự nhiên & mượt mà",
-      tag: "Khuyên dùng ⭐",
-      isHD: true,
-      gender: "female",
-    },
-    {
-      id: "vi-vn-x-vie-network",
-      name: "Nữ Hà Nội Chuẩn",
-      desc: "Giọng Bắc chuẩn xác, truyền cảm & thanh thoát",
-      tag: "HD Network",
-      isHD: true,
-      gender: "female",
-    },
-    {
-      id: "vi-vn-x-vif-network",
-      name: "Nữ Dịu Dàng",
-      desc: "Âm điệu nhẹ nhàng, ấm áp như người bạn đồng hành",
-      tag: "HD Network",
-      isHD: true,
-      gender: "female",
-    },
-    {
-      id: "vi-vn-x-vid-network",
-      name: "Nam Trầm Ấm",
-      desc: "Tông nam ấm, rõ ràng, dứt khoát từng câu chữ",
-      tag: "HD Nam",
-      isHD: true,
-      gender: "male",
-    },
-    {
-      id: "vi-vn-x-vic-network",
-      name: "Nữ Google Chuẩn",
-      desc: "Giọng đọc trực tuyến phổ biến chất lượng cao",
-      tag: "HD Network",
-      isHD: true,
-      gender: "female",
-    },
-    {
-      id: "default",
-      name: "Mặc định thiết bị",
-      desc: "Bộ tổng hợp âm thanh mặc định trên máy",
-      tag: "Gốc",
-      isHD: false,
-      gender: "female",
-    },
+    ...availableVoices.map((voice) => ({
+      id: voice.identifier, name: voice.name, desc: "Giọng tiếng Việt trên thiết bị",
+      tag: voice.quality === Speech.VoiceQuality.Enhanced ? "Chất lượng cao" : "Thiết bị",
+      isHD: voice.quality === Speech.VoiceQuality.Enhanced, gender: "female",
+    })),
+    { id: "default", name: "Mặc định thiết bị", desc: "Tự chọn giọng tiếng Việt", tag: "Gốc", isHD: false, gender: "female" },
   ];
 
   const getVoiceDisplayName = (id: string): string => {
@@ -301,14 +313,19 @@ export default function CookingModeScreen() {
       return;
     }
 
-    setIsSpeaking(true);
+    let audioOptions: Speech.SpeechOptions;
+    try {
+      audioOptions = await prepareCookingSpeech(selectedVoiceIdRef.current);
+    } catch {
+      setIsSpeaking(false);
+      Alert.alert("Không phát được giọng đọc", "Hãy kiểm tra âm lượng và thử lại.");
+      return;
+    }
 
     // Strictly ONE unified voice across all steps
-    const voiceToUse = selectedVoiceIdRef.current || gUnifiedVoiceId || UNIFIED_VOICE_ID;
 
     const options: Speech.SpeechOptions = {
-      language: "vi-VN",
-      voice: voiceToUse !== "default" ? voiceToUse : undefined,
+      ...audioOptions,
       rate: speechRate || 0.92,
       pitch: 1.0,
       onStart: () => setIsSpeaking(true),
@@ -316,9 +333,6 @@ export default function CookingModeScreen() {
         setIsSpeaking(false);
         if (onFinish) {
           onFinish();
-        } else if (isAutoAdvanceRef.current && currentStepIndexRef.current < steps.length - 1) {
-          setCountdownLeftSec(autoAdvanceDelaySecRef.current);
-          setIsCountdownActive(true);
         }
       },
       onStopped: () => setIsSpeaking(false),
@@ -339,6 +353,14 @@ export default function CookingModeScreen() {
     try {
       await Speech.stop();
     } catch {}
+    let audioOptions: Speech.SpeechOptions;
+    try {
+      audioOptions = await prepareCookingSpeech(voiceId);
+    } catch {
+      setIsTestingVoice(false);
+      Alert.alert("Không phát được giọng đọc", "Hãy kiểm tra âm lượng và thử lại.");
+      return;
+    }
     setIsTestingVoice(true);
 
     const testText =
@@ -346,8 +368,7 @@ export default function CookingModeScreen() {
     const clean = cleanTextForSpeech(testText);
 
     const options: Speech.SpeechOptions = {
-      language: "vi-VN",
-      voice: voiceId !== "default" ? voiceId : undefined,
+      ...audioOptions,
       rate: rate || 0.92,
       pitch: 1.0,
       onStart: () => setIsTestingVoice(true),
@@ -379,14 +400,18 @@ export default function CookingModeScreen() {
     speakText(textToSpeak);
   };
 
-  const resetStepTimer = () => {
-    setInitialSeconds(0);
-    setTimeLeft(0);
-    setIsTimerRunning(false);
-    setIsCountdownActive(false);
-  };
+  const readNavigatedStep = useEffectEvent((index: number) => {
+    if (isVoiceActiveRef.current) {
+      if (speechTimerRef.current) clearTimeout(speechTimerRef.current);
+      speechTimerRef.current = setTimeout(() => {
+        void speakCurrentStep(index);
+      }, 300);
+    } else {
+      void stopSpeaking();
+    }
+  });
 
-  // Step change effect: auto-speak only on real step navigation
+  // Reading preferences are sampled on navigation; changing a setting does not restart speech.
   useEffect(() => {
     // Skip speech on initial mount
     if (isFirstMountRef.current) {
@@ -394,15 +419,7 @@ export default function CookingModeScreen() {
       return;
     }
 
-    // Only speak on step navigation if voice is active
-    if (isVoiceActiveRef.current) {
-      if (speechTimerRef.current) clearTimeout(speechTimerRef.current);
-      speechTimerRef.current = setTimeout(() => {
-        speakCurrentStep(currentStepIndex);
-      }, 300);
-    } else {
-      stopSpeaking();
-    }
+    readNavigatedStep(currentStepIndex);
 
     return () => {
       if (speechTimerRef.current) {
@@ -419,100 +436,62 @@ export default function CookingModeScreen() {
     };
   }, []);
 
-  // Countdown timer for manual timer card
+  const { triggerProactiveCheckIn } = cookingVoice;
   useEffect(() => {
-    if (!isTimerRunning || timeLeft <= 0) return;
-
-    const interval = setInterval(() => {
-      setTimeLeft((previousTime) => {
-        if (previousTime > 1) return previousTime - 1;
-
-        setTimeout(() => {
-          setIsTimerRunning(false);
-          setCompletedSteps((previousSteps) => ({
-            ...previousSteps,
-            [currentStepIndex]: true,
-          }));
-          void hapticSuccess();
-          if (isVoiceActive) {
-            speakText(
-              `Hết thời gian! Bạn đã hoàn thành bước ${steps[currentStepIndex].stepNumber}: ${steps[currentStepIndex].title}. Hãy chuyển sang bước tiếp theo.`
-            );
-          }
-          Alert.alert(
-            "⏰ Hết thời gian!",
-            `Đã hoàn thành thời gian cho: "${steps[currentStepIndex].title}". Bạn có thể chuyển sang bước tiếp theo!`
-          );
-        }, 0);
-        return 0;
-      });
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [isTimerRunning, timeLeft, currentStepIndex, steps, isVoiceActive]);
-
-  // Auto-advance countdown timer effect
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-    if (isCountdownActive && countdownLeftSec > 0 && isAutoAdvance) {
-      interval = setInterval(() => {
-        setCountdownLeftSec((prev) => {
-          if (prev <= 1) {
-            setIsCountdownActive(false);
-            // Advance to next step automatically
-            setCompletedSteps((c) => ({ ...c, [currentStepIndex]: true }));
-            if (currentStepIndex < steps.length - 1) {
-              setCurrentStepIndex((idx) => idx + 1);
-            }
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    if (showVoiceOverlay || showIngredientsModal || showVoiceSettingsModal) {
+      dispatchTimer({ type: "pauseGrace" });
     }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isCountdownActive, countdownLeftSec, isAutoAdvance, currentStepIndex, steps]);
+  }, [showVoiceOverlay, showIngredientsModal, showVoiceSettingsModal, isCountdownActive, dispatchTimer]);
 
-  const toggleTimer = () => {
-    if (!isTimerRunning && timeLeft === 0) {
-      // Default to 1 minute if started at 00:00
-      setTimeLeft(60);
-      setInitialSeconds(60);
-      setIsTimerRunning(true);
+  useEffect(() => {
+    if (timer.status !== "expired") {
+      expiryNotifiedRef.current = false;
       return;
     }
-    setIsTimerRunning(!isTimerRunning);
+    if (expiryNotifiedRef.current) return;
+    expiryNotifiedRef.current = true;
+    void hapticSuccess();
+    setShowVoiceOverlay(true);
+    void triggerProactiveCheckIn();
+  }, [timer.status, currentStepIndex, triggerProactiveCheckIn]);
+
+  const toggleTimer = () => {
+    if (timeLeft === 0 || timer.status === "confirmed") {
+      dispatchTimer({ type: "pauseGrace" });
+      Alert.alert("Chọn thời gian nấu", "Bấm +30s, +1p hoặc +5p để đặt thêm thời gian, hoặc xác nhận đã xong bước.");
+      return;
+    }
+    dispatchTimer({ type: "toggle" });
   };
 
-  const resetTimer = () => {
-    setIsTimerRunning(false);
-    setTimeLeft(0);
-    setInitialSeconds(0);
+  const resetTimer = () => dispatchTimer({ type: "reset" });
+  const adjustTime = (seconds: number) => dispatchTimer({ type: "adjust", seconds });
+
+  const navigateToStep = (index: number, completeCurrent = false) => {
+    if (index < 0 || index >= steps.length || index === currentStepIndex) return;
+    void stopSpeaking();
+    dispatchTimer({ type: "navigate", index, fromIndex: currentStepIndex, completeCurrent });
+    void hapticLightImpact();
   };
 
-  const adjustTime = (deltaSeconds: number) => {
-    setTimeLeft((prev) => {
-      const next = Math.max(0, prev + deltaSeconds);
-      if (next > initialSeconds) {
-        setInitialSeconds(next);
-      }
-      return next;
-    });
+  const handleConfirmStep = () => {
+    if (isAutoAdvance && currentStepIndex < steps.length - 1 && timer.status !== "confirmed") {
+      void stopSpeaking();
+      dispatchTimer({ type: "confirm" });
+      void hapticSuccess();
+    } else {
+      handleNextStep();
+    }
   };
 
   const handleNextStep = () => {
-    resetStepTimer();
-    stopSpeaking();
-    setCompletedSteps((prev) => ({ ...prev, [currentStepIndex]: true }));
-
     if (currentStepIndex < steps.length - 1) {
-      void hapticLightImpact();
-      setCurrentStepIndex(currentStepIndex + 1);
+      navigateToStep(currentStepIndex + 1, true);
     } else {
+      if (completionRecordedRef.current) return;
+      completionRecordedRef.current = true;
+      void stopSpeaking();
+      dispatchTimer({ type: "confirm" });
       void hapticSuccess();
       if (isVoiceActive) {
         speakText("Chúc mừng bạn đã hoàn thành xuất sắc món ăn! Bữa cơm đã sẵn sàng!");
@@ -547,19 +526,8 @@ export default function CookingModeScreen() {
     }
   };
 
-  const handlePrevStep = () => {
-    resetStepTimer();
-    stopSpeaking();
-    if (currentStepIndex > 0) {
-      setCurrentStepIndex(currentStepIndex - 1);
-    }
-  };
-
-  const handleSelectStep = (idx: number) => {
-    resetStepTimer();
-    stopSpeaking();
-    setCurrentStepIndex(idx);
-  };
+  const handlePrevStep = () => navigateToStep(currentStepIndex - 1);
+  const handleSelectStep = (idx: number) => navigateToStep(idx);
 
   const toggleIngredientCheck = (idx: number) => {
     setCheckedIngredients((prev) => ({
@@ -681,7 +649,7 @@ export default function CookingModeScreen() {
               setIsVoiceActive(false);
               isVoiceActiveRef.current = false;
               stopSpeaking();
-              setIsCountdownActive(false);
+              dispatchTimer({ type: "pauseGrace" });
             } else {
               setIsVoiceActive(true);
               isVoiceActiveRef.current = true;
@@ -718,7 +686,7 @@ export default function CookingModeScreen() {
         >
           {steps.map((s, idx) => {
             const isActive = idx === currentStepIndex;
-            const isDone = completedSteps[idx] || idx < currentStepIndex;
+            const isDone = completedSteps[idx];
 
             return (
               <TouchableOpacity
@@ -895,11 +863,10 @@ export default function CookingModeScreen() {
                   timeLeft === 0 && styles.timerMiniStatusTextDone,
                 ]}
               >
-                {timeLeft === 0
-                  ? "00:00"
-                  : isTimerRunning
-                  ? "Đang đếm"
-                  : "Chờ bấm"}
+                {timer.status === "expired" ? "Hết giờ"
+                  : timer.status === "confirmed" ? "Đã xong"
+                  : isTimerRunning ? "Đang đếm"
+                  : timer.status === "paused" ? "Tạm dừng" : "Chờ bấm"}
               </Text>
             </View>
           </View>
@@ -939,7 +906,7 @@ export default function CookingModeScreen() {
                   color="#FFFFFF"
                 />
                 <Text style={styles.mainActionBtnText}>
-                  {isTimerRunning ? "Tạm dừng" : "Bắt đầu"}
+                  {isTimerRunning ? "Tạm dừng" : timer.status === "paused" ? "Tiếp tục" : "Bắt đầu"}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -971,7 +938,7 @@ export default function CookingModeScreen() {
               <Text style={styles.quickChipText}>+5p</Text>
             </TouchableOpacity>
 
-            {/* Reset về 0 */}
+            {/* Reset to this step's recipe duration */}
             <TouchableOpacity
               style={styles.quickChipBtn}
               onPress={resetTimer}
@@ -980,6 +947,15 @@ export default function CookingModeScreen() {
               <Ionicons name="refresh" size={13} color="#64748B" />
             </TouchableOpacity>
           </View>
+          <Text style={styles.timerHelpText} accessibilityLiveRegion="polite">
+            {timer.status === "expired"
+              ? "Hết giờ dự kiến. Kiểm tra món ăn, thêm thời gian nếu cần hoặc xác nhận đã xong bước."
+              : timer.status === "confirmed"
+              ? "Bạn đã xác nhận xong bước. Thêm thời gian sẽ hủy chuyển bước."
+              : initialSeconds === 0
+              ? "Bước này chưa có thời lượng. Chọn thêm thời gian hoặc xác nhận khi làm xong."
+              : "Thời gian dự kiến theo công thức. Chỉ chuyển tự động sau khi bạn xác nhận đã xong."}
+          </Text>
         </View>
 
         {/* ==================================================== */}
@@ -1007,7 +983,7 @@ export default function CookingModeScreen() {
                   {isSpeaking
                     ? "Đang đọc hướng dẫn..."
                     : isAutoAdvance
-                    ? "Tự động đọc & chuyển bước: BẬT"
+                    ? "Tự chuyển sau khi xác nhận xong"
                     : "Chế độ: Đang tắt"}
                 </Text>
               </View>
@@ -1034,9 +1010,8 @@ export default function CookingModeScreen() {
                 style={styles.primaryAutoStartBtn}
                 onPress={() => {
                   setIsVoiceActive(true);
-                  setIsAutoAdvance(true);
+                  dispatchTimer({ type: "auto", enabled: true });
                   isVoiceActiveRef.current = true;
-                  isAutoAdvanceRef.current = true;
                   speakCurrentStep(currentStepIndex);
                 }}
                 activeOpacity={0.85}
@@ -1083,9 +1058,12 @@ export default function CookingModeScreen() {
                       ? "🔊 Đang đọc..."
                       : isCountdownActive
                       ? `⏳ Qua Bước ${currentStepIndex + 2} sau:`
-                      : "⏸ Tạm dừng đếm:"}
+                      : timer.status === "confirmed"
+                      ? "⏸ Đã dừng chuyển:"
+                      : timer.status === "expired" ? "Chờ xác nhận xong bước"
+                      : "Chờ bạn làm xong bước"}
                   </Text>
-                  {!isSpeaking && (
+                  {!isSpeaking && timer.status === "confirmed" && (
                     <Text style={styles.autoCountdownTime}>
                       {formatTime(countdownLeftSec)}
                     </Text>
@@ -1094,10 +1072,10 @@ export default function CookingModeScreen() {
 
                 {/* Pause / Resume / Skip / Turn Off */}
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                  {!isSpeaking && (
+                  {!isSpeaking && timer.status === "confirmed" && currentStepIndex < steps.length - 1 && (
                     <TouchableOpacity
                       style={styles.pauseCountdownBtn}
-                      onPress={() => setIsCountdownActive(!isCountdownActive)}
+                      onPress={() => dispatchTimer({ type: "toggleGrace" })}
                       activeOpacity={0.7}
                     >
                       <Ionicons
@@ -1122,11 +1100,10 @@ export default function CookingModeScreen() {
                   <TouchableOpacity
                     style={styles.turnOffAutoPill}
                     onPress={() => {
-                      setIsAutoAdvance(false);
+                      dispatchTimer({ type: "auto", enabled: false });
                       setIsVoiceActive(false);
-                      isAutoAdvanceRef.current = false;
                       isVoiceActiveRef.current = false;
-                      setIsCountdownActive(false);
+                      dispatchTimer({ type: "pauseGrace" });
                       stopSpeaking();
                     }}
                     activeOpacity={0.7}
@@ -1161,7 +1138,7 @@ export default function CookingModeScreen() {
 
               {/* Delay Interval Setup Chips */}
               <View style={styles.delayIntervalRow}>
-                <Text style={styles.delayIntervalLabel}>Chờ:</Text>
+                <Text style={styles.delayIntervalLabel}>Sau xác nhận:</Text>
                 {[
                   { label: "15s", sec: 15 },
                   { label: "30s", sec: 30 },
@@ -1177,10 +1154,7 @@ export default function CookingModeScreen() {
                         isSelected && styles.intervalChipSelected,
                       ]}
                       onPress={() => {
-                        setAutoAdvanceDelaySec(item.sec);
-                        if (isCountdownActive) {
-                          setCountdownLeftSec(item.sec);
-                        }
+                        dispatchTimer({ type: "delay", seconds: item.sec });
                       }}
                       activeOpacity={0.75}
                     >
@@ -1236,7 +1210,7 @@ export default function CookingModeScreen() {
 
         <TouchableOpacity
           style={styles.compactNextBtn}
-          onPress={handleNextStep}
+          onPress={handleConfirmStep}
           activeOpacity={0.88}
         >
           <LinearGradient
@@ -1252,7 +1226,8 @@ export default function CookingModeScreen() {
             <Text style={styles.compactNextText}>
               {currentStepIndex === steps.length - 1
                 ? "Hoàn thành 🎉"
-                : "Bước tiếp theo"}
+                : timer.status === "confirmed" ? "Qua ngay"
+                : "Đã xong bước này"}
             </Text>
             <Ionicons
               name={
@@ -1678,11 +1653,61 @@ export default function CookingModeScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Floating AI Cooking Companion Button */}
+      {!showVoiceOverlay && (
+        <TouchableOpacity
+          style={styles.floatingAiVoiceBtn}
+          onPress={() => {
+            setShowVoiceOverlay(true);
+            cookingVoice.startListening();
+          }}
+          activeOpacity={0.85}
+        >
+          <LinearGradient
+            colors={["#059669", "#10B981"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.floatingAiVoiceGradient}
+          >
+            <Ionicons name="mic" size={18} color="#FFFFFF" />
+            <Text style={styles.floatingAiVoiceText}>Trợ lý AI</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      )}
+
+      {/* Real-time Cooking Voice Assistant Overlay */}
+      <CookingVoiceOverlay
+        isVisible={showVoiceOverlay}
+        isListening={cookingVoice.isListening}
+        isThinking={cookingVoice.isThinking}
+        isSpeaking={cookingVoice.isSpeaking}
+        transcript={cookingVoice.transcript}
+        aiReply={cookingVoice.aiReply}
+        lastAction={cookingVoice.lastAction}
+        quickReplies={cookingVoice.quickReplies}
+        errorMessage={cookingVoice.errorMessage}
+        onMicPress={() => {
+          if (cookingVoice.isListening) {
+            cookingVoice.stopListening();
+          } else {
+            cookingVoice.startListening();
+          }
+        }}
+        onClose={() => {
+          cookingVoice.cancelListening();
+          setShowVoiceOverlay(false);
+        }}
+        onQuickReplySelect={(reply) => {
+          cookingVoice.processVoiceInput(reply);
+        }}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  timerHelpText: { fontSize: 12, color: "#64748B", lineHeight: 18, marginTop: 10 },
   screen: {
     flex: 1,
     backgroundColor: "#F8FAFC",
@@ -2902,5 +2927,30 @@ const styles = StyleSheet.create({
   },
   previewTestBtnTextActive: {
     color: "#FFFFFF",
+  },
+  floatingAiVoiceBtn: {
+    position: "absolute",
+    bottom: 84,
+    right: 16,
+    borderRadius: 24,
+    shadowColor: "#059669",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 8,
+    zIndex: 999,
+  },
+  floatingAiVoiceGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 24,
+  },
+  floatingAiVoiceText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
   },
 });
