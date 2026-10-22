@@ -1,4 +1,3 @@
-import { BrandColors } from "@/constants/brandColors";
 import {
   ScanHistoryItem,
   ScanHistoryService,
@@ -442,7 +441,7 @@ export default function ScanHistoryModal({
                               </TouchableOpacity>
                             )}
 
-                            <TouchableOpacity
+                            {item.suggestedRecipe.id ? <TouchableOpacity
                               style={styles.viewRecipeBtn}
                               activeOpacity={0.85}
                               onPress={() =>
@@ -457,7 +456,7 @@ export default function ScanHistoryModal({
                                   Xem công thức →
                                 </Text>
                               </LinearGradient>
-                            </TouchableOpacity>
+                            </TouchableOpacity> : null}
                           </View>
                         </View>
                       </View>

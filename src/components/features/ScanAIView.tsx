@@ -1,5 +1,3 @@
-import { BrandColors } from "@/constants/brandColors";
-import { RECIPES_DATA } from "@/data/recipesData";
 import {
   ScanDetectedIngredient,
   ScanHistoryItem,
@@ -12,6 +10,8 @@ import { FridgeService } from "@/services/fridgeService";
 import { hapticSuccess } from "@/utils/haptics";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
+import { File } from "expo-file-system";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -19,6 +19,8 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Linking,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -27,111 +29,6 @@ import {
   View,
 } from "react-native";
 import ScanHistoryModal from "./ScanHistoryModal";
-
-// Presets for rich realistic simulated AI detections
-const SCAN_PRESETS: Array<{
-  title: string;
-  image: any;
-  accuracy: number;
-  ingredients: ScanDetectedIngredient[];
-  pins: ScanPin[];
-  suggestedRecipe: ScanSuggestedRecipe;
-}> = [
-  {
-    title: "Bàn bếp chuẩn bị trưa nay",
-    image: require("@/assets/images/smartcook-auth-bg.jpg"),
-    accuracy: 96,
-    ingredients: [
-      { name: "Thịt ức gà", confidence: "98%", icon: "food-drumstick" },
-      { name: "Cà chua bi", confidence: "96%", icon: "fruit-cherries" },
-      { name: "Quả bơ sáp", confidence: "94%", icon: "food-apple" },
-      { name: "Hành tây & Tỏi", confidence: "91%", icon: "seed" },
-    ],
-    pins: [
-      { text: "🍗 Ức gà (98%)", top: 30, left: 30 },
-      { text: "🍅 Cà chua (96%)", top: 75, right: 35 },
-      { text: "🥑 Quả bơ (94%)", bottom: 40, left: 50 },
-    ],
-    suggestedRecipe: {
-      id: "dish-3",
-      title: "Salad Ức Gà Bơ Sáp Sốt Chanh Leo",
-      desc: "Công thức sáng tạo tối ưu từ 100% nguyên liệu vừa quét được. Không cần đi chợ thêm!",
-      calories: 380,
-      durationMinutes: 20,
-      matchPercent: 100,
-    },
-  },
-  {
-    title: "Ngăn mát tủ lạnh sáng nay",
-    image: require("@/assets/images/salad-salmon.jpg"),
-    accuracy: 98,
-    ingredients: [
-      { name: "Cá hồi phi lê", confidence: "99%", icon: "fish" },
-      { name: "Xà lách Romaine", confidence: "97%", icon: "leaf" },
-      { name: "Quả bơ sáp", confidence: "95%", icon: "food-apple" },
-      { name: "Chanh vàng & Olive", confidence: "92%", icon: "fruit-citrus" },
-    ],
-    pins: [
-      { text: "🐟 Cá hồi (99%)", top: 40, right: 40 },
-      { text: "🥬 Xà lách (97%)", bottom: 50, left: 35 },
-      { text: "🥑 Quả bơ (95%)", top: 60, left: 45 },
-    ],
-    suggestedRecipe: {
-      id: "dish-3",
-      title: "Salad Cá Hồi Bơ Sáp Healthy",
-      desc: "Dồi dào Omega-3 và chất béo lành mạnh, tốt cho tim mạch và duy trì vóc dáng.",
-      calories: 380,
-      durationMinutes: 15,
-      matchPercent: 95,
-    },
-  },
-  {
-    title: "Thực phẩm tươi đi chợ chiều",
-    image: require("@/assets/images/steak-asparagus.jpg"),
-    accuracy: 95,
-    ingredients: [
-      { name: "Thịt thăn bò", confidence: "98%", icon: "food-steak" },
-      { name: "Măng tây tươi", confidence: "95%", icon: "leaf" },
-      { name: "Bơ lạt Anchor", confidence: "93%", icon: "seed" },
-      { name: "Tỏi củ & Tiêu đen", confidence: "90%", icon: "shaker" },
-    ],
-    pins: [
-      { text: "🥩 Thăn bò (98%)", top: 35, left: 40 },
-      { text: "🌿 Măng tây (95%)", bottom: 45, right: 40 },
-    ],
-    suggestedRecipe: {
-      id: "dish-2",
-      title: "Bò Bít Tết Măng Tây Sốt Tiêu",
-      desc: "Thịt bò mềm mọng nước thơm mùi bơ tỏi, kèm măng tây giòn ngọt chuẩn phong cách nhà hàng.",
-      calories: 520,
-      durationMinutes: 20,
-      matchPercent: 100,
-    },
-  },
-  {
-    title: "Nguyên liệu bữa tối gia đình",
-    image: require("@/assets/images/crispy-chicken.jpg"),
-    accuracy: 94,
-    ingredients: [
-      { name: "Đùi gà tươi", confidence: "97%", icon: "food-drumstick" },
-      { name: "Sả cây & Ớt hiểm", confidence: "95%", icon: "leaf" },
-      { name: "Gừng & Tỏi băm", confidence: "93%", icon: "seed" },
-      { name: "Nước mắm truyền thống", confidence: "91%", icon: "bottle-tonic" },
-    ],
-    pins: [
-      { text: "🍗 Đùi gà (97%)", top: 45, left: 50 },
-      { text: "🌶 Sả & Ớt (95%)", bottom: 35, right: 45 },
-    ],
-    suggestedRecipe: {
-      id: "dish-1",
-      title: "Cơm Gà Xào Sả Ớt Cay Thơm",
-      desc: "Thịt gà ngấm sốt sả ớt đậm đà thơm cay kích thích vị giác, hao cơm cho cả gia đình.",
-      calories: 540,
-      durationMinutes: 25,
-      matchPercent: 92,
-    },
-  },
-];
 
 export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
   const router = useRouter();
@@ -144,285 +41,166 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [activeHistoryId, setActiveHistoryId] = useState<string | null>(null);
 
-  // Active scan display data
-  const [presetIndex, setPresetIndex] = useState(0);
   const [isScanning, setIsScanning] = useState(false);
-  const [scanCompleted, setScanCompleted] = useState(true);
-
-  const initialPreset = SCAN_PRESETS[0];
-  const [activeImage, setActiveImage] = useState<any>(initialPreset.image);
-  const [activeTitle, setActiveTitle] = useState<string>(initialPreset.title);
-  const [activeAccuracy, setActiveAccuracy] = useState<number>(
-    initialPreset.accuracy
-  );
-  const [detectedIngredients, setDetectedIngredients] = useState<
-    ScanDetectedIngredient[]
-  >(initialPreset.ingredients);
-  const [activePins, setActivePins] = useState<ScanPin[]>(initialPreset.pins);
-  const [aiRecipe, setAiRecipe] = useState<ScanSuggestedRecipe>(
-    initialPreset.suggestedRecipe
-  );
-
-  // Toast feedback state
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [scanCompleted, setScanCompleted] = useState(false);
+  const [activeImage, setActiveImage] = useState<{ uri: string } | string | number | null>(null);
+  const [activeTitle, setActiveTitle] = useState("");
+  const [activeAccuracy, setActiveAccuracy] = useState(0);
+  const [detectedIngredients, setDetectedIngredients] = useState<ScanDetectedIngredient[]>([]);
+  const [dishes, setDishes] = useState<{ name: string; confidence: string }[]>([]);
+  const [activePins, setActivePins] = useState<ScanPin[]>([]);
+  const [aiRecipe, setAiRecipe] = useState<ScanSuggestedRecipe | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [cameraType, setCameraType] = useState<ImagePicker.CameraType>(ImagePicker.CameraType.back);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const toastTimeoutRef = useRef<any>(null);
+  const [isSavingToFridge, setIsSavingToFridge] = useState(false);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+  const busyRef = useRef(false);
+  const lastPhotoRef = useRef<ImagePicker.ImagePickerAsset | null>(null);
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-    }
-    toastTimeoutRef.current = setTimeout(() => {
-      setToastMessage(null);
-    }, 3200);
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => setToastMessage(null), 3200);
   };
 
-  const [isSavingToFridge, setIsSavingToFridge] = useState(false);
-
   useEffect(() => {
-    ScanHistoryService.fetchBackendHistory();
-    const unsub = ScanHistoryService.subscribe((list) => {
-      setHistoryList(list);
-    });
+    mountedRef.current = true;
+    const unsub = ScanHistoryService.subscribe(setHistoryList);
+    void ScanHistoryService.fetchBackendHistory();
     return () => {
+      mountedRef.current = false;
       unsub();
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     };
   }, []);
 
-  // Save all detected ingredients to user's MongoDB fridge
-  const handleSaveAllToFridge = async () => {
-    if (!detectedIngredients || detectedIngredients.length === 0) return;
-    setIsSavingToFridge(true);
+  const processUploadedPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
+    lastPhotoRef.current = asset;
+    setIsScanning(true);
+    setScanCompleted(false);
+    setErrorMessage(null);
+    setActiveHistoryId(null);
+    setActiveImage({ uri: asset.uri });
+    setDetectedIngredients([]);
+    setDishes([]);
+    setActivePins([]);
+    setAiRecipe(null);
     try {
-      let savedCount = 0;
-      for (const ing of detectedIngredients) {
-        await FridgeService.addItem({
-          name: ing.name,
-          amount: "1 phần",
-          category: "veggies",
-          storageLocation: "chilled",
-        });
+      // iPhone HEIC/large photos become a real JPEG before multipart upload.
+      const context = ImageManipulator.manipulate(asset.uri);
+      if (Math.max(asset.width, asset.height) > 1600) {
+        context.resize(asset.width >= asset.height ? { width: 1600 } : { height: 1600 });
+      }
+      const rendered = await context.renderAsync();
+      const photo = await rendered.saveAsync({ compress: 0.8, format: SaveFormat.JPEG });
+      if (!mountedRef.current) return;
+      const fileSize = Platform.OS === "web" ? (await (await fetch(photo.uri)).blob()).size : new File(photo.uri).size;
+      if (fileSize > 5 * 1024 * 1024) throw new Error("Ảnh lớn hơn 5 MB. Bạn hãy chọn ảnh nhỏ hơn.");
+      setActiveImage({ uri: photo.uri });
+      const result = await aiService.scanIngredients(photo.uri, "image/jpeg");
+      if (!mountedRef.current) return;
+      if (!result?.ingredients?.length) throw new Error("Chưa nhận diện được món ăn. Hãy thử ảnh rõ hơn.");
+      const suggested: ScanSuggestedRecipe = { ...result.suggestedRecipe, id: result.suggestedRecipe.id || "" };
+      const saved = ScanHistoryService.addHistory({
+        id: result.id, title: result.title || "Kết quả quét thực phẩm", scannedAt: result.scannedAt || "Vừa xong",
+        image: result.imageUrl ? { uri: result.imageUrl } : { uri: photo.uri },
+        accuracy: result.accuracy, ingredients: result.ingredients, dishes: result.dishes || [],
+        pins: result.pins || [], suggestedRecipe: suggested,
+      });
+      setActiveTitle(saved.title);
+      setActiveAccuracy(saved.accuracy);
+      setDetectedIngredients(saved.ingredients);
+      setDishes(saved.dishes || []);
+      setActivePins(saved.pins);
+      setAiRecipe(saved.suggestedRecipe);
+      setActiveHistoryId(saved.id);
+      setScanCompleted(true);
+      void hapticSuccess();
+      showToast("Đã phân tích ảnh và lưu lịch sử!");
+    } catch (error: unknown) {
+      if (!mountedRef.current) return;
+      const requestError = error as { response?: { data?: { message?: string } }; message?: string };
+      setErrorMessage(requestError.response?.data?.message || requestError.message || "Không thể quét ảnh. Vui lòng thử lại.");
+    } finally {
+      if (mountedRef.current) setIsScanning(false);
+    }
+  };
+
+  const choosePhoto = async (source: "camera" | "library") => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setIsSelecting(true);
+    try {
+      if (source === "camera") {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permission.granted) {
+          Alert.alert("Cần quyền camera", "Hãy cho phép Expo Go truy cập camera để chụp món ăn.", [
+            { text: "Đóng", style: "cancel" }, { text: "Mở cài đặt", onPress: () => void Linking.openSettings() },
+          ]);
+          return;
+        }
+      }
+      const options: ImagePicker.ImagePickerOptions = { mediaTypes: ["images"], allowsEditing: false, quality: 0.8, allowsMultipleSelection: false };
+      const result = source === "camera"
+        ? await ImagePicker.launchCameraAsync({ ...options, cameraType })
+        : await ImagePicker.launchImageLibraryAsync(options);
+      if (!mountedRef.current || result.canceled || !result.assets?.length) return;
+      setIsSelecting(false);
+      await processUploadedPhoto(result.assets[0]);
+    } catch {
+      if (mountedRef.current) Alert.alert("Chưa mở được ảnh", "Bạn hãy thử lại hoặc chọn ảnh khác từ thư viện.");
+    } finally {
+      busyRef.current = false;
+      if (mountedRef.current) setIsSelecting(false);
+    }
+  };
+
+  const handleRetry = async () => {
+    if (busyRef.current || !lastPhotoRef.current) return;
+    busyRef.current = true;
+    try { await processUploadedPhoto(lastPhotoRef.current); } finally { busyRef.current = false; }
+  };
+
+  const handleSaveAllToFridge = async () => {
+    if (!detectedIngredients.length || isSavingToFridge) return;
+    setIsSavingToFridge(true);
+    let savedCount = 0;
+    try {
+      for (const ingredient of detectedIngredients) {
+        const item = await FridgeService.addItem({ name: ingredient.name, amount: "1 phần", category: "veggies", storageLocation: "chilled" });
+        if (!item) throw new Error("Lưu nguyên liệu chưa thành công");
         savedCount++;
       }
-      void hapticSuccess();
-      showToast(`✨ Đã lưu ${savedCount} nguyên liệu vào Bếp của bạn!`);
-    } catch (e) {
-      console.warn("Lỗi lưu nguyên liệu vào tủ lạnh:", e);
-      showToast("Đã lưu nguyên liệu vào Bếp của bạn!");
-    } finally {
-      setIsSavingToFridge(false);
-    }
+      showToast(`Đã lưu ${savedCount} nguyên liệu vào tủ lạnh.`);
+    } catch {
+      showToast(`Đã lưu ${savedCount}/${detectedIngredients.length} nguyên liệu. Vui lòng thử lại với phần còn lại.`);
+    } finally { if (mountedRef.current) setIsSavingToFridge(false); }
   };
 
-  // Handler: Simulate Scan with presets & save to history automatically
-  const handleSimulateScan = () => {
-    setIsScanning(true);
-    setScanCompleted(false);
-
-    setTimeout(() => {
-      const nextIndex = (presetIndex + 1) % SCAN_PRESETS.length;
-      setPresetIndex(nextIndex);
-      const preset = SCAN_PRESETS[nextIndex];
-
-      setActiveImage(preset.image);
-      setActiveTitle(preset.title);
-      setActiveAccuracy(preset.accuracy);
-      setDetectedIngredients(preset.ingredients);
-      setActivePins(preset.pins);
-      setAiRecipe(preset.suggestedRecipe);
-      setActiveHistoryId(null);
-
-      // Save to history service
-      const now = new Date();
-      const timeStr = `Hôm nay, ${now.getHours().toString().padStart(2, "0")}:${now
-        .getMinutes()
-        .toString()
-        .padStart(2, "0")}`;
-
-      const newHistoryItem = ScanHistoryService.addHistory({
-        title: preset.title,
-        scannedAt: timeStr,
-        image: preset.image,
-        accuracy: preset.accuracy,
-        ingredients: preset.ingredients,
-        pins: preset.pins,
-        suggestedRecipe: preset.suggestedRecipe,
-      });
-
-      setActiveHistoryId(newHistoryItem.id);
-      setIsScanning(false);
-      setScanCompleted(true);
-      showToast("✨ Đã phân tích nguyên liệu & lưu vào lịch sử!");
-    }, 1500);
-  };
-
-  // Handler: Pick photo from phone gallery
-  const handlePickFromLibrary = async () => {
-    try {
-      const permission =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert(
-          "Quyền truy cập",
-          "Ứng dụng cần quyền truy cập thư viện ảnh để phân tích nguyên liệu bàn bếp / tủ lạnh."
-        );
-        return;
-      }
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        processUploadedPhoto(result.assets[0].uri, "Ảnh tải từ thư viện");
-      }
-    } catch (e) {
-      console.log("Error picking image:", e);
-    }
-  };
-
-  // Handler: Take photo with camera
-  const handleTakePhoto = async () => {
-    try {
-      const permission = await ImagePicker.requestCameraPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert(
-          "Quyền camera",
-          "Ứng dụng cần quyền camera để bạn chụp ảnh bàn bếp hoặc tủ lạnh trực tiếp."
-        );
-        return;
-      }
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        processUploadedPhoto(result.assets[0].uri, "Ảnh chụp camera mới");
-      }
-    } catch (e) {
-      console.log("Error taking photo:", e);
-    }
-  };
-
-  // Process custom photo uploaded by user (Gemini 1.5 Flash Vision API with fallback)
-  const processUploadedPhoto = async (uri: string, customTitle: string) => {
-    setIsScanning(true);
-    setScanCompleted(false);
-    setActiveImage({ uri });
-
-    try {
-      const apiResult = await aiService.scanIngredients(uri);
-
-      if (apiResult && apiResult.ingredients && apiResult.ingredients.length > 0) {
-        setActiveTitle(customTitle);
-        setActiveAccuracy(apiResult.accuracy || 96);
-        setDetectedIngredients(apiResult.ingredients);
-        setActivePins(apiResult.pins || []);
-        
-        const suggested: ScanSuggestedRecipe = {
-          id:
-            apiResult.suggestedRecipe?.id ||
-            `ai-recipe-${encodeURIComponent(uri).slice(-24)}`,
-          title: apiResult.suggestedRecipe?.title || "Món ăn sáng tạo từ nguyên liệu của bạn",
-          desc: apiResult.suggestedRecipe?.desc || "Công thức tối ưu từ 100% nguyên liệu vừa quét được.",
-          calories: apiResult.suggestedRecipe?.calories || 450,
-          durationMinutes: apiResult.suggestedRecipe?.durationMinutes || 25,
-          matchPercent: apiResult.suggestedRecipe?.matchPercent || 100,
-        };
-        setAiRecipe(suggested);
-
-        const now = new Date();
-        const timeStr = `Hôm nay, ${now.getHours().toString().padStart(2, "0")}:${now
-          .getMinutes()
-          .toString()
-          .padStart(2, "0")}`;
-
-        const saved = ScanHistoryService.addHistory({
-          title: customTitle,
-          scannedAt: timeStr,
-          image: { uri },
-          accuracy: apiResult.accuracy || 96,
-          ingredients: apiResult.ingredients,
-          pins: apiResult.pins || [],
-          suggestedRecipe: suggested,
-        });
-
-        setActiveHistoryId(saved.id);
-        setIsScanning(false);
-        setScanCompleted(true);
-        showToast("✨ Gemini AI đã quét & nhận diện nguyên liệu!");
-        return;
-      }
-    } catch (e) {
-      console.warn("Scan AI API failed, using graceful preset fallback:", e);
-    }
-
-    // Graceful fallback to rich realistic preset
-    setTimeout(() => {
-      const nextIndex = (presetIndex + 1) % SCAN_PRESETS.length;
-      setPresetIndex(nextIndex);
-      const preset = SCAN_PRESETS[nextIndex];
-
-      setActiveTitle(customTitle);
-      setActiveAccuracy(96);
-      setDetectedIngredients(preset.ingredients);
-      setActivePins(preset.pins);
-      setAiRecipe(preset.suggestedRecipe);
-
-      const now = new Date();
-      const timeStr = `Hôm nay, ${now.getHours().toString().padStart(2, "0")}:${now
-        .getMinutes()
-        .toString()
-        .padStart(2, "0")}`;
-
-      const saved = ScanHistoryService.addHistory({
-        title: customTitle,
-        scannedAt: timeStr,
-        image: { uri },
-        accuracy: 96,
-        ingredients: preset.ingredients,
-        pins: preset.pins,
-        suggestedRecipe: preset.suggestedRecipe,
-      });
-
-      setActiveHistoryId(saved.id);
-      setIsScanning(false);
-      setScanCompleted(true);
-      showToast("✨ Đã nhận diện nguyên liệu ảnh của bạn!");
-    }, 1200);
-  };
-
-  // Handler: Select a scan from history
   const handleSelectHistoryItem = (item: ScanHistoryItem) => {
+    if (busyRef.current) return;
     setActiveHistoryId(item.id);
     setActiveImage(item.image);
     setActiveTitle(item.title);
     setActiveAccuracy(item.accuracy);
     setDetectedIngredients(item.ingredients);
+    setDishes(item.dishes || []);
     setActivePins(item.pins);
     setAiRecipe(item.suggestedRecipe);
     setScanCompleted(true);
-    setIsScanning(false);
-    showToast(`Đã nạp lại: "${item.title}"`);
+    setErrorMessage(null);
   };
 
-  // Reset to default live scanner
   const handleResetToLiveScan = () => {
-    const defaultPreset = SCAN_PRESETS[0];
+    if (busyRef.current) return;
     setActiveHistoryId(null);
-    setActiveImage(defaultPreset.image);
-    setActiveTitle(defaultPreset.title);
-    setActiveAccuracy(defaultPreset.accuracy);
-    setDetectedIngredients(defaultPreset.ingredients);
-    setActivePins(defaultPreset.pins);
-    setAiRecipe(defaultPreset.suggestedRecipe);
-    setScanCompleted(true);
-    showToast("Đã chuyển về khung quét trực tiếp");
+    setActiveImage(null);
+    setScanCompleted(false);
+    setErrorMessage(null);
+    lastPhotoRef.current = null;
   };
 
   return (
@@ -432,7 +210,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
         <View style={styles.headerTopRow}>
           <View style={{ flex: 1 }}>
             <Text style={styles.headerSubtitle}>SMART VISION AI</Text>
-            <Text style={styles.headerTitle}>Scan Nguyên Liệu</Text>
+            <Text style={styles.headerTitle}>Scan Món Ăn</Text>
           </View>
 
           {/* History Shortcut Button */}
@@ -452,7 +230,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
         </View>
 
         <Text style={styles.headerDescription}>
-          Chụp ảnh bàn bếp hoặc tủ lạnh để AI tự động nhận diện nguyên liệu và sáng tạo công thức riêng cho bạn.
+          Chụp món ăn, nguyên liệu hoặc chọn ảnh từ thư viện để AI nhận diện tên món và thành phần.
         </Text>
       </View>
 
@@ -466,15 +244,18 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
 
       {/* Camera Viewfinder Simulator */}
       <View style={[styles.cameraViewfinder, { width: width - 40 }]}>
-        <Image
+        {activeImage ? <Image
           source={
             typeof activeImage === "string"
               ? { uri: activeImage }
               : activeImage
           }
           style={styles.cameraPreviewImage}
-          resizeMode="cover"
-        />
+          resizeMode="contain"
+        /> : <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, backgroundColor: "#334155" }}>
+          <Ionicons name="scan-outline" size={54} color="#FFFFFF" />
+          <Text style={{ color: "white", textAlign: "center", marginTop: 12 }}>Chụp món ăn hoặc chọn ảnh từ thư viện</Text>
+        </View>}
 
         {/* Scanner Dark Overlay */}
         <View style={styles.scannerOverlay} />
@@ -535,8 +316,9 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
           {/* Pick from Library Button */}
           <TouchableOpacity
             style={styles.auxBtn}
-            onPress={handlePickFromLibrary}
-            disabled={isScanning}
+            onPress={() => void choosePhoto("library")}
+            accessibilityLabel="Chọn ảnh món ăn từ thư viện"
+            disabled={isScanning || isSelecting}
             activeOpacity={0.8}
           >
             <Ionicons name="images-outline" size={20} color="#FFFFFF" />
@@ -545,8 +327,9 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
           {/* Center Main Shutter Action Button */}
           <TouchableOpacity
             style={styles.shutterBtn}
-            onPress={handleSimulateScan}
-            disabled={isScanning}
+            onPress={() => void choosePhoto("camera")}
+            accessibilityLabel="Chụp ảnh món ăn"
+            disabled={isScanning || isSelecting}
             activeOpacity={0.85}
           >
             <LinearGradient
@@ -560,14 +343,22 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
           {/* Take photo from device camera */}
           <TouchableOpacity
             style={styles.auxBtn}
-            onPress={handleTakePhoto}
-            disabled={isScanning}
+            onPress={() => setCameraType((current) => current === ImagePicker.CameraType.back ? ImagePicker.CameraType.front : ImagePicker.CameraType.back)}
+            accessibilityLabel="Đổi camera trước hoặc sau"
+            disabled={isScanning || isSelecting}
             activeOpacity={0.8}
           >
             <Ionicons name="camera-reverse-outline" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </View>
+
+      {errorMessage && <View style={{ margin: 20, padding: 14, backgroundColor: "#FEF2F2", borderRadius: 12 }}>
+        <Text style={{ color: "#B91C1C" }}>{errorMessage}</Text>
+        <TouchableOpacity onPress={() => void handleRetry()} disabled={isScanning || isSelecting} style={{ marginTop: 10 }}>
+          <Text style={{ color: "#EA580C", fontWeight: "700" }}>Thử quét lại ảnh này</Text>
+        </TouchableOpacity>
+      </View>}
 
       {/* Horizontal Recent Scans Slider (Lịch sử phân tích gần đây) */}
       <View style={styles.recentSection}>
@@ -665,6 +456,9 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
             </TouchableOpacity>
           </View>
 
+          <Text style={{ fontSize: 19, fontWeight: "700", color: "#0F172A", marginBottom: 8 }}>{activeTitle}</Text>
+          {dishes.map((dish, index) => <Text key={index} style={{ color: "#059669", fontWeight: "600", marginBottom: 6 }}>{dish.name} · {dish.confidence}</Text>)}
+          <Text style={{ color: "#64748B", marginBottom: 12 }}>Độ tin cậy là ước tính. Thành phần ẩn hoặc gia vị có thể chỉ là suy đoán từ hình ảnh.</Text>
           {/* Chips Row */}
           <View style={styles.detectedChipsRow}>
             {detectedIngredients.map((item, index) => (
@@ -674,14 +468,14 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
                   size={15}
                   color="#E65100"
                 />
-                <Text style={styles.detectedChipText}>{item.name}</Text>
+                <Text style={styles.detectedChipText}>{item.name}{item.source === "inferred" ? " (suy đoán)" : ""}</Text>
                 <Text style={styles.detectedChipConf}>{item.confidence}</Text>
               </View>
             ))}
           </View>
 
           {/* AI Recipe Generator Suggestion Box (SRS Module 25) */}
-          <View style={styles.aiGeneratedBox}>
+          {aiRecipe && <View style={styles.aiGeneratedBox}>
             <View style={styles.aiGenTop}>
               <View style={styles.aiBadge}>
                 <Ionicons
@@ -692,14 +486,14 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
                 <Text style={styles.aiBadgeText}>Gợi ý công thức từ AI</Text>
               </View>
               <Text style={styles.aiCaloText}>
-                {aiRecipe.calories} kcal • {aiRecipe.durationMinutes} phút
+                {aiRecipe.calories > 0 ? `Ước tính ${aiRecipe.calories} kcal` : ""}{aiRecipe.durationMinutes > 0 ? ` · ${aiRecipe.durationMinutes} phút` : ""}
               </Text>
             </View>
 
             <Text style={styles.aiDishTitle}>{aiRecipe.title}</Text>
             <Text style={styles.aiDishDesc}>{aiRecipe.desc}</Text>
 
-            <TouchableOpacity
+            {aiRecipe.id ? <TouchableOpacity
               style={styles.cookAiRecipeBtn}
               activeOpacity={0.85}
               onPress={() =>
@@ -715,8 +509,8 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
               >
                 <Text style={styles.cookAiBtnText}>Xem chi tiết công thức →</Text>
               </LinearGradient>
-            </TouchableOpacity>
-          </View>
+            </TouchableOpacity> : <Text style={{ color: "#64748B", marginTop: 10 }}>Chưa có công thức chi tiết phù hợp trong thư viện.</Text>}
+          </View>}
         </View>
       )}
 
