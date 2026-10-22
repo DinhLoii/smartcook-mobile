@@ -52,6 +52,7 @@ export interface Recipe {
   ingredients: RecipeIngredient[];
   steps: RecipeStep[];
   nutrition: RecipeNutrition;
+  cookingNutrition?: import("../utils/cookingScope").CookingNutrition | null;
   isFavorite?: boolean;
   createdAt?: string;
   updatedAt?: string;

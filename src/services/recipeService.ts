@@ -1,3 +1,4 @@
+import { normalizeCookingNutrition } from "@/utils/cookingScope";
 import apiClient from "./apiClient";
 import { RECIPES_DATA, getRecipeById as getLocalRecipeById } from "@/data/recipesData";
 import { Recipe, RecipeFilterParams, RecipeListResponse } from "@/types";
@@ -348,6 +349,7 @@ class RecipeServiceClass {
             tip: step.tip,
           }))
         : [],
+      cookingNutrition: normalizeCookingNutrition(raw.nutrition, raw.calories) ?? null,
       nutrition: raw.nutrition || {
         calories: Number(raw.calories) || 450,
         protein: "25g",
