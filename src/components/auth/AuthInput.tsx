@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Pressable,
+  Platform,
   TextInputProps,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -54,13 +55,19 @@ export const AuthInput: React.FC<AuthInputProps> = ({
           isFocused && styles.inputWrapperFocused,
           Boolean(error) && styles.inputWrapperError,
         ]}>
-        {/* Leading Icon (pointerEvents="none" so it doesn't block tap) */}
+        {/* Leading Icon */}
         {iconName && (
           <View style={styles.leadingIcon} pointerEvents="none">
             <Ionicons
               name={iconName}
-              size={18}
-              color={isFocused ? BrandColors.primary : '#94A3B8'}
+              size={19}
+              color={
+                Boolean(error)
+                  ? '#EF4444'
+                  : isFocused
+                    ? BrandColors.primary
+                    : '#94A3B8'
+              }
             />
           </View>
         )}
@@ -82,79 +89,99 @@ export const AuthInput: React.FC<AuthInputProps> = ({
         {isPassword && (
           <TouchableOpacity
             style={styles.eyeIconContainer}
-            activeOpacity={0.7}
+            activeOpacity={0.6}
             onPress={() => setShowPassword(!showPassword)}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
             <Ionicons
               name={showPassword ? 'eye-off-outline' : 'eye-outline'}
               size={19}
-              color={isFocused ? BrandColors.primary : '#64748B'}
+              color={showPassword ? BrandColors.primary : '#94A3B8'}
             />
           </TouchableOpacity>
         )}
       </Pressable>
 
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? (
+        <View style={styles.errorRow}>
+          <Ionicons name="alert-circle-outline" size={13} color="#EF4444" />
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : null}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 10,
+    marginBottom: 12,
     width: '100%',
   },
   label: {
-    fontSize: 12.5,
-    fontWeight: '700',
-    color: '#475569',
-    marginBottom: 4,
-    letterSpacing: 0.2,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#334155',
+    marginBottom: 6,
+    letterSpacing: 0.1,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    borderWidth: 1.5,
+    borderRadius: 14,
+    borderWidth: 1.2,
     borderColor: '#E2E8F0',
-    height: 44,
-    paddingHorizontal: 12,
+    height: 48,
+    paddingHorizontal: 14,
   },
   inputWrapperFocused: {
     borderColor: BrandColors.primary,
     backgroundColor: '#FFFFFF',
     shadowColor: BrandColors.primary,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
     elevation: 2,
   },
   inputWrapperError: {
     borderColor: '#EF4444',
+    backgroundColor: '#FFFFFF',
   },
   leadingIcon: {
-    marginRight: 8,
+    marginRight: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
   input: {
     flex: 1,
     fontSize: 14.5,
-    color: '#1E293B',
-    height: 44,
+    color: '#0F172A',
+    height: '100%',
     paddingVertical: 0,
+    backgroundColor: 'transparent',
+    ...(Platform.OS === 'web'
+      ? ({
+          outlineStyle: 'none',
+          boxShadow: 'none',
+        } as any)
+      : {}),
   },
   eyeIconContainer: {
     paddingLeft: 8,
+    paddingRight: 2,
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
   },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    marginLeft: 2,
+    gap: 4,
+  },
   errorText: {
-    fontSize: 11.5,
+    fontSize: 12,
     color: '#EF4444',
-    marginTop: 3,
-    marginLeft: 4,
+    fontWeight: '500',
   },
 });

@@ -196,6 +196,7 @@ const styles = StyleSheet.create({
   },
   logoWrapper: {
     marginBottom: 24,
+    borderRadius: 28,
     shadowColor: BrandColors.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.35,

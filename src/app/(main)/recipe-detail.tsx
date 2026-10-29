@@ -455,7 +455,9 @@ export default function RecipeDetailScreen() {
           <View style={styles.floatingHeroBadgesRow}>
             {recipe.badge ? (
               <View style={styles.heroCategoryBadge}>
-                <Text style={styles.heroCategoryBadgeText}>{recipe.badge}</Text>
+                <Text style={styles.heroCategoryBadgeText}>
+                  {recipe.badge.replace(/^[^\p{L}\p{N}]+/u, "").trim()}
+                </Text>
               </View>
             ) : null}
 
@@ -495,76 +497,57 @@ export default function RecipeDetailScreen() {
           {/* 3. COMPACT 4-STAT CARDS ROW (Thời gian | Năng lượng | Độ khó | Số bước) */}
           <View style={styles.compactStatsGrid}>
             {/* Stat 1: Thời gian */}
-            <View style={[styles.compactStatCard, { backgroundColor: "#FFF7ED", borderColor: "#FED7AA" }]}>
+            <View style={styles.compactStatCard}>
               <View style={styles.compactStatTopRow}>
-                <Ionicons name="time-outline" size={13} color="#EA580C" />
+                <Ionicons name="time-outline" size={14} color="#475569" />
                 <Text style={styles.compactStatValue}>{recipe.minutes}p</Text>
               </View>
               <Text style={styles.compactStatLabel}>Thời gian</Text>
             </View>
 
             {/* Stat 2: Calo */}
-            <View style={[styles.compactStatCard, { backgroundColor: "#FEF2F2", borderColor: "#FECACA" }]}>
+            <View style={styles.compactStatCard}>
               <View style={styles.compactStatTopRow}>
-                <Ionicons name="flame-outline" size={13} color="#DC2626" />
+                <Ionicons name="flame-outline" size={14} color="#475569" />
                 <Text style={styles.compactStatValue}>{recipe.calories}</Text>
               </View>
               <Text style={styles.compactStatLabel}>Calories</Text>
             </View>
 
             {/* Stat 3: Độ khó */}
-            <View style={[styles.compactStatCard, { backgroundColor: "#F5F3FF", borderColor: "#DDD6FE" }]}>
+            <View style={styles.compactStatCard}>
               <View style={styles.compactStatTopRow}>
-                <Ionicons name="ribbon-outline" size={13} color="#7C3AED" />
+                <Ionicons name="ribbon-outline" size={14} color="#475569" />
                 <Text style={styles.compactStatValue}>{recipe.difficulty || "Dễ"}</Text>
               </View>
               <Text style={styles.compactStatLabel}>Độ khó</Text>
             </View>
 
             {/* Stat 4: Số bước */}
-            <View style={[styles.compactStatCard, { backgroundColor: "#F0F9FF", borderColor: "#BAE6FD" }]}>
+            <View style={styles.compactStatCard}>
               <View style={styles.compactStatTopRow}>
-                <Ionicons name="list-outline" size={13} color="#0284C7" />
+                <Ionicons name="list-outline" size={14} color="#475569" />
                 <Text style={styles.compactStatValue}>{recipe.stepsCount} bước</Text>
               </View>
               <Text style={styles.compactStatLabel}>Cách làm</Text>
             </View>
           </View>
 
-          {/* 4. COMPACT MEAL TAGS ROW */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.compactTagsContainer}
-            style={styles.compactTagsScroll}
-          >
-            {recipe.tags.map((tag, index) => (
-              <View key={index} style={styles.compactTagPill}>
-                <Text style={styles.compactTagText}>{tag}</Text>
-              </View>
-            ))}
-          </ScrollView>
-
-          {/* 5. COMPACT CULINARY EDITORIAL DESCRIPTION */}
+          {/* 5. CULINARY EDITORIAL DESCRIPTION (Minimalist without box) */}
           {recipe.description ? (
-            <View style={styles.compactEditorialCard}>
-              <Ionicons name="sparkles" size={13} color="#EA580C" style={{ marginTop: 1 }} />
-              <Text style={styles.compactEditorialText} numberOfLines={3}>
-                <Text style={styles.compactEditorialTitle}>Cảm hứng: </Text>
-                {recipe.description}
-              </Text>
-            </View>
+            <Text style={styles.compactEditorialText} numberOfLines={3}>
+              <Text style={styles.compactEditorialTitle}>Cảm hứng: </Text>
+              {recipe.description}
+            </Text>
           ) : null}
 
-          {/* 6. ESTIMATED PRICE & FRIDGE MATCH CARD */}
+          {/* 6. ESTIMATED PRICE & FRIDGE MATCH (Streamlined minimal bar) */}
           <View style={styles.smartCostCard}>
             <View style={styles.smartCostLeft}>
-              <View style={styles.smartCostIconBox}>
-                <Ionicons name="wallet-outline" size={20} color="#EA580C" />
-              </View>
+              <Ionicons name="wallet-outline" size={18} color="#475569" />
               <View>
                 <Text style={styles.smartCostSub}>Ước tính giá cần mua</Text>
-                <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}>
+                <View style={{ flexDirection: "row", alignItems: "baseline", gap: 5 }}>
                   <Text style={styles.smartCostPrice}>
                     {remainingCost === 0
                       ? "0đ"
@@ -582,18 +565,18 @@ export default function RecipeDetailScreen() {
             <View
               style={[
                 styles.fridgeMatchChip,
-                matchPercent === 100 && { backgroundColor: "#ECFDF5", borderColor: "#A7F3D0" },
+                matchPercent > 0 && styles.fridgeMatchChipPositive,
               ]}
             >
               <Ionicons
                 name={matchPercent > 0 ? "checkmark-circle" : "basket-outline"}
-                size={14}
-                color={matchPercent > 0 ? "#059669" : "#EA580C"}
+                size={13}
+                color={matchPercent > 0 ? "#16A34A" : "#64748B"}
               />
               <Text
                 style={[
                   styles.fridgeMatchChipText,
-                  matchPercent === 0 && { color: "#EA580C" },
+                  matchPercent > 0 && styles.fridgeMatchChipTextPositive,
                 ]}
               >
                 {matchPercent}% trong tủ
@@ -720,6 +703,31 @@ export default function RecipeDetailScreen() {
                 </Text>
               </View>
 
+              {/* Header with "Thêm tất cả" on TOP to save space */}
+              <View style={styles.ingredientsSectionHeader}>
+                <Text style={styles.ingredientsSectionTitle}>
+                  Nguyên liệu ({totalCount})
+                </Text>
+
+                {totalCount - ownedCount > 0 ? (
+                  <TouchableOpacity
+                    style={styles.addAllToCartBtn}
+                    activeOpacity={0.8}
+                    onPress={handleAddToCart}
+                  >
+                    <Ionicons name="cart-outline" size={14} color="#FFFFFF" />
+                    <Text style={styles.addAllToCartText}>
+                      Thêm tất cả ({totalCount - ownedCount})
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={styles.allReadyBadge}>
+                    <Ionicons name="checkmark-circle" size={13} color="#16A34A" />
+                    <Text style={styles.allReadyBadgeText}>Đã có đủ</Text>
+                  </View>
+                )}
+              </View>
+
               {/* Interactive Ingredients List */}
               <View style={styles.ingredientsCardList}>
                 {recipe.ingredients.map((ing, idx) => {
@@ -835,26 +843,7 @@ export default function RecipeDetailScreen() {
               </View>
 
 
-              {/* 🛒 Shopping Cart Action for missing ingredients */}
-              {totalCount - ownedCount > 0 ? (
-                <TouchableOpacity
-                  style={styles.cartActionBtn}
-                  activeOpacity={0.82}
-                  onPress={handleAddToCart}
-                >
-                  <Ionicons name="cart-outline" size={18} color="#FFFFFF" />
-                  <Text style={styles.cartActionText}>
-                    Thêm {totalCount - ownedCount} món cần mua vào Giỏ hàng đi chợ
-                  </Text>
-                </TouchableOpacity>
-              ) : (
-                <View style={styles.allIngredientsReadyBanner}>
-                  <Ionicons name="checkmark-done-circle" size={18} color="#059669" />
-                  <Text style={styles.allIngredientsReadyText}>
-                    Đã đủ nguyên liệu! Bạn có thể bắt đầu nấu ngay mà không cần đi chợ.
-                  </Text>
-                </View>
-              )}
+
 
               {/* 🏪 Siêu thị gần tôi (Mock Data & GPS Haversine) */}
               <NearbyStoreCard
@@ -953,52 +942,52 @@ export default function RecipeDetailScreen() {
             <View style={styles.tabContentBlock}>
               <View style={styles.nutritionPanel}>
                 <View style={styles.nutritionHeaderRow}>
-                  <Ionicons name="fitness-outline" size={20} color="#EA580C" />
+                  <Ionicons name="fitness-outline" size={18} color="#475569" />
                   <Text style={styles.nutritionHeaderTitle}>
                     Giá trị dinh dưỡng ({recipe.servings})
                   </Text>
                 </View>
 
-                {/* 4 Macros Grid */}
+                {/* 4 Macros Grid (Text đen nhẹ có gạch chân bên dưới, không khung) */}
                 <View style={styles.macroGridContainer}>
                   {/* Calo */}
-                  <View style={[styles.macroItemBox, { backgroundColor: "#FFF7ED" }]}>
-                    <Text style={[styles.macroValueNumber, { color: "#EA580C" }]}>
+                  <View style={styles.macroItemBox}>
+                    <Text style={styles.macroValueNumber}>
                       {recipe.nutrition.calories}
                     </Text>
                     <Text style={styles.macroNameLabel}>Calories</Text>
                   </View>
 
                   {/* Đạm */}
-                  <View style={[styles.macroItemBox, { backgroundColor: "#FEF2F2" }]}>
-                    <Text style={[styles.macroValueNumber, { color: "#DC2626" }]}>
+                  <View style={styles.macroItemBox}>
+                    <Text style={styles.macroValueNumber}>
                       {recipe.nutrition.protein}
                     </Text>
                     <Text style={styles.macroNameLabel}>Chất đạm (Protein)</Text>
                   </View>
 
                   {/* Tinh bột */}
-                  <View style={[styles.macroItemBox, { backgroundColor: "#F5F3FF" }]}>
-                    <Text style={[styles.macroValueNumber, { color: "#7C3AED" }]}>
+                  <View style={styles.macroItemBox}>
+                    <Text style={styles.macroValueNumber}>
                       {recipe.nutrition.carbs}
                     </Text>
                     <Text style={styles.macroNameLabel}>Carbohydrate</Text>
                   </View>
 
                   {/* Chất béo */}
-                  <View style={[styles.macroItemBox, { backgroundColor: "#ECFDF5" }]}>
-                    <Text style={[styles.macroValueNumber, { color: "#059669" }]}>
+                  <View style={styles.macroItemBox}>
+                    <Text style={styles.macroValueNumber}>
                       {recipe.nutrition.fat}
                     </Text>
                     <Text style={styles.macroNameLabel}>Chất béo (Fat)</Text>
                   </View>
                 </View>
 
-                {/* Nutritionist Advice Box */}
+                {/* Nutritionist Advice Box (Tối giản, bỏ viền khung) */}
                 {recipe.nutrition.advice ? (
                   <View style={styles.nutritionAdviceCard}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                      <Ionicons name="sparkles" size={15} color="#EA580C" />
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 4 }}>
+                      <Ionicons name="sparkles" size={14} color="#EA580C" />
                       <Text style={styles.nutritionAdviceTitle}>Lời khuyên chuyên gia</Text>
                     </View>
                     <Text style={styles.nutritionAdviceDesc}>
@@ -1035,7 +1024,7 @@ export default function RecipeDetailScreen() {
             </Text>
           </View>
 
-          {/* Big Call-to-action button */}
+          {/* Call-to-action button */}
           <TouchableOpacity
             style={styles.startCookingBtn}
             activeOpacity={0.88}
@@ -1052,7 +1041,7 @@ export default function RecipeDetailScreen() {
               end={{ x: 1, y: 0 }}
               style={styles.startCookingGradient}
             >
-              <MaterialCommunityIcons name="pot-steam" size={20} color="#FFFFFF" />
+              <MaterialCommunityIcons name="chef-hat" size={16} color="#FFFFFF" />
               <Text style={styles.startCookingText}>Bắt đầu nấu</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -1290,87 +1279,56 @@ const styles = StyleSheet.create({
     color: "#64748B",
   },
 
-  /* 3. Compact 4-Stat Cards */
+  /* 3. Compact 4-Stat Minimal Underline Row */
   compactStatsGrid: {
     flexDirection: "row",
-    gap: 6,
-    marginBottom: 10,
+    gap: 10,
+    marginTop: 4,
+    marginBottom: 16,
   },
   compactStatCard: {
     flex: 1,
-    borderRadius: 11,
-    borderWidth: 1,
-    paddingVertical: 7,
-    paddingHorizontal: 4,
     alignItems: "center",
     justifyContent: "center",
+    paddingTop: 4,
+    paddingBottom: 8,
+    borderBottomWidth: 1.5,
+    borderBottomColor: "#CBD5E1",
+    backgroundColor: "transparent",
   },
   compactStatTopRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 3,
+    gap: 4,
   },
   compactStatValue: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#0F172A",
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#334155",
+    letterSpacing: -0.2,
   },
   compactStatLabel: {
-    fontSize: 10,
+    fontSize: 11,
     color: "#64748B",
-    fontWeight: "600",
-    marginTop: 1,
+    fontWeight: "500",
+    marginTop: 3,
+    textAlign: "center",
   },
 
-  /* 4. Compact Tags */
-  compactTagsScroll: {
-    marginBottom: 10,
-  },
-  compactTagsContainer: {
-    flexDirection: "row",
-    gap: 6,
-    paddingRight: 6,
-  },
-  compactTagPill: {
-    backgroundColor: "#F8FAFC",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-  },
-  compactTagText: {
-    fontSize: 11.5,
-    fontWeight: "600",
+  /* 5. Minimalist Editorial Description */
+  compactEditorialText: {
+    fontSize: 13,
+    lineHeight: 19,
     color: "#475569",
-  },
-
-  /* 5. Compact Editorial Description */
-  compactEditorialCard: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 6,
-    backgroundColor: "#FFFDF9",
-    borderRadius: 10,
-    paddingVertical: 7,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#FED7AA",
+    marginBottom: 12,
   },
   compactEditorialTitle: {
-    fontSize: 11.5,
-    fontWeight: "800",
-    color: "#C2410C",
-  },
-  compactEditorialText: {
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 13,
+    fontWeight: "600",
     color: "#334155",
   },
 
-  /* 6. Smart Cost & Fridge Card */
+  /* 6. Streamlined Smart Cost & Fridge Bar */
   smartCostCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -1378,56 +1336,55 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 20,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 16,
   },
   smartCostLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-  },
-  smartCostIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "#FFF7ED",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#FFEDD5",
+    gap: 9,
+    flex: 1,
   },
   smartCostSub: {
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: "500",
     color: "#64748B",
+    marginBottom: 1,
   },
   smartCostPrice: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: "800",
     color: "#0F172A",
   },
   smartCostPerPerson: {
     fontSize: 11.5,
-    color: "#EA580C",
-    fontWeight: "600",
+    color: "#64748B",
+    fontWeight: "500",
   },
   fridgeMatchChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ECFDF5",
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: 10,
+    backgroundColor: "#F1F5F9",
+    paddingHorizontal: 8,
+    paddingVertical: 4.5,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#A7F3D0",
+    borderColor: "#E2E8F0",
     gap: 4,
   },
   fridgeMatchChipText: {
     fontSize: 11,
-    fontWeight: "700",
-    color: "#059669",
+    fontWeight: "600",
+    color: "#64748B",
+  },
+  fridgeMatchChipPositive: {
+    backgroundColor: "#F0FDF4",
+    borderColor: "#DCFCE7",
+  },
+  fridgeMatchChipTextPositive: {
+    color: "#16A34A",
   },
 
   /* 7. Segmented Tab Bar */
@@ -1528,6 +1485,53 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#166534",
     flex: 1,
+  },
+  ingredientsSectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 10,
+    marginBottom: 8,
+  },
+  ingredientsSectionTitle: {
+    fontSize: 13.5,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  addAllToCartBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#EA580C",
+    paddingHorizontal: 10,
+    paddingVertical: 5.5,
+    borderRadius: 8,
+    gap: 4,
+    shadowColor: "#EA580C",
+    shadowOffset: { width: 0, height: 1.5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  addAllToCartText: {
+    fontSize: 11.5,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  allReadyBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0FDF4",
+    paddingHorizontal: 8,
+    paddingVertical: 4.5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#DCFCE7",
+    gap: 4,
+  },
+  allReadyBadgeText: {
+    fontSize: 11.5,
+    fontWeight: "600",
+    color: "#16A34A",
   },
   ingredientsCardList: {
     gap: 8,
@@ -1747,63 +1751,63 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
 
-  /* TAB 3: NUTRITION STYLES */
+  /* TAB 3: NUTRITION STYLES (Minimalist, không viền khung, gạch chân) */
   nutritionPanel: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    padding: 16,
+    paddingVertical: 4,
+    paddingHorizontal: 0,
   },
   nutritionHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 14,
+    gap: 7,
+    marginBottom: 12,
   },
   nutritionHeaderTitle: {
-    fontSize: 14.5,
-    fontWeight: "800",
-    color: "#0F172A",
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#334155",
   },
   macroGridContainer: {
     flexDirection: "row",
     gap: 8,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   macroItemBox: {
     flex: 1,
-    borderRadius: 12,
-    paddingVertical: 12,
     alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 4,
+    paddingBottom: 8,
+    borderBottomWidth: 1.5,
+    borderBottomColor: "#CBD5E1",
+    backgroundColor: "transparent",
   },
   macroValueNumber: {
-    fontSize: 15,
-    fontWeight: "800",
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#334155",
+    letterSpacing: -0.2,
   },
   macroNameLabel: {
     fontSize: 10.5,
     color: "#64748B",
-    marginTop: 2,
-    fontWeight: "600",
+    marginTop: 3,
+    fontWeight: "500",
     textAlign: "center",
   },
   nutritionAdviceCard: {
-    backgroundColor: "#FFFDF9",
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#FED7AA",
+    marginTop: 12,
+    paddingTop: 8,
   },
   nutritionAdviceTitle: {
     fontSize: 12.5,
-    fontWeight: "800",
-    color: "#C2410C",
+    fontWeight: "600",
+    color: "#334155",
   },
   nutritionAdviceDesc: {
-    fontSize: 12,
+    fontSize: 12.5,
     lineHeight: 18,
-    color: "#475569",
+    color: "#64748B",
   },
 
   /* 8. FLOATING BOTTOM ACTION BAR */
@@ -1848,25 +1852,26 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   startCookingBtn: {
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: "hidden",
     shadowColor: "#FF5722",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.22,
+    shadowRadius: 4,
+    elevation: 2.5,
   },
   startCookingGradient: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 22,
-    paddingVertical: 13,
-    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 9.5,
+    gap: 6,
   },
   startCookingText: {
     color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "800",
+    fontSize: 13.5,
+    fontWeight: "700",
+    letterSpacing: 0.2,
   },
   cartActionBtn: {
     backgroundColor: "#EA580C",

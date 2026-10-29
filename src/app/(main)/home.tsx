@@ -607,7 +607,7 @@ export default function HomeScreen() {
       {
         id: "dish-1",
         title: "Cơm Gà Teriyaki Áp Chảo",
-        badge: "👨‍👩‍👧 Gia đình • 4 phần",
+        badge: "Gia đình • 4 phần",
         price: "~65.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Đậm đà • Cả nhà thích",
@@ -616,7 +616,7 @@ export default function HomeScreen() {
       {
         id: "dish-2",
         title: "Bò Bít Tết Sốt Tiêu",
-        badge: "⭐ 4.9 • 30 phút",
+        badge: "4.9 • 30 phút",
         price: "~85.000đ",
         image: require("@/assets/images/steak-asparagus.jpg"),
         sub: "Bữa tối giàu protein",
@@ -625,7 +625,7 @@ export default function HomeScreen() {
       {
         id: "dish-vn-1",
         title: "Phở Bò Tái Lăn Hà Nội",
-        badge: "🇻🇳 Chuẩn vị • 35 phút",
+        badge: "Chuẩn vị • 35 phút",
         price: "~60.000đ",
         image: require("@/assets/images/steak-asparagus.jpg"),
         sub: "Nước dùng ngọt thanh",
@@ -634,7 +634,7 @@ export default function HomeScreen() {
       {
         id: "dish-5",
         title: "Mỳ Ý Bò Bằm Sốt Cà",
-        badge: "🍝 Chuẩn Ý • 15 phút",
+        badge: "Chuẩn Ý • 15 phút",
         price: "~45.000đ",
         image: require("@/assets/images/pasta-bolognese.jpg"),
         sub: "Cả nhà cùng mê",
@@ -643,7 +643,7 @@ export default function HomeScreen() {
       {
         id: "dish-3",
         title: "Salad Cá Hồi Áp Chảo",
-        badge: "🔥 20 phút • 420 kcal",
+        badge: "20 phút • 420 kcal",
         price: "~55.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Giảm cân • Eat Clean",
@@ -652,7 +652,7 @@ export default function HomeScreen() {
       {
         id: "dish-4",
         title: "Gà Áp Chảo Bơ Mè",
-        badge: "🥗 Low Carb • 380 kcal",
+        badge: "Low Carb • 380 kcal",
         price: "~40.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Healthy • Tăng cơ",
@@ -661,7 +661,7 @@ export default function HomeScreen() {
       {
         id: "dish-veg-1",
         title: "Nấm Đùi Gà Xào Hạt Điều",
-        badge: "🌱 Thanh lọc • 320 kcal",
+        badge: "Thanh lọc • 320 kcal",
         price: "~40.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Ít béo • Bổ dưỡng",
@@ -670,7 +670,7 @@ export default function HomeScreen() {
       {
         id: "dish-6",
         title: "Salad Rau Trộn Bơ Sáp",
-        badge: "⏱ 10 phút • 280 kcal",
+        badge: "10 phút • 280 kcal",
         price: "~35.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Tươi mát • Giữ dáng",
@@ -679,7 +679,7 @@ export default function HomeScreen() {
       {
         id: "dish-8",
         title: "Cơm Đùi Gà Trứng Ốp",
-        badge: "🍳 12 phút • Nhanh gọn",
+        badge: "12 phút • Nhanh gọn",
         price: "~25.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Tiện lợi • Đủ chất",
@@ -688,7 +688,7 @@ export default function HomeScreen() {
       {
         id: "dish-kids-1",
         title: "Cơm Nắm Cá Ngừ Rong Biển",
-        badge: "⏱ 15 phút • Không khói",
+        badge: "15 phút • Không khói",
         price: "~35.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Ăn liền • Đậm vị",
@@ -697,7 +697,7 @@ export default function HomeScreen() {
       {
         id: "dish-7",
         title: "Gà Giòn Chiên Sốt Cay",
-        badge: "💰 Tiết kiệm • Dưới 30k",
+        badge: "Tiết kiệm • Dưới 30k",
         price: "~28.000đ",
         image: require("@/assets/images/crispy-chicken.jpg"),
         sub: "Bình dân • No bụng",
@@ -706,7 +706,7 @@ export default function HomeScreen() {
       {
         id: "dish-des-1",
         title: "Panna Cotta Sữa Dâu Tây",
-        badge: "🍓 Mềm mịn • Tan chảy",
+        badge: "Mềm mịn • Tan chảy",
         price: "~20.000đ",
         image: require("@/assets/images/crispy-chicken.jpg"),
         sub: "Tráng miệng cho bé",
@@ -715,7 +715,7 @@ export default function HomeScreen() {
       {
         id: "dish-kids-2",
         title: "Mỳ Ý Sốt Kem Phô Mai",
-        badge: "🧀 Béo ngậy • Bé mê",
+        badge: "Béo ngậy • Bé mê",
         price: "~45.000đ",
         image: require("@/assets/images/pasta-bolognese.jpg"),
         sub: "Giàu canxi • Dễ tiêu",
@@ -724,7 +724,7 @@ export default function HomeScreen() {
       {
         id: "dish-1-alt",
         title: "Gà Rim Nước Mắm Gừng",
-        badge: "🍗 Bữa cơm mẹ nấu",
+        badge: "Bữa cơm mẹ nấu",
         price: "~50.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Gừng ấm • Đưa cơm",
@@ -733,7 +733,7 @@ export default function HomeScreen() {
       {
         id: "dish-des-2",
         title: "Chè Khúc Bạch Hạnh Nhân",
-        badge: "🍧 Thanh nhiệt • Dịu ngọt",
+        badge: "Thanh nhiệt • Dịu ngọt",
         price: "~32.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Khúc bạch phô mai",
@@ -742,7 +742,7 @@ export default function HomeScreen() {
       {
         id: "dish-des-3",
         title: "Sữa Chua Hy Lạp Hoa Quả",
-        badge: "🥛 Lợi khuẩn • Tươi mát",
+        badge: "Lợi khuẩn • Tươi mát",
         price: "~30.000đ",
         image: require("@/assets/images/pasta-bolognese.jpg"),
         sub: "Tráng miệng nhẹ nhàng",
@@ -753,7 +753,7 @@ export default function HomeScreen() {
       {
         id: "dish-1",
         title: "Cơm Gà Teriyaki Áp Chảo",
-        badge: "👨‍👩‍👧 Gia đình • 4 phần",
+        badge: "Gia đình • 4 phần",
         price: "~65.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Đậm đà • Cả nhà thích",
@@ -762,7 +762,7 @@ export default function HomeScreen() {
       {
         id: "dish-2",
         title: "Bò Bít Tết Sốt Tiêu",
-        badge: "⭐ 4.9 • 30 phút",
+        badge: "4.9 • 30 phút",
         price: "~85.000đ",
         image: require("@/assets/images/steak-asparagus.jpg"),
         sub: "Bữa tối giàu protein",
@@ -771,7 +771,7 @@ export default function HomeScreen() {
       {
         id: "dish-vn-1",
         title: "Phở Bò Tái Lăn Hà Nội",
-        badge: "🇻🇳 Chuẩn vị • 35 phút",
+        badge: "Chuẩn vị • 35 phút",
         price: "~60.000đ",
         image: require("@/assets/images/steak-asparagus.jpg"),
         sub: "Nước dùng ngọt thanh",
@@ -780,7 +780,7 @@ export default function HomeScreen() {
       {
         id: "dish-5",
         title: "Mỳ Ý Bò Bằm Sốt Cà",
-        badge: "🍝 Chuẩn Ý • 15 phút",
+        badge: "Chuẩn Ý • 15 phút",
         price: "~45.000đ",
         image: require("@/assets/images/pasta-bolognese.jpg"),
         sub: "Cả nhà cùng mê",
@@ -789,7 +789,7 @@ export default function HomeScreen() {
       {
         id: "dish-7",
         title: "Gà Chiên Nước Mắm Giòn",
-        badge: "🔥 Giòn thơm nức mũi",
+        badge: "Giòn thơm nức mũi",
         price: "~35.000đ",
         image: require("@/assets/images/crispy-chicken.jpg"),
         sub: "Đậm vị miền Nam",
@@ -798,7 +798,7 @@ export default function HomeScreen() {
       {
         id: "dish-8",
         title: "Cơm Sườn Trứng Ốp La",
-        badge: "🍛 Cơm tấm • Đậm đà",
+        badge: "Cơm tấm • Đậm đà",
         price: "~35.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Nước mắm tỏi ớt",
@@ -807,7 +807,7 @@ export default function HomeScreen() {
       {
         id: "dish-3",
         title: "Salad Cá Hồi Áp Chảo",
-        badge: "🥑 Bổ dưỡng • Cả nhà",
+        badge: "Bổ dưỡng • Cả nhà",
         price: "~55.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Omega-3 cho gia đình",
@@ -816,7 +816,7 @@ export default function HomeScreen() {
       {
         id: "dish-des-1",
         title: "Panna Cotta Sữa Dâu Tây",
-        badge: "🍓 Tráng miệng gia đình",
+        badge: "Tráng miệng gia đình",
         price: "~20.000đ",
         image: require("@/assets/images/crispy-chicken.jpg"),
         sub: "Tráng miệng cho bé & mẹ",
@@ -827,7 +827,7 @@ export default function HomeScreen() {
       {
         id: "dish-3",
         title: "Salad Cá Hồi Áp Chảo",
-        badge: "🔥 20 phút • 420 kcal",
+        badge: "20 phút • 420 kcal",
         price: "~55.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Giảm cân • Eat Clean",
@@ -836,7 +836,7 @@ export default function HomeScreen() {
       {
         id: "dish-4",
         title: "Gà Áp Chảo Bơ Mè",
-        badge: "🥗 Low Carb • 380 kcal",
+        badge: "Low Carb • 380 kcal",
         price: "~40.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Healthy • Tăng cơ",
@@ -845,7 +845,7 @@ export default function HomeScreen() {
       {
         id: "dish-veg-1",
         title: "Nấm Đùi Gà Xào Hạt Điều",
-        badge: "🌱 Thanh lọc • 320 kcal",
+        badge: "Thanh lọc • 320 kcal",
         price: "~40.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Ít béo • Bổ dưỡng",
@@ -854,7 +854,7 @@ export default function HomeScreen() {
       {
         id: "dish-6",
         title: "Salad Rau Trộn Bơ Sáp",
-        badge: "⏱ 10 phút • 280 kcal",
+        badge: "10 phút • 280 kcal",
         price: "~35.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Tươi mát • Giữ dáng",
@@ -863,7 +863,7 @@ export default function HomeScreen() {
       {
         id: "dish-1",
         title: "Cơm Gà Teriyaki Nấu Gạo Lứt",
-        badge: "🌾 Giàu chất xơ • 450 kcal",
+        badge: "Giàu chất xơ • 450 kcal",
         price: "~65.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Gạo lứt dinh dưỡng",
@@ -872,7 +872,7 @@ export default function HomeScreen() {
       {
         id: "dish-kids-1",
         title: "Cơm Nắm Rong Biển Nhật",
-        badge: "🍙 Tinh bột chậm • 290 kcal",
+        badge: "Tinh bột chậm • 290 kcal",
         price: "~25.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Rong biển giải độc",
@@ -881,7 +881,7 @@ export default function HomeScreen() {
       {
         id: "dish-2",
         title: "Bò Áp Chảo Măng Tây Healthy",
-        badge: "🥩 Đạm nạc • 490 kcal",
+        badge: "Đạm nạc • 490 kcal",
         price: "~85.000đ",
         image: require("@/assets/images/steak-asparagus.jpg"),
         sub: "Măng tây giàu xơ",
@@ -890,7 +890,7 @@ export default function HomeScreen() {
       {
         id: "dish-des-1",
         title: "Sữa Chua Hoa Quả Hạt Chia",
-        badge: "🍓 Lợi khuẩn • 180 kcal",
+        badge: "Lợi khuẩn • 180 kcal",
         price: "~25.000đ",
         image: require("@/assets/images/crispy-chicken.jpg"),
         sub: "Tráng miệng thanh nhẹ",
@@ -901,7 +901,7 @@ export default function HomeScreen() {
       {
         id: "dish-5",
         title: "Mỳ Ý Bò Bằm Sốt Cà",
-        badge: "⚡ 15 phút • Chuẩn Ý",
+        badge: "15 phút • Chuẩn Ý",
         price: "~45.000đ",
         image: require("@/assets/images/pasta-bolognese.jpg"),
         sub: "Tiện lợi • Nóng hổi",
@@ -910,7 +910,7 @@ export default function HomeScreen() {
       {
         id: "dish-8",
         title: "Cơm Đùi Gà Trứng Ốp",
-        badge: "🍳 12 phút • Nhanh gọn",
+        badge: "12 phút • Nhanh gọn",
         price: "~25.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Tiện lợi • Đủ chất",
@@ -919,7 +919,7 @@ export default function HomeScreen() {
       {
         id: "dish-kids-1",
         title: "Cơm Nắm Cá Ngừ Rong Biển",
-        badge: "⏱ 15 phút • Không khói",
+        badge: "15 phút • Không khói",
         price: "~35.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Ăn liền • Đậm vị",
@@ -928,7 +928,7 @@ export default function HomeScreen() {
       {
         id: "dish-3",
         title: "Salad Cá Hồi Trộn Chanh Leo",
-        badge: "⚡ 15 phút • Siêu tốc",
+        badge: "15 phút • Siêu tốc",
         price: "~55.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Tươi mát • Nhanh gọn",
@@ -937,7 +937,7 @@ export default function HomeScreen() {
       {
         id: "dish-7",
         title: "Gà Giòn Lắc Phô Mai Siêu Tốc",
-        badge: "🍗 15 phút • Giòn rụm",
+        badge: "15 phút • Giòn rụm",
         price: "~30.000đ",
         image: require("@/assets/images/crispy-chicken.jpg"),
         sub: "Chiên nồi chiên không dầu",
@@ -946,7 +946,7 @@ export default function HomeScreen() {
       {
         id: "dish-6",
         title: "Salad Trộn Sốt Giấm Táo",
-        badge: "⏱ 8 phút • Không nấu",
+        badge: "8 phút • Không nấu",
         price: "~25.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Trộn ăn ngay",
@@ -955,7 +955,7 @@ export default function HomeScreen() {
       {
         id: "dish-vn-1",
         title: "Phở Bò Nước Dùng Nấu Sẵn",
-        badge: "🍜 10 phút • Nóng hổi",
+        badge: "10 phút • Nóng hổi",
         price: "~60.000đ",
         image: require("@/assets/images/steak-asparagus.jpg"),
         sub: "Nhanh gọn tiện lợi",
@@ -964,7 +964,7 @@ export default function HomeScreen() {
       {
         id: "dish-4",
         title: "Ức Gà Áp Chảo Bơ Tỏi",
-        badge: "⚡ 12 phút • Thơm lừng",
+        badge: "12 phút • Thơm lừng",
         price: "~40.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Chín mềm mọng nước",
@@ -975,7 +975,7 @@ export default function HomeScreen() {
       {
         id: "dish-7",
         title: "Gà Giòn Chiên Sốt Cay",
-        badge: "💰 Tiết kiệm • Dưới 30k",
+        badge: "Tiết kiệm • Dưới 30k",
         price: "~28.000đ",
         image: require("@/assets/images/crispy-chicken.jpg"),
         sub: "Bình dân • No bụng",
@@ -984,7 +984,7 @@ export default function HomeScreen() {
       {
         id: "dish-8",
         title: "Cơm Đùi Gà Trứng Ốp",
-        badge: "🍳 Dễ làm • ~25.000đ",
+        badge: "Dễ làm • ~25.000đ",
         price: "~25.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Sinh viên • Tiết kiệm",
@@ -993,7 +993,7 @@ export default function HomeScreen() {
       {
         id: "dish-kids-1",
         title: "Cơm Nắm Rong Biển Nhật",
-        badge: "💰 Giá rẻ • ~20.000đ",
+        badge: "Giá rẻ • ~20.000đ",
         price: "~20.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Đơn giản • Dễ làm",
@@ -1002,7 +1002,7 @@ export default function HomeScreen() {
       {
         id: "dish-des-1",
         title: "Panna Cotta Dâu Tây",
-        badge: "🍓 Tráng miệng • ~15.000đ",
+        badge: "Tráng miệng • ~15.000đ",
         price: "~15.000đ",
         image: require("@/assets/images/crispy-chicken.jpg"),
         sub: "Ngọt ngào • Mát lạnh",
@@ -1011,7 +1011,7 @@ export default function HomeScreen() {
       {
         id: "dish-5",
         title: "Mỳ Ý Xốt Cà Chua Trứng",
-        badge: "🍝 Tiết kiệm • ~22.000đ",
+        badge: "Tiết kiệm • ~22.000đ",
         price: "~22.000đ",
         image: require("@/assets/images/pasta-bolognese.jpg"),
         sub: "Dễ làm tại nhà",
@@ -1020,7 +1020,7 @@ export default function HomeScreen() {
       {
         id: "dish-1",
         title: "Cơm Đùi Gà Rim Nước Mắm",
-        badge: "🍗 Đậm vị • ~28.000đ",
+        badge: "Đậm vị • ~28.000đ",
         price: "~28.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Bữa trưa giá rẻ",
@@ -1029,7 +1029,7 @@ export default function HomeScreen() {
       {
         id: "dish-veg-1",
         title: "Đậu Hũ Sốt Nấm Hạt Điều",
-        badge: "🌱 Thuần chay • ~24.000đ",
+        badge: "Thuần chay • ~24.000đ",
         price: "~24.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Bổ dưỡng rẻ khỏe",
@@ -1038,7 +1038,7 @@ export default function HomeScreen() {
       {
         id: "dish-4",
         title: "Gà Xào Bắp Cải Tiết Kiệm",
-        badge: "💰 Bình dân • ~26.000đ",
+        badge: "Bình dân • ~26.000đ",
         price: "~26.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Đưa cơm no lâu",
@@ -1049,7 +1049,7 @@ export default function HomeScreen() {
       {
         id: "dish-kids-1",
         title: "Cơm Nắm Cá Ngừ Rong Biển",
-        badge: "👶 Bé thích • Giàu DHA",
+        badge: "Bé thích • Giàu DHA",
         price: "~35.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Ngộ nghĩnh • Dễ ăn",
@@ -1058,7 +1058,7 @@ export default function HomeScreen() {
       {
         id: "dish-kids-2",
         title: "Mỳ Ý Sốt Kem Phô Mai",
-        badge: "🧀 Béo ngậy • Bé mê",
+        badge: "Béo ngậy • Bé mê",
         price: "~45.000đ",
         image: require("@/assets/images/pasta-bolognese.jpg"),
         sub: "Giàu canxi • Dễ tiêu",
@@ -1067,7 +1067,7 @@ export default function HomeScreen() {
       {
         id: "dish-7",
         title: "Gà Viên Mật Ong Giòn Tan",
-        badge: "🍗 Giòn rụm • Không cay",
+        badge: "Giòn rụm • Không cay",
         price: "~30.000đ",
         image: require("@/assets/images/crispy-chicken.jpg"),
         sub: "Mật ong thơm ngọt",
@@ -1076,7 +1076,7 @@ export default function HomeScreen() {
       {
         id: "dish-des-1",
         title: "Panna Cotta Sữa Dâu Tây",
-        badge: "🍓 Mềm mịn • Tan chảy",
+        badge: "Mềm mịn • Tan chảy",
         price: "~20.000đ",
         image: require("@/assets/images/crispy-chicken.jpg"),
         sub: "Tráng miệng cho bé",
@@ -1085,7 +1085,7 @@ export default function HomeScreen() {
       {
         id: "dish-5",
         title: "Mỳ Ý Bò Bằm Sốt Cà Bi",
-        badge: "🍝 Trẻ em • Ngọt tự nhiên",
+        badge: "Trẻ em • Ngọt tự nhiên",
         price: "~40.000đ",
         image: require("@/assets/images/pasta-bolognese.jpg"),
         sub: "Cà chua giàu vitamin A",
@@ -1094,7 +1094,7 @@ export default function HomeScreen() {
       {
         id: "dish-1",
         title: "Cơm Gà Teriyaki Ngọt Dịu",
-        badge: "🍚 Bé ăn ngon miệng",
+        badge: "Bé ăn ngon miệng",
         price: "~45.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Sốt ngọt dễ nuốt",
@@ -1103,7 +1103,7 @@ export default function HomeScreen() {
       {
         id: "dish-8",
         title: "Cơm Trứng Cuộn Omurice",
-        badge: "🍳 Hình gấu ngộ nghĩnh",
+        badge: "Hình gấu ngộ nghĩnh",
         price: "~25.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Trứng mềm béo thơm",
@@ -1112,7 +1112,7 @@ export default function HomeScreen() {
       {
         id: "dish-3",
         title: "Bơ Nghiền Sữa Chua Cho Bé",
-        badge: "🥑 Chất béo tốt cho não",
+        badge: "Chất béo tốt cho não",
         price: "~22.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Ăn dặm & bữa phụ",
@@ -1123,7 +1123,7 @@ export default function HomeScreen() {
       {
         id: "dish-veg-1",
         title: "Nấm Đùi Gà Xào Hạt Điều",
-        badge: "🌱 Thuần chay • Thanh đạm",
+        badge: "Thuần chay • Thanh đạm",
         price: "~40.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Thơm bùi • Bổ dưỡng",
@@ -1132,7 +1132,7 @@ export default function HomeScreen() {
       {
         id: "dish-3",
         title: "Salad Rau Mầm Bơ Quả",
-        badge: "🥑 Tươi xanh • 100% Chay",
+        badge: "Tươi xanh • 100% Chay",
         price: "~35.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Giàu vitamin • Nhẹ bụng",
@@ -1141,7 +1141,7 @@ export default function HomeScreen() {
       {
         id: "dish-kids-1",
         title: "Cơm Nắm Rong Biển Hạt Mè",
-        badge: "🍙 Chay thực dưỡng",
+        badge: "Chay thực dưỡng",
         price: "~22.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Mè rang thơm bùi",
@@ -1150,7 +1150,7 @@ export default function HomeScreen() {
       {
         id: "dish-des-1",
         title: "Chè Thạch Dâu Trái Cây",
-        badge: "🍧 Mát lạnh • Chay thanh",
+        badge: "Mát lạnh • Chay thanh",
         price: "~25.000đ",
         image: require("@/assets/images/crispy-chicken.jpg"),
         sub: "Tráng miệng thanh nhiệt",
@@ -1159,7 +1159,7 @@ export default function HomeScreen() {
       {
         id: "dish-5",
         title: "Mỳ Ý Sốt Cà Chua Nấm Đùi Gà",
-        badge: "🍝 Chay chuẩn vị Ý",
+        badge: "Chay chuẩn vị Ý",
         price: "~38.000đ",
         image: require("@/assets/images/pasta-bolognese.jpg"),
         sub: "Nấm ngọt thanh đạm",
@@ -1168,7 +1168,7 @@ export default function HomeScreen() {
       {
         id: "dish-6",
         title: "Salad Bơ Sáp Dầu Giấm",
-        badge: "🥗 Thuần thực vật",
+        badge: "Thuần thực vật",
         price: "~32.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Dầu olive nguyên chất",
@@ -1177,7 +1177,7 @@ export default function HomeScreen() {
       {
         id: "dish-8",
         title: "Đậu Hũ Chiên Sả Ớt Chay",
-        badge: "🔥 Giòn thơm nức mũi",
+        badge: "Giòn thơm nức mũi",
         price: "~20.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Đậm vị đưa cơm",
@@ -1186,7 +1186,7 @@ export default function HomeScreen() {
       {
         id: "dish-4",
         title: "Nấm Bào Ngư Chiên Giòn",
-        badge: "🌱 Giòn rụm • Chay thanh",
+        badge: "Giòn rụm • Chay thanh",
         price: "~30.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Món ăn vặt thuần chay",
@@ -1197,7 +1197,7 @@ export default function HomeScreen() {
       {
         id: "dish-vn-1",
         title: "Phở Bò Tái Lăn Hà Nội",
-        badge: "🇻🇳 Món Việt • Tinh hoa",
+        badge: "Món Việt • Tinh hoa",
         price: "~60.000đ",
         image: require("@/assets/images/steak-asparagus.jpg"),
         sub: "Nước dùng ngọt thanh",
@@ -1206,7 +1206,7 @@ export default function HomeScreen() {
       {
         id: "dish-8",
         title: "Cơm Sườn Trứng Ốp La",
-        badge: "🍛 Cơm tấm • Đậm đà",
+        badge: "Cơm tấm • Đậm đà",
         price: "~35.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Nước mắm tỏi ớt",
@@ -1215,7 +1215,7 @@ export default function HomeScreen() {
       {
         id: "dish-1",
         title: "Gà Rim Nước Mắm Gừng",
-        badge: "🍗 Bữa cơm mẹ nấu",
+        badge: "Bữa cơm mẹ nấu",
         price: "~50.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Gừng ấm • Đưa cơm",
@@ -1224,7 +1224,7 @@ export default function HomeScreen() {
       {
         id: "dish-7",
         title: "Gà Chiên Nước Mắm Giòn",
-        badge: "🔥 Giòn thơm nức mũi",
+        badge: "Giòn thơm nức mũi",
         price: "~35.000đ",
         image: require("@/assets/images/crispy-chicken.jpg"),
         sub: "Đậm vị miền Nam",
@@ -1233,7 +1233,7 @@ export default function HomeScreen() {
       {
         id: "dish-3",
         title: "Gỏi Cá Hồi Xoài Xanh",
-        badge: "🇻🇳 Biến tấu Việt Nam",
+        badge: "Biến tấu Việt Nam",
         price: "~55.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Chua ngọt cay nồng",
@@ -1242,7 +1242,7 @@ export default function HomeScreen() {
       {
         id: "dish-veg-1",
         title: "Canh Nấm Đùi Gà Nấu Rong",
-        badge: "🍲 Canh thanh mát",
+        badge: "Canh thanh mát",
         price: "~35.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Bữa cơm gia đình",
@@ -1251,7 +1251,7 @@ export default function HomeScreen() {
       {
         id: "dish-5",
         title: "Mỳ Xào Bò Rau Cải",
-        badge: "🍜 Quen thuộc • Đậm đà",
+        badge: "Quen thuộc • Đậm đà",
         price: "~40.000đ",
         image: require("@/assets/images/pasta-bolognese.jpg"),
         sub: "Bò mềm cải giòn",
@@ -1260,7 +1260,7 @@ export default function HomeScreen() {
       {
         id: "dish-des-1",
         title: "Chè Khúc Bạch Đường Phèn",
-        badge: "🍧 Thanh nhiệt giải nhiệt",
+        badge: "Thanh nhiệt giải nhiệt",
         price: "~25.000đ",
         image: require("@/assets/images/crispy-chicken.jpg"),
         sub: "Hạnh nhân giòn bùi",
@@ -1271,7 +1271,7 @@ export default function HomeScreen() {
       {
         id: "dish-des-1",
         title: "Panna Cotta Sốt Dâu Tây",
-        badge: "🍓 Mát lạnh • Núng nính",
+        badge: "Mát lạnh • Núng nính",
         price: "~30.000đ",
         image: require("@/assets/images/crispy-chicken.jpg"),
         sub: "Mềm mịn • Tan trong miệng",
@@ -1280,7 +1280,7 @@ export default function HomeScreen() {
       {
         id: "dish-3",
         title: "Sinh Tố Bơ Chuối Hạt Chia",
-        badge: "🥑 Bổ dưỡng • Healthy",
+        badge: "Bổ dưỡng • Healthy",
         price: "~28.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Bữa phụ nạp năng lượng",
@@ -1289,7 +1289,7 @@ export default function HomeScreen() {
       {
         id: "dish-kids-1",
         title: "Chè Khúc Bạch Hạnh Nhân",
-        badge: "🍧 Thanh nhiệt • Dịu ngọt",
+        badge: "Thanh nhiệt • Dịu ngọt",
         price: "~32.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Khúc bạch phô mai",
@@ -1298,7 +1298,7 @@ export default function HomeScreen() {
       {
         id: "dish-5",
         title: "Sữa Chua Hy Lạp Hoa Quả",
-        badge: "🥛 Lợi khuẩn • Tươi mát",
+        badge: "Lợi khuẩn • Tươi mát",
         price: "~30.000đ",
         image: require("@/assets/images/pasta-bolognese.jpg"),
         sub: "Tráng miệng nhẹ nhàng",
@@ -1307,7 +1307,7 @@ export default function HomeScreen() {
       {
         id: "dish-7",
         title: "Chuối Chiên Mật Ong Giòn",
-        badge: "🍌 Nóng giòn thơm lừng",
+        badge: "Nóng giòn thơm lừng",
         price: "~18.000đ",
         image: require("@/assets/images/crispy-chicken.jpg"),
         sub: "Mật ong hoa rừng",
@@ -1316,7 +1316,7 @@ export default function HomeScreen() {
       {
         id: "dish-6",
         title: "Pudding Xoài Cốt Dừa",
-        badge: "🥭 Chua ngọt béo ngậy",
+        badge: "Chua ngọt béo ngậy",
         price: "~26.000đ",
         image: require("@/assets/images/salad-salmon.jpg"),
         sub: "Cốt dừa béo thơm",
@@ -1325,7 +1325,7 @@ export default function HomeScreen() {
       {
         id: "dish-4",
         title: "Kem Trái Cây Sữa Tươi",
-        badge: "🍦 Mát lạnh ngày hè",
+        badge: "Mát lạnh ngày hè",
         price: "~20.000đ",
         image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
         sub: "Tươi ngon thanh mát",
@@ -1334,7 +1334,7 @@ export default function HomeScreen() {
       {
         id: "dish-2",
         title: "Bánh Crepe Sốt Socola Dâu",
-        badge: "🥞 Chuẩn vị Pháp",
+        badge: "Chuẩn vị Pháp",
         price: "~35.000đ",
         image: require("@/assets/images/steak-asparagus.jpg"),
         sub: "Vỏ bánh mềm mỏng",
