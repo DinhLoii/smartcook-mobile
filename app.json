@@ -15,6 +15,7 @@
       }
     },
     "android": {
+      "package": "com.smartcook.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -48,11 +49,24 @@
           "photosPermission": "SmartCook cần truy cập ảnh bạn chọn để nhận diện món ăn và nguyên liệu.",
           "cameraPermission": "SmartCook cần camera để chụp món ăn và nhận diện nguyên liệu."
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Cho phép SmartCook sử dụng máy ảnh để quét và nhận diện nguyên liệu thực phẩm."
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "819f5c77-d445-41cd-abef-7777f2a7b740"
+      }
+    },
+    "owner": "quynv64"
   }
 }

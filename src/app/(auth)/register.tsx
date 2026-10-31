@@ -45,8 +45,10 @@ export default function RegisterScreen() {
     terms?: string;
   }>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const handleRegister = async () => {
+    setServerError(null);
     const newErrors: typeof errors = {};
 
     if (!firstName.trim()) {
@@ -100,10 +102,43 @@ export default function RegisterScreen() {
 
       setShowSuccessModal(true);
     } catch (err: any) {
-      const serverMessage =
-        err.response?.data?.message ||
-        "Đăng ký thất bại. Email có thể đã được sử dụng.";
-      Alert.alert("Lỗi đăng ký", serverMessage);
+      const rawMessage = err.response?.data?.message;
+      const isNetworkError =
+        err.message === "Network Error" ||
+        !err.response ||
+        err.code === "ECONNABORTED" ||
+        err.message?.includes("Network");
+
+      if (isNetworkError) {
+        setServerError(
+          "Không thể kết nối đến máy chủ Backend. Vui lòng kiểm tra lại kết nối mạng."
+        );
+        setErrors({});
+      } else if (err.response?.status >= 500) {
+        setServerError(
+          rawMessage || "Lỗi hệ thống máy chủ. Vui lòng thử lại sau."
+        );
+        setErrors({});
+      } else {
+        // Lỗi nhập liệu từ server: CHỈ hiển thị dưới ô input tương ứng
+        setServerError(null);
+        const lower = (rawMessage || "").toLowerCase();
+        if (
+          lower.includes("email") ||
+          lower.includes("already exists") ||
+          lower.includes("đã tồn tại") ||
+          lower.includes("được sử dụng") ||
+          lower.includes("user already")
+        ) {
+          setErrors({ email: "Email này đã được sử dụng. Vui lòng chọn email khác." });
+        } else if (lower.includes("password") || lower.includes("mật khẩu")) {
+          setErrors({ password: rawMessage || "Mật khẩu không hợp lệ." });
+        } else if (lower.includes("name") || lower.includes("tên")) {
+          setErrors({ firstName: rawMessage || "Họ và tên không hợp lệ." });
+        } else {
+          setErrors({ email: rawMessage || "Thông tin đăng ký không hợp lệ." });
+        }
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -127,6 +162,19 @@ export default function RegisterScreen() {
 
           {/* Form Card Content */}
           <View style={styles.formContainer}>
+            {/* Server Error Banner on Top (only for general/network/server errors) */}
+            {serverError ? (
+              <View style={styles.serverErrorBanner}>
+                <Ionicons
+                  name="alert-circle"
+                  size={18}
+                  color="#DC2626"
+                  style={{ marginRight: 8 }}
+                />
+                <Text style={styles.serverErrorBannerText}>{serverError}</Text>
+              </View>
+            ) : null}
+
             <View style={styles.nameRow}>
               <View style={styles.halfWidth}>
                 <AuthInput
@@ -136,6 +184,7 @@ export default function RegisterScreen() {
                   value={firstName}
                   onChangeText={(text) => {
                     setFirstName(text);
+                    if (serverError) setServerError(null);
                     if (errors.firstName) setErrors((prev) => ({ ...prev, firstName: undefined }));
                   }}
                   error={errors.firstName}
@@ -149,6 +198,7 @@ export default function RegisterScreen() {
                   value={lastName}
                   onChangeText={(text) => {
                     setLastName(text);
+                    if (serverError) setServerError(null);
                     if (errors.lastName) setErrors((prev) => ({ ...prev, lastName: undefined }));
                   }}
                   error={errors.lastName}
@@ -163,6 +213,7 @@ export default function RegisterScreen() {
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
+                if (serverError) setServerError(null);
                 if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
               }}
               keyboardType="email-address"
@@ -177,6 +228,7 @@ export default function RegisterScreen() {
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
+                if (serverError) setServerError(null);
                 if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
               }}
               isPassword
@@ -190,6 +242,7 @@ export default function RegisterScreen() {
               value={repeatPassword}
               onChangeText={(text) => {
                 setRepeatPassword(text);
+                if (serverError) setServerError(null);
                 if (errors.repeatPassword)
                   setErrors((prev) => ({ ...prev, repeatPassword: undefined }));
               }}
@@ -282,6 +335,24 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     backgroundColor: '#FFFFFF',
   },
+  serverErrorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1.5,
+    borderColor: '#FCA5A5',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 12,
+  },
+  serverErrorBannerText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#DC2626',
+    lineHeight: 18,
+  },
   nameRow: {
     flexDirection: 'row',
     gap: 10,
@@ -292,6 +363,7 @@ const styles = StyleSheet.create({
   createButtonWrapper: {
     marginTop: 6,
     marginBottom: 10,
+    borderRadius: 22,
     shadowColor: BrandColors.primary,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.35,

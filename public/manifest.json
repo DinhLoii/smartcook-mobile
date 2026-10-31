@@ -1,0 +1,23 @@
+{
+  "name": "SmartCook",
+  "short_name": "SmartCook",
+  "description": "Ứng dụng nấu ăn thông minh",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#208AEF",
+  "theme_color": "#ff6b35",
+  "icons": [
+    {
+      "src": "/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

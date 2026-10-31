@@ -1,4 +1,3 @@
-import ChatRoomModal from "@/components/community/ChatRoomModal";
 import CommentsModal from "@/components/community/CommentsModal";
 import CreatePostModal from "@/components/community/CreatePostModal";
 import DirectChatModal from "@/components/community/DirectChatModal";
@@ -9,7 +8,6 @@ import { CommunityService, CURRENT_USER } from "@/services/communityService";
 import { socketService } from "@/services/socketService";
 import {
   ChatMessage,
-  ChatRoom,
   CommunityAuthor,
   CommunityPost,
   DirectConversation,
@@ -19,7 +17,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Image,
-  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -27,7 +24,6 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  StatusBar,
 } from "react-native";
 
 const COMMUNITY_TAGS = [
@@ -53,9 +49,6 @@ export default function CommunityView({
   const [conversations, setConversations] = useState<DirectConversation[]>(() =>
     CommunityService.getConversations(),
   );
-  const [chatRooms, setChatRooms] = useState<ChatRoom[]>(() =>
-    CommunityService.getChatRooms(),
-  );
   const [refreshing, setRefreshing] = useState(false);
 
   // Filters & Search
@@ -75,10 +68,6 @@ export default function CommunityView({
   const [activeConvId, setActiveConvId] = useState<string>("");
   const [directMessages, setDirectMessages] = useState<ChatMessage[]>([]);
 
-  // Community Chat Room
-  const [activeChatRoom, setActiveChatRoom] = useState<ChatRoom | null>(null);
-  const [roomMessages, setRoomMessages] = useState<ChatMessage[]>([]);
-
   // Calculate total unread messages
   const totalUnread = useMemo(() => {
     return conversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
@@ -89,9 +78,6 @@ export default function CommunityView({
     socketService.connect();
     CommunityService.fetchPosts({ tag: selectedTag, search: searchQuery });
     CommunityService.fetchConversations();
-    CommunityService.fetchChatRooms().then((rooms) => {
-      if (rooms && rooms.length > 0) setChatRooms(rooms);
-    });
   }, []);
 
   // Subscribe to service updates
@@ -99,7 +85,6 @@ export default function CommunityView({
     const unsub = CommunityService.subscribe(() => {
       setPosts(CommunityService.getPosts());
       setConversations(CommunityService.getConversations());
-      setChatRooms(CommunityService.getChatRooms());
       if (directChatTarget) {
         setDirectMessages(
           CommunityService.getDirectMessages(activeConvId || directChatTarget.id),
@@ -112,27 +97,6 @@ export default function CommunityView({
   // Realtime Socket listener for incoming messages
   useEffect(() => {
     const unsubSocket = socketService.onNewMessage((msg) => {
-      // If message belongs to active chat room
-      if (activeChatRoom && msg.conversationId === activeChatRoom.id) {
-        setRoomMessages((prev) => {
-          if (prev.some((m) => m.id === msg.id)) return prev;
-          return [
-            ...prev,
-            {
-              id: msg.id,
-              sender: msg.sender as any,
-              text: msg.text,
-              imageUri: msg.imageUri,
-              timestamp: msg.timestamp,
-              isMe:
-                msg.isMe !== undefined
-                  ? Boolean(msg.isMe)
-                  : msg.sender?.id === CURRENT_USER.id,
-            },
-          ];
-        });
-      }
-
       // If message belongs to active direct chat
       if (
         directChatTarget &&
@@ -164,7 +128,7 @@ export default function CommunityView({
     });
 
     return unsubSocket;
-  }, [activeChatRoom, directChatTarget, activeConvId]);
+  }, [directChatTarget, activeConvId]);
 
   // On refresh with full backend synchronization
   const onRefresh = async () => {
@@ -173,11 +137,9 @@ export default function CommunityView({
       await Promise.all([
         CommunityService.fetchPosts({ tag: selectedTag, search: searchQuery }),
         CommunityService.fetchConversations(),
-        CommunityService.fetchChatRooms(),
       ]);
       setPosts(CommunityService.getPosts());
       setConversations(CommunityService.getConversations());
-      setChatRooms(CommunityService.getChatRooms());
     } catch (e) {
       console.warn("Lỗi refresh community:", e);
     } finally {
@@ -283,75 +245,22 @@ export default function CommunityView({
     });
   };
 
-  // Open community chat room
-  const handleOpenChatRoom = async (room: ChatRoom) => {
-    setActiveChatRoom(room);
-    socketService.joinRoom(room.id);
-    const history = await CommunityService.fetchMessageHistory(room.id);
-    setRoomMessages(history);
-  };
-
-  const handleSendRoomMessage = (text: string, imageUri?: string) => {
-    if (!activeChatRoom) return;
-    const cleanText = text.trim();
-    if (!cleanText && !imageUri) return;
-
-    socketService.sendMessage(activeChatRoom.id, cleanText, imageUri, (res) => {
-      if (res?.success && res.data) {
-        const msgId =
-          res.data.id ||
-          res.data._id ||
-          `m-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-        setRoomMessages((prev) => {
-          if (prev.some((m) => m.id === msgId)) return prev;
-          return [
-            ...prev,
-            {
-              id: msgId,
-              sender: CURRENT_USER,
-              text: cleanText,
-              imageUri,
-              timestamp: new Date().toLocaleTimeString("vi-VN", {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
-              isMe: true,
-            },
-          ];
-        });
-      }
-    });
-  };
-
   return (
     <View style={styles.container}>
-      {/* 1. Header with Title, Search Icon, Messenger Icon & Avatar */}
-      <View
-        style={[
-          styles.header,
-          {
-            paddingTop:
-              Math.max(
-                insetsTop,
-                Platform.OS === "android" ? (StatusBar.currentHeight || 28) : 20,
-              ) + 8,
-          },
-        ]}
-      >
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: insetsTop + 8 }]}>
         <View style={styles.headerTop}>
-          <View>
-            <View style={styles.subtitleRow}>
+          <View style={styles.communityLeft}>
+            <View style={styles.communityIconBadge}>
               <MaterialCommunityIcons
                 name="account-group"
-                size={14}
+                size={22}
                 color={BrandColors.primary}
               />
-              <Text style={styles.headerSubtitle}>CỘNG ĐỒNG BẾP SMARTCOOK</Text>
             </View>
-            <Text style={styles.headerTitle}>Giao Lưu &amp; Học Hỏi</Text>
+            <Text style={styles.communityLabel}>Cộng đồng</Text>
           </View>
 
-          {/* Right Action Buttons: Search Icon + Messenger Icon + User Avatar */}
           <View style={styles.headerActionsRight}>
             {/* Search Icon Button */}
             <TouchableOpacity
@@ -385,16 +294,6 @@ export default function CommunityView({
                   <Text style={styles.messengerBadgeText}>{totalUnread}</Text>
                 </View>
               )}
-            </TouchableOpacity>
-
-            {/* User Avatar */}
-            <TouchableOpacity
-              style={styles.myAvatarBtn}
-              activeOpacity={0.8}
-              onPress={() => setShowCreateModal(true)}
-            >
-              <Image source={CURRENT_USER.avatar} style={styles.myAvatar} />
-              <View style={styles.onlineDot} />
             </TouchableOpacity>
           </View>
         </View>
@@ -432,7 +331,7 @@ export default function CommunityView({
         )}
       </View>
 
-      {/* 2. Community Feed Content */}
+      {/* Community Feed Content */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -495,68 +394,6 @@ export default function CommunityView({
               <Text style={styles.publishPostBtnText}>Đăng bài</Text>
             </TouchableOpacity>
           </View>
-        </View>
-
-        {/* Realtime Community Chat Rooms Carousel */}
-        <View style={styles.roomsSection}>
-          <View style={styles.roomsHeaderRow}>
-            <View style={styles.liveIndicatorRow}>
-              <View style={styles.livePulseDot} />
-              <Text style={styles.roomsHeaderTitle}>PHÒNG CHAT ẨM THỰC REALTIME</Text>
-            </View>
-            <Text style={styles.roomsCount}>{chatRooms.length} phòng</Text>
-          </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.roomsScrollContent}
-          >
-            {chatRooms.map((room) => (
-              <TouchableOpacity
-                key={room.id}
-                style={styles.roomCard}
-                activeOpacity={0.85}
-                onPress={() => handleOpenChatRoom(room)}
-              >
-                <View style={styles.roomTopRow}>
-                  <View style={styles.roomIconBadge}>
-                    {room.iconName === "chef-hat" ? (
-                      <MaterialCommunityIcons
-                        name="chef-hat"
-                        size={18}
-                        color={BrandColors.primary}
-                      />
-                    ) : (
-                      <Ionicons
-                        name={(room.iconName || "chatbubbles") as any}
-                        size={18}
-                        color={BrandColors.primary}
-                      />
-                    )}
-                  </View>
-                  <View style={styles.onlineBadge}>
-                    <Ionicons name="people" size={10} color="#059669" />
-                    <Text style={styles.onlineBadgeText}>{room.activeMembers}</Text>
-                  </View>
-                </View>
-
-                <Text style={styles.roomTitle} numberOfLines={1}>
-                  {room.title}
-                </Text>
-                <Text style={styles.roomDesc} numberOfLines={1}>
-                  {room.description}
-                </Text>
-
-                <View style={styles.roomBottomRow}>
-                  <Text style={styles.roomLastMsg} numberOfLines={1}>
-                    💬 {room.lastMessage}
-                  </Text>
-                  <Text style={styles.joinText}>Vào chat →</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
         </View>
 
         {/* Tag Filter Pills */}
@@ -669,19 +506,6 @@ export default function CommunityView({
         onSendMessage={handleSendDirectMessage}
       />
 
-      {/* Community Realtime Chat Room Window */}
-      <ChatRoomModal
-        visible={!!activeChatRoom}
-        room={activeChatRoom}
-        messages={roomMessages}
-        onClose={() => {
-          if (activeChatRoom) {
-            socketService.leaveRoom(activeChatRoom.id);
-          }
-          setActiveChatRoom(null);
-        }}
-        onSendMessage={handleSendRoomMessage}
-      />
     </View>
   );
 }
@@ -692,35 +516,36 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
   },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 10,
     marginBottom: 8,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
-    paddingBottom: 10,
   },
   headerTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  subtitleRow: {
+  communityLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    marginBottom: 2,
+    gap: 8,
   },
-  headerSubtitle: {
-    fontSize: 10.5,
-    fontWeight: "800",
-    color: BrandColors.primary,
-    letterSpacing: 0.8,
+  communityIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#FFF3E0",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  headerTitle: {
-    fontSize: 22,
+  communityLabel: {
+    fontSize: 18,
     fontWeight: "800",
     color: "#0F172A",
-    letterSpacing: -0.3,
+    letterSpacing: -0.2,
   },
   headerActionsRight: {
     flexDirection: "row",
@@ -761,27 +586,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#FFFFFF",
   },
-  myAvatarBtn: {
-    position: "relative",
-  },
-  myAvatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    borderWidth: 2,
-    borderColor: BrandColors.primary,
-  },
-  onlineDot: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#10B981",
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
-  },
   headerSearchBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -790,6 +594,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
     marginTop: 10,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    color: "#0F172A",
+    paddingVertical: 4,
+    fontWeight: "500",
+  },
+  clearBtn: {
+    padding: 4,
+    marginLeft: 4,
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -883,131 +701,8 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
 
-  /* Realtime Community Rooms Section */
-  roomsSection: {
-    marginBottom: 14,
-  },
-  roomsHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8,
-    paddingHorizontal: 2,
-  },
-  liveIndicatorRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  livePulseDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: "#10B981",
-  },
-  roomsHeaderTitle: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: "#475569",
-    letterSpacing: 0.5,
-  },
-  roomsCount: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#94A3B8",
-  },
-  roomsScrollContent: {
-    gap: 10,
-    paddingVertical: 2,
-  },
-  roomCard: {
-    width: 220,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  roomTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  roomIconBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#FFF3E0",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  onlineBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    backgroundColor: "#ECFDF5",
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 10,
-  },
-  onlineBadgeText: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#059669",
-  },
-  roomTitle: {
-    fontSize: 13.5,
-    fontWeight: "700",
-    color: "#0F172A",
-    marginBottom: 2,
-  },
-  roomDesc: {
-    fontSize: 11,
-    color: "#64748B",
-    marginBottom: 8,
-  },
-  roomBottomRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
-    paddingTop: 6,
-  },
-  roomLastMsg: {
-    fontSize: 10,
-    color: "#94A3B8",
-    flex: 1,
-    marginRight: 6,
-  },
-  joinText: {
-    fontSize: 10.5,
-    fontWeight: "700",
-    color: BrandColors.primary,
-  },
-
   filterSection: {
     marginBottom: 12,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 13,
-    color: "#0F172A",
-    paddingVertical: Platform.OS === "android" ? 4 : 0,
-    fontWeight: "500",
-  },
-  clearBtn: {
-    padding: 4,
-    marginLeft: 4,
   },
   tagChipsScroll: {
     gap: 6,

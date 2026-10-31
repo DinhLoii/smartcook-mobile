@@ -23,7 +23,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const AI_CHEF_AVATAR = require("@/assets/images/ai-chef-avatar.png");
+const AI_CHEF_AVATAR = require("@/assets/images/ai-chef-avatar.jpg");
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 

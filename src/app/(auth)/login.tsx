@@ -132,14 +132,36 @@ export default function LoginScreen() {
       }
     } catch (err: any) {
       const rawMessage = err.response?.data?.message;
-      const friendlyMessage =
-        rawMessage === "Invalid email or password"
-          ? "Email hoặc mật khẩu không chính xác"
-          : (rawMessage || "Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.");
-      
-      // Hiển thị lỗi màu đỏ rõ ràng ngay dưới ô mật khẩu và banner thông báo
-      setServerError(friendlyMessage);
-      setErrors((prev) => ({ ...prev, password: friendlyMessage }));
+      const isNetworkError =
+        err.message === "Network Error" ||
+        !err.response ||
+        err.code === "ECONNABORTED" ||
+        err.message?.includes("Network");
+
+      if (isNetworkError) {
+        setServerError(
+          "Không thể kết nối đến máy chủ Backend. Vui lòng kiểm tra lại kết nối mạng."
+        );
+        setErrors({});
+      } else if (err.response?.status >= 500) {
+        setServerError(
+          rawMessage || "Lỗi hệ thống máy chủ. Vui lòng thử lại sau."
+        );
+        setErrors({});
+      } else {
+        // Lỗi liên quan đến tài khoản / mật khẩu: CHỈ hiển thị dưới ô input
+        const friendlyMessage =
+          rawMessage === "Invalid email or password" ||
+          rawMessage === "User not found" ||
+          rawMessage?.toLowerCase().includes("password") ||
+          rawMessage?.toLowerCase().includes("email") ||
+          err.response?.status === 401
+            ? "Email hoặc mật khẩu không chính xác"
+            : (rawMessage || "Thông tin đăng nhập không hợp lệ.");
+
+        setServerError(null);
+        setErrors({ password: friendlyMessage });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -388,6 +410,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   loginButtonWrapper: {
+    borderRadius: 20,
     shadowColor: BrandColors.primary,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.35,

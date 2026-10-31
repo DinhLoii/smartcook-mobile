@@ -1286,12 +1286,15 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
         {perfectMatches.length > 0 && (
           <View style={styles.matchTierBlock}>
             <View style={styles.tierHeader}>
-              <View style={styles.tierBadgeGreen}>
-                <Ionicons name="checkmark-done" size={13} color="#059669" />
-                <Text style={styles.tierBadgeGreenText}>
-                  100% NGUYÊN LIỆU CÓ SẴN • NẤU ĐƯỢC NGAY
+              <View style={styles.tierHeaderRow}>
+                <View style={styles.tierDotGreen} />
+                <Text style={styles.tierSectionTitle}>
+                  Nấu được ngay ({perfectMatches.length})
                 </Text>
               </View>
+              <Text style={styles.tierSectionSub}>
+                Đủ 100% nguyên liệu có sẵn
+              </Text>
             </View>
 
             <View style={styles.recipesVerticalList}>
@@ -1319,7 +1322,7 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                     <View style={styles.recipeCardRight}>
                       <View style={styles.recipeMatchBadgeGreen}>
                         <Text style={styles.recipeMatchTextGreen}>
-                          Khớp 100% nguyên liệu
+                          Đủ 100% nguyên liệu
                         </Text>
                       </View>
 
@@ -1327,33 +1330,29 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                         {recipe.title}
                       </Text>
 
-                      <Text style={styles.recipeFullMeta}>
-                        ⏱ {recipe.minutes} phút • 🔥 {recipe.calories} kcal
-                      </Text>
+                      <View style={styles.recipeMetaRow}>
+                        <Ionicons name="time-outline" size={12} color="#94A3B8" />
+                        <Text style={styles.recipeFullMeta}>{recipe.minutes} phút</Text>
+                        <Text style={styles.metaDivider}>•</Text>
+                        <Ionicons name="flame-outline" size={12} color="#94A3B8" />
+                        <Text style={styles.recipeFullMeta}>{recipe.calories} kcal</Text>
+                      </View>
 
                       <Text style={styles.matchedPreviewText} numberOfLines={1}>
-                        ✅ Đã có: {matchedIngredients.slice(0, 3).join(", ")}...
+                        Đã có: {matchedIngredients.slice(0, 3).join(", ")}
                       </Text>
 
-                      <TouchableOpacity
-                        style={styles.cookActionBtn}
-                        activeOpacity={0.85}
-                        onPress={() =>
-                          router.push({
-                            pathname: "/recipe-detail",
-                            params: { id: recipe.id },
-                          })
-                        }
-                      >
+                      <View style={styles.viewDetailsBtn}>
                         <LinearGradient
                           colors={["#FF5722", "#FF7043"]}
-                          style={styles.cookActionGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.viewDetailsGradient}
                         >
-                          <Text style={styles.cookActionText}>
-                            Xem chi tiết →
-                          </Text>
+                          <Text style={styles.viewDetailsText}>Xem chi tiết</Text>
+                          <Ionicons name="arrow-forward" size={12} color="#FFFFFF" />
                         </LinearGradient>
-                      </TouchableOpacity>
+                      </View>
                     </View>
                   </TouchableOpacity>
                 ),
@@ -1366,16 +1365,15 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
         {partialMatches.length > 0 && (
           <View style={[styles.matchTierBlock, { marginTop: 18 }]}>
             <View style={styles.tierHeader}>
-              <View style={styles.tierBadgeOrange}>
-                <Ionicons
-                  name="alert-circle-outline"
-                  size={13}
-                  color="#D97706"
-                />
-                <Text style={styles.tierBadgeOrangeText}>
-                  CHỈ THIẾU 1 NGUYÊN LIỆU • CÓ THỂ BIẾN TẤU
+              <View style={styles.tierHeaderRow}>
+                <View style={styles.tierDotAmber} />
+                <Text style={styles.tierSectionTitle}>
+                  Có thể biến tấu ({partialMatches.length})
                 </Text>
               </View>
+              <Text style={styles.tierSectionSub}>
+                Chỉ thiếu 1 nguyên liệu
+              </Text>
             </View>
 
             <View style={styles.recipesVerticalList}>
@@ -1408,7 +1406,7 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                     <View style={styles.recipeCardRight}>
                       <View style={styles.recipeMatchBadgeOrange}>
                         <Text style={styles.recipeMatchTextOrange}>
-                          Độ khớp {matchPercent}%
+                          Khớp {matchPercent}%
                         </Text>
                       </View>
 
@@ -1416,32 +1414,34 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                         {recipe.title}
                       </Text>
 
-                      <Text style={styles.recipeFullMeta}>
-                        ⏱ {recipe.minutes} phút • 🔥 {recipe.calories} kcal
-                      </Text>
+                      <View style={styles.recipeMetaRow}>
+                        <Ionicons name="time-outline" size={12} color="#94A3B8" />
+                        <Text style={styles.recipeFullMeta}>{recipe.minutes} phút</Text>
+                        <Text style={styles.metaDivider}>•</Text>
+                        <Ionicons name="flame-outline" size={12} color="#94A3B8" />
+                        <Text style={styles.recipeFullMeta}>{recipe.calories} kcal</Text>
+                      </View>
 
                       {missingIngredients.length > 0 && (
                         <Text
                           style={styles.missingWarningText}
                           numberOfLines={1}
                         >
-                          ⚠️ Cần thêm: {missingIngredients[0]}
+                          Cần thêm: {missingIngredients[0]}
                         </Text>
                       )}
 
-                      <TouchableOpacity
-                        style={styles.viewRecipeMiniBtn}
-                        onPress={() =>
-                          router.push({
-                            pathname: "/recipe-detail",
-                            params: { id: recipe.id },
-                          })
-                        }
-                      >
-                        <Text style={styles.viewRecipeMiniText}>
-                          Xem chi tiết →
-                        </Text>
-                      </TouchableOpacity>
+                      <View style={styles.viewDetailsBtn}>
+                        <LinearGradient
+                          colors={["#FF5722", "#FF7043"]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.viewDetailsGradient}
+                        >
+                          <Text style={styles.viewDetailsText}>Xem chi tiết</Text>
+                          <Ionicons name="arrow-forward" size={12} color="#FFFFFF" />
+                        </LinearGradient>
+                      </View>
                     </View>
                   </TouchableOpacity>
                 ),
@@ -1449,16 +1449,20 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
             </View>
           </View>
         )}
+
         {/* TIER 3: GỢI Ý MÓN CẦN MUA THÊM (NẾU CHƯA CÓ MÓN 100% HOẶC 50%) */}
         {perfectMatches.length === 0 && partialMatches.length === 0 && otherMatches.length > 0 && (
           <View style={[styles.matchTierBlock, { marginTop: 18 }]}>
             <View style={styles.tierHeader}>
-              <View style={[styles.tierBadgeOrange, { backgroundColor: "#FEF3C7", borderColor: "#FCD34D" }]}>
-                <Ionicons name="basket-outline" size={13} color="#D97706" />
-                <Text style={styles.tierBadgeOrangeText}>
-                  CẦN MUA THÊM NGUYÊN LIỆU • GỢI Ý THAM KHẢO
+              <View style={styles.tierHeaderRow}>
+                <View style={styles.tierDotSlate} />
+                <Text style={styles.tierSectionTitle}>
+                  Cần mua thêm ({otherMatches.length})
                 </Text>
               </View>
+              <Text style={styles.tierSectionSub}>
+                Gợi ý món ăn tham khảo
+              </Text>
             </View>
 
             <View style={styles.recipesVerticalList}>
@@ -1480,9 +1484,9 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                       style={styles.recipeCardImg}
                     />
                     <View style={styles.recipeCardRight}>
-                      <View style={[styles.recipeMatchBadgeOrange, { backgroundColor: "#FEF3C7" }]}>
-                        <Text style={[styles.recipeMatchTextOrange, { color: "#D97706" }]}>
-                          Độ khớp {matchPercent}%
+                      <View style={styles.recipeMatchBadgeOrange}>
+                        <Text style={styles.recipeMatchTextOrange}>
+                          Khớp {matchPercent}%
                         </Text>
                       </View>
 
@@ -1490,29 +1494,31 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                         {recipe.title}
                       </Text>
 
-                      <Text style={styles.recipeFullMeta}>
-                        ⏱ {recipe.minutes} phút • 🔥 {recipe.calories} kcal
-                      </Text>
+                      <View style={styles.recipeMetaRow}>
+                        <Ionicons name="time-outline" size={12} color="#94A3B8" />
+                        <Text style={styles.recipeFullMeta}>{recipe.minutes} phút</Text>
+                        <Text style={styles.metaDivider}>•</Text>
+                        <Ionicons name="flame-outline" size={12} color="#94A3B8" />
+                        <Text style={styles.recipeFullMeta}>{recipe.calories} kcal</Text>
+                      </View>
 
                       {missingIngredients.length > 0 && (
                         <Text style={styles.missingWarningText} numberOfLines={1}>
-                          ⚠️ Cần thêm: {missingIngredients.slice(0, 2).join(", ")}
+                          Cần thêm: {missingIngredients.slice(0, 2).join(", ")}
                         </Text>
                       )}
 
-                      <TouchableOpacity
-                        style={styles.viewRecipeMiniBtn}
-                        onPress={() =>
-                          router.push({
-                            pathname: "/recipe-detail",
-                            params: { id: recipe.id },
-                          })
-                        }
-                      >
-                        <Text style={styles.viewRecipeMiniText}>
-                          Xem chi tiết →
-                        </Text>
-                      </TouchableOpacity>
+                      <View style={styles.viewDetailsBtn}>
+                        <LinearGradient
+                          colors={["#FF5722", "#FF7043"]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.viewDetailsGradient}
+                        >
+                          <Text style={styles.viewDetailsText}>Xem chi tiết</Text>
+                          <Ionicons name="arrow-forward" size={12} color="#FFFFFF" />
+                        </LinearGradient>
+                      </View>
                     </View>
                   </TouchableOpacity>
                 )
@@ -1942,35 +1948,39 @@ const styles = StyleSheet.create({
   tierHeader: {
     marginBottom: 10,
   },
-  tierBadgeGreen: {
+  tierHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    backgroundColor: "#ECFDF5",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    alignSelf: "flex-start",
+    gap: 6,
   },
-  tierBadgeGreenText: {
-    fontSize: 10.5,
-    fontWeight: "800",
-    color: "#059669",
+  tierDotGreen: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#16A34A",
   },
-  tierBadgeOrange: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "#FFFBEB",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    alignSelf: "flex-start",
+  tierDotAmber: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#D97706",
   },
-  tierBadgeOrangeText: {
-    fontSize: 10.5,
-    fontWeight: "800",
-    color: "#D97706",
+  tierDotSlate: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#64748B",
+  },
+  tierSectionTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  tierSectionSub: {
+    fontSize: 11,
+    color: "#64748B",
+    marginTop: 2,
+    marginLeft: 12,
   },
   recipesVerticalList: {
     gap: 12,
@@ -1978,28 +1988,30 @@ const styles = StyleSheet.create({
   recipeCardFull: {
     flexDirection: "row",
     backgroundColor: "#FFFFFF",
-    borderRadius: 18,
+    borderRadius: 16,
     padding: 10,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: "#E2E8F0",
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
     gap: 12,
   },
   recipeCardImg: {
     width: 95,
     height: 105,
-    borderRadius: 14,
+    borderRadius: 12,
   },
   recipeCardRight: {
     flex: 1,
     justifyContent: "space-between",
   },
   recipeMatchBadgeGreen: {
-    backgroundColor: "#DCFCE7",
+    backgroundColor: "#F0FDF4",
+    borderWidth: 1,
+    borderColor: "#DCFCE7",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -2007,11 +2019,13 @@ const styles = StyleSheet.create({
   },
   recipeMatchTextGreen: {
     fontSize: 10,
-    fontWeight: "800",
-    color: "#059669",
+    fontWeight: "700",
+    color: "#16A34A",
   },
   recipeMatchBadgeOrange: {
-    backgroundColor: "#FEF3C7",
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -2019,59 +2033,60 @@ const styles = StyleSheet.create({
   },
   recipeMatchTextOrange: {
     fontSize: 10,
-    fontWeight: "800",
-    color: "#D97706",
+    fontWeight: "700",
+    color: "#475569",
   },
   recipeFullTitle: {
     fontSize: 14,
-    fontWeight: "800",
+    fontWeight: "700",
     color: "#0F172A",
     marginTop: 2,
+  },
+  recipeMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   recipeFullMeta: {
     fontSize: 11,
     color: "#64748B",
   },
+  metaDivider: {
+    fontSize: 10,
+    color: "#CBD5E1",
+    marginHorizontal: 2,
+  },
   matchedPreviewText: {
-    fontSize: 10.5,
-    color: "#059669",
-    fontWeight: "600",
+    fontSize: 11,
+    color: "#64748B",
+    fontWeight: "500",
   },
   missingWarningText: {
-    fontSize: 10.5,
-    color: "#D97706",
-    fontWeight: "600",
+    fontSize: 11,
+    color: "#9A3412",
+    fontWeight: "500",
   },
-  cookActionBtn: {
+  viewDetailsBtn: {
     borderRadius: 10,
     overflow: "hidden",
     marginTop: 4,
+    shadowColor: "#FF5722",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  cookActionGradient: {
+  viewDetailsGradient: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
-    paddingVertical: 6,
+    paddingVertical: 6.5,
     borderRadius: 10,
   },
-  cookActionText: {
-    color: "#FFFFFF",
+  viewDetailsText: {
     fontSize: 11.5,
     fontWeight: "700",
-  },
-  viewRecipeMiniBtn: {
-    backgroundColor: "#FFF7ED",
-    paddingVertical: 5,
-    borderRadius: 8,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#FED7AA",
-    marginTop: 4,
-  },
-  viewRecipeMiniText: {
-    fontSize: 10.5,
-    fontWeight: "700",
-    color: "#EA580C",
+    color: "#FFFFFF",
   },
 });

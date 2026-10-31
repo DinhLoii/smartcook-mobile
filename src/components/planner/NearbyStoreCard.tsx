@@ -6,7 +6,7 @@ import {
   NearestStoreResult,
   openDirectionsInMaps,
 } from "@/services/storeService";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -138,7 +138,7 @@ export default function NearbyStoreCard({
       {/* 1. Header Row */}
       <View style={styles.headerRow}>
         <View style={styles.titleGroup}>
-          <Text style={styles.headerIcon}>🏪</Text>
+          <MaterialCommunityIcons name="google-maps" size={18} color="#EA580C" />
           <View style={{ flexShrink: 1, paddingRight: 6 }}>
             <Text style={styles.headerTitle}>
               {selectedProduct ? `Địa chỉ bán "${selectedProduct}" gần bạn` : title}
@@ -180,18 +180,18 @@ export default function NearbyStoreCard({
         <View style={styles.idleBody}>
           <Text style={styles.idleDesc}>
             {selectedProduct
-              ? `Nhấn nút bên dưới để hệ thống định vị GPS và tìm các siêu thị có bán "${selectedProduct}" gần bạn nhất.`
-              : "Nhấn 'Xem địa chỉ' tại từng sản phẩm cần mua hoặc bấm nút bên dưới để định vị và tìm các siêu thị quanh bạn."}
+              ? `Tìm siêu thị có bán "${selectedProduct}" gần bạn nhất.`
+              : "Định vị và tìm các siêu thị, cửa hàng tiện lợi quanh bạn."}
           </Text>
           <TouchableOpacity
             style={styles.actionBtn}
             activeOpacity={0.8}
             onPress={() => handleFindNearbyStores(false)}
           >
-            <Ionicons name="location-sharp" size={16} color="#FFFFFF" />
+            <MaterialCommunityIcons name="google-maps" size={16} color="#FFFFFF" />
             <Text style={styles.actionBtnText}>
               {selectedProduct
-                ? `Xem địa chỉ bán "${selectedProduct}"`
+                ? `Xem nơi bán "${selectedProduct}"`
                 : "Xem địa chỉ siêu thị gần đây"}
             </Text>
           </TouchableOpacity>
@@ -388,7 +388,7 @@ export default function NearbyStoreCard({
                           )
                         }
                       >
-                        <Ionicons name="map" size={13} color="#0284C7" />
+                        <MaterialCommunityIcons name="google-maps" size={14} color="#0284C7" />
                         <Text style={styles.mapBtnText}>Mở Google Maps</Text>
                       </TouchableOpacity>
                     </View>
@@ -442,34 +442,32 @@ export default function NearbyStoreCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 14,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     borderWidth: 1,
     borderColor: "#E2E8F0",
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-    marginVertical: 6,
+    shadowOffset: { width: 0, height: 1.5 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1.5,
+    marginVertical: 4,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 10,
+    marginBottom: 6,
   },
   titleGroup: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
   },
-  headerIcon: {
-    fontSize: 16,
-  },
   headerTitle: {
-    fontSize: 14,
-    fontWeight: "800",
+    fontSize: 13.5,
+    fontWeight: "700",
     color: "#0F172A",
   },
   headerSubtext: {
@@ -540,24 +538,24 @@ const styles = StyleSheet.create({
 
   /* Idle */
   idleBody: {
-    gap: 10,
+    gap: 7,
   },
   idleDesc: {
-    fontSize: 12,
+    fontSize: 11.5,
     color: "#64748B",
-    lineHeight: 18,
+    lineHeight: 16,
   },
   actionBtn: {
     backgroundColor: "#EA580C",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 10,
-    borderRadius: 10,
-    gap: 6,
+    paddingVertical: 7.5,
+    borderRadius: 8,
+    gap: 5,
   },
   actionBtnText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: "700",
     color: "#FFFFFF",
   },

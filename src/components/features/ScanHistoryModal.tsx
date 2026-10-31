@@ -111,7 +111,8 @@ export default function ScanHistoryModal({
         !(
           item.scannedAt.includes("Hôm nay") ||
           item.scannedAt.includes("Hôm qua") ||
-          item.scannedAt.includes("Th09")
+          item.scannedAt.includes("ngày trước") ||
+          item.scannedAt.includes("Vừa xong")
         )
       ) {
         return false;
