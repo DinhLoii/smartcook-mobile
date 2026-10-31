@@ -66,3 +66,4 @@ export function getBrandLogoSource(
 
   return null;
 }
+

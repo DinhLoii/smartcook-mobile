@@ -1442,27 +1442,27 @@ export default function PlannerView({
                             </Text>
                           </View>
 
-                        <Text style={styles.claimedCardTitle} numberOfLines={1}>
-                          {reward.title}
-                        </Text>
+                          <Text style={styles.claimedCardTitle} numberOfLines={1}>
+                            {reward.title}
+                          </Text>
 
-                        {/* Monospace Code + 1-Tap Copy */}
-                        <View style={styles.claimedCodeRow}>
-                          <View style={styles.claimedCodeBox}>
-                            <Text style={styles.claimedCodeText}>{reward.code}</Text>
+                          {/* Monospace Code + 1-Tap Copy */}
+                          <View style={styles.claimedCodeRow}>
+                            <View style={styles.claimedCodeBox}>
+                              <Text style={styles.claimedCodeText}>{reward.code}</Text>
+                            </View>
+                            <TouchableOpacity
+                              style={styles.claimedCopyBtn}
+                              activeOpacity={0.8}
+                              onPress={() => handleCopyCode(reward.code)}
+                            >
+                              <Ionicons name="copy-outline" size={14} color="#FF5722" />
+                              <Text style={styles.claimedCopyBtnText}>Sao chép</Text>
+                            </TouchableOpacity>
                           </View>
-                          <TouchableOpacity
-                            style={styles.claimedCopyBtn}
-                            activeOpacity={0.8}
-                            onPress={() => handleCopyCode(reward.code)}
-                          >
-                            <Ionicons name="copy-outline" size={14} color="#FF5722" />
-                            <Text style={styles.claimedCopyBtnText}>Sao chép</Text>
-                          </TouchableOpacity>
                         </View>
-                      </View>
-                    );
-                  })
+                      );
+                    })
                   )}
                 </View>
               )}
