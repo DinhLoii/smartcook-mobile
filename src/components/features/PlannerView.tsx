@@ -556,7 +556,7 @@ export default function PlannerView({
           <Ionicons
             name="calendar"
             size={14}
-            color={activeSubTab === "calendar" ? "#EA580C" : "#64748B"}
+            color={activeSubTab === "calendar" ? "#FF5722" : "#64748B"}
           />
           <Text
             style={[
@@ -579,7 +579,7 @@ export default function PlannerView({
           <Ionicons
             name="cart"
             size={14}
-            color={activeSubTab === "shopping" ? "#EA580C" : "#64748B"}
+            color={activeSubTab === "shopping" ? "#FF5722" : "#64748B"}
           />
           <Text
             style={[
@@ -602,7 +602,7 @@ export default function PlannerView({
           <Ionicons
             name="gift"
             size={14}
-            color={activeSubTab === "rewards" ? "#EA580C" : "#64748B"}
+            color={activeSubTab === "rewards" ? "#FF5722" : "#64748B"}
           />
           <Text
             style={[
@@ -1103,38 +1103,56 @@ export default function PlannerView({
             </View>
           ) : (
             <>
-              {/* 1. Chef Level & Daily Check-in Card */}
+              {/* 1. Chef Pass & Balance Card */}
               <View style={styles.chefStatusCard}>
-                {/* Top: Rank badge + XP count + Streak flame */}
+                {/* Top: Rank badge + Streak pill */}
                 <View style={styles.chefCardTopRow}>
-                  <View style={styles.chefCardLeft}>
-                    <View style={styles.chefRankBadge}>
-                      <Ionicons name="ribbon" size={13} color="#D97706" />
-                      <Text style={styles.chefRankText}>{rewardStatus?.level || "Tập sự"}</Text>
-                    </View>
-                    <View style={styles.chefXpRow}>
-                      <Ionicons name="sparkles" size={20} color="#F59E0B" />
-                      <Text style={styles.chefXpNumber}>{rewardStatus?.chefExp ?? 0}</Text>
-                      <Text style={styles.chefXpUnit}>XP</Text>
-                    </View>
+                  <View style={styles.chefRankBadge}>
+                    <Ionicons name="ribbon-outline" size={13} color="#475569" />
+                    <Text style={styles.chefRankText}>{rewardStatus?.level || "Tập sự"}</Text>
                   </View>
 
                   <View style={styles.streakFlamePill}>
-                    <Ionicons name="flame" size={18} color="#EA580C" />
+                    <Ionicons name="flame" size={15} color="#FF5722" />
                     <Text style={styles.streakFlameNum}>{rewardStatus?.streakDays ?? 0}</Text>
                     <Text style={styles.streakFlameLabel}>ngày liên tiếp</Text>
                   </View>
                 </View>
 
-                {/* Middle: 7-Day Streak Tracker */}
+                {/* Middle: Prominent XP Balance */}
+                <View style={styles.chefBalanceBox}>
+                  <Text style={styles.chefBalanceLabel}>ĐIỂM TÍCH LŨY CHEF XP</Text>
+                  <View style={styles.chefBalanceValueRow}>
+                    <Text style={styles.chefXpNumber}>{rewardStatus?.chefExp ?? 0}</Text>
+                    <Text style={styles.chefXpUnit}>XP</Text>
+                  </View>
+                </View>
+
+                {/* Subtle Divider */}
+                <View style={styles.chefCardDivider} />
+
+                {/* 7-Day Streak Tracker */}
                 <View style={styles.streakTrackerSection}>
                   <View style={styles.streakTrackerHeader}>
                     <Text style={styles.streakTrackerTitle}>Chuỗi điểm danh 7 ngày</Text>
-                    <Text style={styles.streakTrackerStatus}>
-                      {rewardStatus?.hasCheckedInToday
-                        ? "Đã điểm danh hôm nay ✓"
-                        : "Chưa điểm danh hôm nay"}
-                    </Text>
+                    <View style={styles.streakTrackerStatusRow}>
+                      <View
+                        style={[
+                          styles.streakTrackerStatusDot,
+                          rewardStatus?.hasCheckedInToday && styles.streakTrackerStatusDotDone,
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          styles.streakTrackerStatus,
+                          rewardStatus?.hasCheckedInToday && styles.streakTrackerStatusDone,
+                        ]}
+                      >
+                        {rewardStatus?.hasCheckedInToday
+                          ? "Đã điểm danh hôm nay"
+                          : "Chưa điểm danh hôm nay"}
+                      </Text>
+                    </View>
                   </View>
 
                   <View style={styles.streakPillRow}>
@@ -1167,14 +1185,18 @@ export default function PlannerView({
                             </Text>
                             <View style={styles.streakDayIcon}>
                               {isPassed ? (
-                                <Ionicons name="checkmark-circle" size={17} color="#10B981" />
+                                <Ionicons name="checkmark-circle" size={15} color="#10B981" />
                               ) : dayNum === 7 ? (
-                                <Ionicons name="gift" size={15} color="#D97706" />
+                                <Ionicons
+                                  name="gift-outline"
+                                  size={14}
+                                  color={isToday ? "#FF5722" : "#475569"}
+                                />
                               ) : (
                                 <Ionicons
                                   name="sparkles"
-                                  size={13}
-                                  color={isToday ? "#EA580C" : "#94A3B8"}
+                                  size={12}
+                                  color={isToday ? "#FF5722" : "#CBD5E1"}
                                 />
                               )}
                             </View>
@@ -1207,19 +1229,19 @@ export default function PlannerView({
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : rewardStatus?.hasCheckedInToday ? (
                     <View style={styles.checkedInRow}>
-                      <Ionicons name="checkmark-circle" size={18} color="#10B981" />
+                      <Ionicons name="checkmark-circle" size={16} color="#10B981" />
                       <Text style={styles.checkedInText}>
                         Đã điểm danh hôm nay (Quay lại vào ngày mai)
                       </Text>
                     </View>
                   ) : (
                     <LinearGradient
-                      colors={["#FF7A00", "#FF5722"]}
+                      colors={["#FF5722", "#FF7043"]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.checkInGradientBtn}
                     >
-                      <Ionicons name="gift-outline" size={18} color="#FFFFFF" />
+                      <Ionicons name="gift-outline" size={17} color="#FFFFFF" />
                       <Text style={styles.checkInGradientText}>
                         Điểm danh nhận ngay +{todayRewardXp} XP
                       </Text>
@@ -1241,7 +1263,7 @@ export default function PlannerView({
                   <Ionicons
                     name="pricetags-outline"
                     size={14}
-                    color={rewardsSubTab === "catalog" ? "#EA580C" : "#64748B"}
+                    color={rewardsSubTab === "catalog" ? "#0F172A" : "#64748B"}
                   />
                   <Text
                     style={[
@@ -1264,7 +1286,7 @@ export default function PlannerView({
                   <Ionicons
                     name="wallet-outline"
                     size={14}
-                    color={rewardsSubTab === "my_rewards" ? "#EA580C" : "#64748B"}
+                    color={rewardsSubTab === "my_rewards" ? "#0F172A" : "#64748B"}
                   />
                   <Text
                     style={[
@@ -1286,25 +1308,20 @@ export default function PlannerView({
 
                     return (
                       <View key={item.id} style={styles.voucherCard}>
-                        {/* Brand Icon Circle */}
-                        <View
-                          style={[
-                            styles.voucherBrandIcon,
-                            { backgroundColor: `${item.badgeColor}15` },
-                          ]}
-                        >
+                        {/* Minimalist Neutral Brand Icon Box */}
+                        <View style={styles.voucherBrandIcon}>
                           <MaterialCommunityIcons
                             name={
                               item.icon === "cart"
-                                ? "cart"
+                                ? "cart-outline"
                                 : item.icon === "basket"
-                                ? "basket"
+                                ? "basket-outline"
                                 : item.icon === "star"
-                                ? "star"
-                                : "gift"
+                                ? "star-outline"
+                                : "gift-outline"
                             }
                             size={22}
-                            color={item.badgeColor}
+                            color="#334155"
                           />
                         </View>
 
@@ -1312,18 +1329,8 @@ export default function PlannerView({
                         <View style={styles.voucherInfoBox}>
                           <View style={styles.voucherBrandRow}>
                             <Text style={styles.voucherBrandLabel}>{item.brand}</Text>
-                            <View
-                              style={[
-                                styles.voucherValueBadge,
-                                { backgroundColor: `${item.badgeColor}15` },
-                              ]}
-                            >
-                              <Text
-                                style={[
-                                  styles.voucherValueBadgeText,
-                                  { color: item.badgeColor },
-                                ]}
-                              >
+                            <View style={styles.voucherValueBadge}>
+                              <Text style={styles.voucherValueBadgeText}>
                                 {item.discountValue}
                               </Text>
                             </View>
@@ -1351,7 +1358,7 @@ export default function PlannerView({
                           ) : (
                             <>
                               <Ionicons
-                                name="sparkles"
+                                name={canAfford ? "sparkles" : "lock-closed-outline"}
                                 size={12}
                                 color={canAfford ? "#FFFFFF" : "#94A3B8"}
                               />
@@ -1391,7 +1398,7 @@ export default function PlannerView({
                       <View key={reward.id} style={styles.claimedCard}>
                         <View style={styles.claimedCardHeader}>
                           <View style={styles.claimedTag}>
-                            <Ionicons name="pricetag" size={12} color="#EA580C" />
+                            <Ionicons name="pricetag-outline" size={12} color="#334155" />
                             <Text style={styles.claimedTagText}>
                               {reward.discountValue}
                             </Text>
@@ -1415,7 +1422,7 @@ export default function PlannerView({
                             activeOpacity={0.8}
                             onPress={() => handleCopyCode(reward.code)}
                           >
-                            <Ionicons name="copy-outline" size={14} color="#EA580C" />
+                            <Ionicons name="copy-outline" size={14} color="#FF5722" />
                             <Text style={styles.claimedCopyBtnText}>Sao chép</Text>
                           </TouchableOpacity>
                         </View>
@@ -1448,7 +1455,7 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#E65100",
+    color: "#64748B",
     letterSpacing: 0.8,
   },
   headerTitle: {
@@ -1489,16 +1496,16 @@ const styles = StyleSheet.create({
     color: "#64748B",
   },
   subTabSegmentTextActive: {
-    color: "#EA580C",
+    color: "#0F172A",
     fontWeight: "700",
   },
   rewardsBadgeDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: "#EA580C",
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#FF5722",
     position: "absolute",
-    top: 7,
+    top: 8,
     right: 8,
   },
   weekPickerRow: {
@@ -1867,78 +1874,93 @@ const styles = StyleSheet.create({
   },
   chefStatusCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 18,
+    borderRadius: 20,
     padding: 16,
     marginHorizontal: 16,
     marginTop: 4,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: "#E2E8F0",
     shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
     elevation: 2,
   },
   chefCardTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 14,
-  },
-  chefCardLeft: {
-    gap: 4,
+    marginBottom: 12,
   },
   chefRankBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FEF3C7",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    backgroundColor: "#F8FAFC",
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: 8,
-    gap: 4,
-    alignSelf: "flex-start",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    gap: 5,
   },
   chefRankText: {
     fontSize: 11.5,
     fontWeight: "700",
-    color: "#B45309",
+    color: "#334155",
   },
-  chefXpRow: {
+  streakFlamePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F8FAFC",
+    paddingHorizontal: 10,
+    paddingVertical: 4.5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    gap: 4,
+  },
+  streakFlameNum: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  streakFlameLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#64748B",
+  },
+  chefBalanceBox: {
+    marginTop: 2,
+    marginBottom: 4,
+  },
+  chefBalanceLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#94A3B8",
+    letterSpacing: 0.8,
+    marginBottom: 2,
+  },
+  chefBalanceValueRow: {
     flexDirection: "row",
     alignItems: "baseline",
     gap: 4,
   },
   chefXpNumber: {
-    fontSize: 24,
-    fontWeight: "900",
+    fontSize: 32,
+    fontWeight: "800",
     color: "#0F172A",
+    letterSpacing: -0.5,
   },
   chefXpUnit: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
-    color: "#EA580C",
+    color: "#64748B",
   },
-  streakFlamePill: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF7ED",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#FFEDD5",
-    gap: 4,
-  },
-  streakFlameNum: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#EA580C",
-  },
-  streakFlameLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#C2410C",
+  chefCardDivider: {
+    height: 1,
+    backgroundColor: "#F1F5F9",
+    marginVertical: 14,
   },
   streakTrackerSection: {
     marginBottom: 14,
@@ -1954,10 +1976,28 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#334155",
   },
+  streakTrackerStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  streakTrackerStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#CBD5E1",
+  },
+  streakTrackerStatusDotDone: {
+    backgroundColor: "#10B981",
+  },
   streakTrackerStatus: {
     fontSize: 11.5,
     fontWeight: "600",
-    color: "#10B981",
+    color: "#94A3B8",
+  },
+  streakTrackerStatusDone: {
+    color: "#16A34A",
+    fontWeight: "600",
   },
   streakPillRow: {
     flexDirection: "row",
@@ -1967,20 +2007,25 @@ const styles = StyleSheet.create({
   streakDayBox: {
     flex: 1,
     alignItems: "center",
-    paddingVertical: 7,
+    paddingVertical: 8,
     borderRadius: 10,
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
     borderColor: "#E2E8F0",
   },
   streakDayBoxPassed: {
-    backgroundColor: "#ECFDF5",
-    borderColor: "#A7F3D0",
+    backgroundColor: "#F8FAFC",
+    borderColor: "#CBD5E1",
   },
   streakDayBoxToday: {
-    backgroundColor: "#FFF7ED",
-    borderColor: "#EA580C",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#FF5722",
     borderWidth: 1.5,
+    shadowColor: "#FF5722",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
   },
   streakDayLabel: {
     fontSize: 10,
@@ -1989,21 +2034,22 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   streakDayLabelToday: {
-    color: "#EA580C",
+    color: "#FF5722",
+    fontWeight: "800",
   },
   streakDayIcon: {
-    height: 20,
+    height: 18,
     justifyContent: "center",
     alignItems: "center",
   },
   streakDayXp: {
     fontSize: 9.5,
     fontWeight: "700",
-    color: "#64748B",
+    color: "#475569",
     marginTop: 2,
   },
   streakDayXpToday: {
-    color: "#EA580C",
+    color: "#FF5722",
     fontWeight: "800",
   },
   checkInBtnWrapper: {
@@ -2011,23 +2057,23 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   checkInBtnDisabled: {
-    opacity: 0.9,
+    opacity: 0.95,
   },
   checkedInRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F0FDF4",
+    backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: "#BBF7D0",
+    borderColor: "#E2E8F0",
     paddingVertical: 12,
     borderRadius: 14,
     gap: 6,
   },
   checkedInText: {
-    fontSize: 12.5,
-    fontWeight: "700",
-    color: "#15803D",
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#475569",
   },
   checkInGradientBtn: {
     flexDirection: "row",
@@ -2048,7 +2094,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     borderRadius: 12,
     padding: 3,
-    marginBottom: 14,
+    marginBottom: 12,
   },
   rewardsSegmentBtn: {
     flex: 1,
@@ -2073,7 +2119,7 @@ const styles = StyleSheet.create({
     color: "#64748B",
   },
   rewardsSegmentTextActive: {
-    color: "#EA580C",
+    color: "#0F172A",
     fontWeight: "700",
   },
   voucherListSection: {
@@ -2088,18 +2134,21 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: "#E2E8F0",
     shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.03,
     shadowRadius: 4,
     elevation: 1,
     gap: 12,
   },
   voucherBrandIcon: {
-    width: 42,
-    height: 42,
+    width: 44,
+    height: 44,
     borderRadius: 12,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -2119,13 +2168,17 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   voucherValueBadge: {
-    paddingHorizontal: 5,
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 6,
   },
   voucherValueBadgeText: {
     fontSize: 10.5,
     fontWeight: "800",
+    color: "#0F172A",
   },
   voucherTitle: {
     fontSize: 13.5,
@@ -2134,20 +2187,22 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   voucherDesc: {
-    fontSize: 11,
-    color: "#94A3B8",
+    fontSize: 11.5,
+    color: "#64748B",
   },
   voucherRedeemBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#EA580C",
+    backgroundColor: "#FF5722",
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 12,
+    borderRadius: 10,
     gap: 4,
   },
   voucherRedeemBtnDisabled: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
   voucherRedeemBtnText: {
     fontSize: 12,
@@ -2156,6 +2211,7 @@ const styles = StyleSheet.create({
   },
   voucherRedeemBtnTextDisabled: {
     color: "#94A3B8",
+    fontWeight: "600",
   },
   claimedListSection: {
     paddingHorizontal: 0,
@@ -2170,11 +2226,11 @@ const styles = StyleSheet.create({
   emptyClaimedTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#475569",
+    color: "#334155",
   },
   emptyClaimedDesc: {
     fontSize: 12.5,
-    color: "#94A3B8",
+    color: "#64748B",
     textAlign: "center",
     lineHeight: 18,
   },
@@ -2185,10 +2241,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: "#E2E8F0",
     shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.03,
     shadowRadius: 4,
     elevation: 1,
   },
@@ -2201,21 +2257,23 @@ const styles = StyleSheet.create({
   claimedTag: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF7ED",
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 6,
     gap: 4,
   },
   claimedTagText: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontWeight: "800",
-    color: "#EA580C",
+    color: "#0F172A",
   },
   claimedExpiry: {
     fontSize: 11,
-    color: "#94A3B8",
-    fontWeight: "600",
+    color: "#64748B",
+    fontWeight: "500",
   },
   claimedCardTitle: {
     fontSize: 14,
@@ -2232,10 +2290,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#CBD5E1",
     borderStyle: "dashed",
-    borderRadius: 10,
-    paddingVertical: 8,
+    borderRadius: 8,
+    paddingVertical: 7,
     paddingHorizontal: 12,
   },
   claimedCodeText: {
@@ -2248,18 +2306,18 @@ const styles = StyleSheet.create({
   claimedCopyBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF7ED",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#FFEDD5",
+    borderColor: "#E2E8F0",
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingVertical: 7,
+    borderRadius: 8,
     gap: 4,
   },
   claimedCopyBtnText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#EA580C",
+    color: "#FF5722",
   },
 });
 
