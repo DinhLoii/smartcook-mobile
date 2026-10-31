@@ -10,6 +10,7 @@ import {
   Alert,
   Clipboard,
   StatusBar,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -17,6 +18,7 @@ import { BrandColors } from "@/constants/brandColors";
 import { RewardCatalogItem, RewardStatus } from "@/types";
 import { rewardService } from "@/services/rewardService";
 import { triggerHaptic } from "@/utils/haptics";
+import { getBrandLogoSource } from "@/utils/brandLogos";
 
 interface GiftRewardsModalProps {
   visible: boolean;
@@ -355,28 +357,37 @@ export const GiftRewardsModal: React.FC<GiftRewardsModalProps> = ({
                 {(statusData?.catalog || []).map((item) => {
                   const canAfford = (statusData?.chefExp ?? 0) >= item.xpCost;
                   const isRedeeming = redeemingId === item.id;
+                  const brandLogo = getBrandLogoSource(
+                    item.brand,
+                    item.title,
+                    item.icon,
+                    (item as any).imageUrl
+                  );
 
                   return (
                     <View key={item.id} style={styles.rewardCard}>
-                      <View
-                        style={[
-                          styles.rewardIconCircle,
-                          { backgroundColor: `${item.badgeColor}15` },
-                        ]}
-                      >
-                        <MaterialCommunityIcons
-                          name={
-                            item.icon === "cart"
-                              ? "cart"
-                              : item.icon === "basket"
-                              ? "basket"
-                              : item.icon === "star"
-                              ? "star"
-                              : "gift"
-                          }
-                          size={24}
-                          color={item.badgeColor}
-                        />
+                      <View style={styles.rewardIconCircle}>
+                        {brandLogo ? (
+                          <Image
+                            source={brandLogo}
+                            style={styles.brandLogoImg}
+                            resizeMode="contain"
+                          />
+                        ) : (
+                          <MaterialCommunityIcons
+                            name={
+                              item.icon === "cart"
+                                ? "cart"
+                                : item.icon === "basket"
+                                ? "basket"
+                                : item.icon === "star"
+                                ? "star"
+                                : "gift"
+                            }
+                            size={24}
+                            color={item.badgeColor}
+                          />
+                        )}
                       </View>
 
                       <View style={styles.rewardInfo}>
@@ -718,11 +729,19 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   rewardIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    padding: 3,
+  },
+  brandLogoImg: {
+    width: "100%",
+    height: "100%",
   },
   rewardInfo: {
     flex: 1,

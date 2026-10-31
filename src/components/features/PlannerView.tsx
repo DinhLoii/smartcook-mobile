@@ -30,6 +30,7 @@ import {
 import { RewardCatalogItem, RewardStatus } from "@/types";
 import { rewardService } from "@/services/rewardService";
 import { triggerHaptic } from "@/utils/haptics";
+import { getBrandLogoSource } from "@/utils/brandLogos";
 
 export interface PlannerViewProps {
   insetsTop: number;
@@ -1305,24 +1306,38 @@ export default function PlannerView({
                   {(rewardStatus?.catalog || []).map((item) => {
                     const canAfford = (rewardStatus?.chefExp ?? 0) >= item.xpCost;
                     const isRedeeming = redeemingRewardId === item.id;
+                    const brandLogo = getBrandLogoSource(
+                      item.brand,
+                      item.title,
+                      item.icon,
+                      (item as any).imageUrl
+                    );
 
                     return (
                       <View key={item.id} style={styles.voucherCard}>
-                        {/* Minimalist Neutral Brand Icon Box */}
+                        {/* Authentic Brand Logo Image Box */}
                         <View style={styles.voucherBrandIcon}>
-                          <MaterialCommunityIcons
-                            name={
-                              item.icon === "cart"
-                                ? "cart-outline"
-                                : item.icon === "basket"
-                                ? "basket-outline"
-                                : item.icon === "star"
-                                ? "star-outline"
-                                : "gift-outline"
-                            }
-                            size={22}
-                            color="#334155"
-                          />
+                          {brandLogo ? (
+                            <Image
+                              source={brandLogo}
+                              style={styles.voucherBrandImage}
+                              resizeMode="contain"
+                            />
+                          ) : (
+                            <MaterialCommunityIcons
+                              name={
+                                item.icon === "cart"
+                                  ? "cart-outline"
+                                  : item.icon === "basket"
+                                  ? "basket-outline"
+                                  : item.icon === "star"
+                                  ? "star-outline"
+                                  : "gift-outline"
+                              }
+                              size={22}
+                              color="#334155"
+                            />
+                          )}
                         </View>
 
                         {/* Voucher Info */}
@@ -1394,19 +1409,38 @@ export default function PlannerView({
                       </Text>
                     </View>
                   ) : (
-                    rewardStatus.claimedRewards.map((reward) => (
-                      <View key={reward.id} style={styles.claimedCard}>
-                        <View style={styles.claimedCardHeader}>
-                          <View style={styles.claimedTag}>
-                            <Ionicons name="pricetag-outline" size={12} color="#334155" />
-                            <Text style={styles.claimedTagText}>
-                              {reward.discountValue}
+                    rewardStatus.claimedRewards.map((reward) => {
+                      const brandLogo = getBrandLogoSource(
+                        undefined,
+                        reward.title,
+                        reward.type,
+                        undefined
+                      );
+
+                      return (
+                        <View key={reward.id} style={styles.claimedCard}>
+                          <View style={styles.claimedCardHeader}>
+                            <View style={styles.claimedBrandHeader}>
+                              {brandLogo && (
+                                <View style={styles.claimedBrandIconSmall}>
+                                  <Image
+                                    source={brandLogo}
+                                    style={styles.voucherBrandImage}
+                                    resizeMode="contain"
+                                  />
+                                </View>
+                              )}
+                              <View style={styles.claimedTag}>
+                                <Ionicons name="pricetag-outline" size={11} color="#0F172A" />
+                                <Text style={styles.claimedTagText}>
+                                  {reward.discountValue}
+                                </Text>
+                              </View>
+                            </View>
+                            <Text style={styles.claimedExpiry}>
+                              HSD: {new Date(reward.expiresAt).toLocaleDateString("vi-VN")}
                             </Text>
                           </View>
-                          <Text style={styles.claimedExpiry}>
-                            HSD: {new Date(reward.expiresAt).toLocaleDateString("vi-VN")}
-                          </Text>
-                        </View>
 
                         <Text style={styles.claimedCardTitle} numberOfLines={1}>
                           {reward.title}
@@ -1427,7 +1461,8 @@ export default function PlannerView({
                           </TouchableOpacity>
                         </View>
                       </View>
-                    ))
+                    );
+                  })
                   )}
                 </View>
               )}
@@ -2143,14 +2178,24 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   voucherBrandIcon: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: 12,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E2E8F0",
+    padding: 4,
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  voucherBrandImage: {
+    width: "100%",
+    height: "100%",
   },
   voucherInfoBox: {
     flex: 1,
@@ -2253,6 +2298,22 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 6,
+  },
+  claimedBrandHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  claimedBrandIconSmall: {
+    width: 26,
+    height: 26,
+    borderRadius: 7,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    padding: 2,
+    justifyContent: "center",
+    alignItems: "center",
   },
   claimedTag: {
     flexDirection: "row",
