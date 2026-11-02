@@ -156,11 +156,12 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
         const photo = await fullCameraRef.current.takePictureAsync({
           quality: 0.7,
           skipProcessing: false,
+          base64: true,
         });
 
         if (photo?.uri) {
           setIsFullScreenCamera(false);
-          processUploadedPhoto(photo.uri, "Ảnh chụp từ camera");
+          processUploadedPhoto(photo.uri, "Ảnh chụp từ camera", photo.base64);
           return;
         }
       }
@@ -206,11 +207,12 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.7,
+        base64: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         if (isFullScreenCamera) setIsFullScreenCamera(false);
-        processUploadedPhoto(result.assets[0].uri, "Ảnh từ thư viện");
+        processUploadedPhoto(result.assets[0].uri, "Ảnh từ thư viện", result.assets[0].base64);
       }
     } catch (e) {
       console.log("Error picking image:", e);
@@ -236,7 +238,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         if (isFullScreenCamera) setIsFullScreenCamera(false);
-        processUploadedPhoto(result.assets[0].uri, "Ảnh chụp camera mới");
+        processUploadedPhoto(result.assets[0].uri, "Ảnh chụp camera mới", result.assets[0].base64);
       }
     } catch (e) {
       console.log("Error taking photo:", e);
@@ -244,7 +246,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
   };
 
   // Real AI scanning process via Gemini 1.5 Vision API
-  const processUploadedPhoto = async (uri: string, customTitle: string) => {
+  const processUploadedPhoto = async (uri: string, customTitle: string, base64?: string | null) => {
     setIsScanning(true);
     setScanCompleted(false);
     setScanError(null);
@@ -252,7 +254,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
     setActiveTitle(customTitle);
 
     try {
-      const apiResult = await aiService.scanIngredients(uri);
+      const apiResult = await aiService.scanIngredients(uri, "image/jpeg", base64 || undefined);
 
       if (apiResult && apiResult.ingredients && apiResult.ingredients.length > 0) {
         const accuracy = apiResult.accuracy || 95;
@@ -311,10 +313,11 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
       console.warn("Scan AI failed:", e);
       setIsScanning(false);
       setScanCompleted(false);
+      const serverMsg = e?.response?.data?.message || e?.message;
       setScanError(
-        "Không thể phân tích ảnh lúc này. Vui lòng kiểm tra kết nối mạng và thử chụp lại!"
+        serverMsg || "Không thể phân tích ảnh lúc này. Vui lòng thử lại với ảnh rõ hơn!"
       );
-      showToast("❌ Lỗi khi phân tích hình ảnh.");
+      showToast("❌ " + (e?.response?.data?.message || e?.message || "Lỗi khi phân tích hình ảnh."));
     }
   };
 
