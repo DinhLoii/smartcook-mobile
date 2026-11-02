@@ -12,6 +12,7 @@ import { hapticSuccess } from "@/utils/haptics";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { CameraType, CameraView, FlashMode, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
+import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -254,7 +255,25 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
     setActiveTitle(customTitle);
 
     try {
-      const apiResult = await aiService.scanIngredients(uri, "image/jpeg", base64 || undefined);
+      let finalUri = uri;
+      let finalBase64 = base64 || undefined;
+
+      // Nén & tối ưu hoá kích thước ảnh (tối đa 1200px) để chống 504 Gateway Timeout và tăng tốc độ scan
+      try {
+        const manipulated = await manipulateAsync(
+          uri,
+          [{ resize: { width: 1200 } }],
+          { compress: 0.65, format: SaveFormat.JPEG, base64: true }
+        );
+        if (manipulated?.uri) {
+          finalUri = manipulated.uri;
+          finalBase64 = manipulated.base64 || finalBase64;
+        }
+      } catch (manipErr) {
+        console.warn("[ScanAIView] Image resize fallback:", manipErr);
+      }
+
+      const apiResult = await aiService.scanIngredients(finalUri, "image/jpeg", finalBase64);
 
       if (apiResult && apiResult.ingredients && apiResult.ingredients.length > 0) {
         const accuracy = apiResult.accuracy || 95;
