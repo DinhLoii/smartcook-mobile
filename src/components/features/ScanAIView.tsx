@@ -154,7 +154,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
     try {
       if (fullCameraRef.current) {
         const photo = await fullCameraRef.current.takePictureAsync({
-          quality: 0.85,
+          quality: 0.7,
           skipProcessing: false,
         });
 
@@ -205,7 +205,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
         mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 0.85,
+        quality: 0.7,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -231,7 +231,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 0.85,
+        quality: 0.7,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {

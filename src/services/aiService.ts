@@ -106,7 +106,7 @@ export const aiService = {
       formData.append("image", { uri: imageUri, name: "scan_photo.jpg", type: mimeType } as unknown as Blob);
     }
     const response = await apiClient.post<{ data: ScanIngredientResponse }>("/ai/scan-ingredients", formData, {
-      headers: { "Content-Type": "multipart/form-data" }, timeout: 60000,
+      timeout: 60000,
     });
     const result = response.data?.data;
     if (!result || !Array.isArray(result.ingredients) || result.ingredients.length === 0) {
