@@ -193,13 +193,14 @@ export default function LoginScreen() {
 
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
+        enabled={Platform.OS !== "web"}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="always"
           bounces={false}
         >
           {/* Top Sunset Dual-Wave Header */}

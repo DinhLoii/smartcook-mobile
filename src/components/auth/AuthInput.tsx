@@ -5,7 +5,6 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  Pressable,
   Platform,
   TextInputProps,
 } from 'react-native';
@@ -47,14 +46,18 @@ export const AuthInput: React.FC<AuthInputProps> = ({
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
 
-      {/* Pressable wrapper: tapping anywhere focuses the TextInput */}
-      <Pressable
-        onPress={() => inputRef.current?.focus()}
+      {/* Direct View wrapper: does not hijack touch responders or suppress native keyboard on mobile */}
+      <View
         style={[
           styles.inputWrapper,
           isFocused && styles.inputWrapperFocused,
           Boolean(error) && styles.inputWrapperError,
-        ]}>
+        ]}
+        {...(Platform.OS === 'web'
+          ? ({
+              onClick: () => inputRef.current?.focus(),
+            } as any)
+          : {})}>
         {/* Leading Icon */}
         {iconName && (
           <View style={styles.leadingIcon} pointerEvents="none">
@@ -79,8 +82,6 @@ export const AuthInput: React.FC<AuthInputProps> = ({
           secureTextEntry={isPassword && !showPassword}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          showSoftInputOnFocus={true}
-          editable={true}
           autoCapitalize={isPassword ? 'none' : rest.autoCapitalize}
           {...rest}
         />
@@ -99,7 +100,7 @@ export const AuthInput: React.FC<AuthInputProps> = ({
             />
           </TouchableOpacity>
         )}
-      </Pressable>
+      </View>
 
       {error ? (
         <View style={styles.errorRow}>
@@ -132,6 +133,11 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     height: 48,
     paddingHorizontal: 14,
+    ...(Platform.OS === 'web'
+      ? ({
+          cursor: 'text',
+        } as any)
+      : {}),
   },
   inputWrapperFocused: {
     borderColor: BrandColors.primary,
@@ -153,7 +159,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 14.5,
+    fontSize: Platform.OS === 'web' ? 16 : 14.5,
     color: '#0F172A',
     height: '100%',
     paddingVertical: 0,
@@ -162,6 +168,9 @@ const styles = StyleSheet.create({
       ? ({
           outlineStyle: 'none',
           boxShadow: 'none',
+          touchAction: 'manipulation',
+          userSelect: 'text',
+          WebkitUserSelect: 'text',
         } as any)
       : {}),
   },

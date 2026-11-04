@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 14,
+    fontSize: Platform.OS === "web" ? 16 : 14,
     color: "#0F172A",
     height: "100%",
   },
