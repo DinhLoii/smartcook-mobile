@@ -31,10 +31,12 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAuth } from "@/contexts/AuthContext";
 import ScanHistoryModal from "./ScanHistoryModal";
 
 export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
   const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
 
@@ -254,6 +256,17 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
     setActiveImage(uri);
     setActiveTitle(customTitle);
 
+    // Kiểm tra trạng thái đăng nhập: API /ai/* bắt buộc người dùng đã đăng nhập
+    if (!isAuthenticated) {
+      setIsScanning(false);
+      setScanCompleted(false);
+      setScanError(
+        "Bạn chưa đăng nhập tài khoản. Vui lòng đăng nhập để phân tích ảnh và lưu công thức với Gemini AI!"
+      );
+      showToast("⚠️ Vui lòng đăng nhập để sử dụng tính năng Scan AI!");
+      return;
+    }
+
     try {
       let finalUri = uri;
       let finalBase64 = base64 || undefined;
@@ -332,11 +345,33 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
       console.warn("Scan AI failed:", e);
       setIsScanning(false);
       setScanCompleted(false);
-      const serverMsg = e?.response?.data?.message || e?.message;
-      setScanError(
-        serverMsg || "Không thể phân tích ảnh lúc này. Vui lòng thử lại với ảnh rõ hơn!"
-      );
-      showToast("❌ " + (e?.response?.data?.message || e?.message || "Lỗi khi phân tích hình ảnh."));
+
+      const status = e?.response?.status;
+      let friendlyError = "";
+
+      if (status === 401) {
+        friendlyError =
+          "Phiên đăng nhập đã hết hạn hoặc bạn chưa đăng nhập. Vui lòng đăng nhập để phân tích ảnh với Gemini AI!";
+      } else if (status === 422) {
+        friendlyError =
+          e?.response?.data?.message ||
+          "Chưa nhận diện được thực phẩm trong ảnh. Vui lòng chụp rõ món ăn hoặc nguyên liệu, đủ sáng và gần hơn!";
+      } else if (status === 504 || e?.code === "ECONNABORTED" || e?.message?.includes("timeout")) {
+        friendlyError =
+          "Máy chủ AI đang khởi động lại (Cold start) hoặc xử lý quá lâu. Vui lòng đợi 10 giây và thử chụp lại!";
+      } else if (status === 503) {
+        friendlyError =
+          e?.response?.data?.message ||
+          "Hệ thống AI đang bận hoặc quá tải. Vui lòng thử lại sau ít phút!";
+      } else {
+        friendlyError =
+          e?.response?.data?.message ||
+          e?.message ||
+          "Không thể phân tích ảnh lúc này. Vui lòng thử lại với ảnh rõ nét hơn!";
+      }
+
+      setScanError(friendlyError);
+      showToast("❌ " + friendlyError);
     }
   };
 
@@ -701,20 +736,43 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
       {scanError && !isScanning && (
         <View style={styles.errorContainer}>
           <View style={styles.errorIconWrap}>
-            <Ionicons name="alert-circle" size={24} color="#EA580C" />
+            <Ionicons
+              name={
+                !isAuthenticated || scanError.includes("đăng nhập")
+                  ? "person-circle"
+                  : "alert-circle"
+              }
+              size={24}
+              color="#EA580C"
+            />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.errorTitle}>Chưa nhận diện được nguyên liệu</Text>
+            <Text style={styles.errorTitle}>
+              {!isAuthenticated || scanError.includes("đăng nhập")
+                ? "Yêu cầu đăng nhập tài khoản"
+                : "Chưa nhận diện được nguyên liệu"}
+            </Text>
             <Text style={styles.errorDesc}>{scanError}</Text>
             <View style={styles.errorActionRow}>
-              <TouchableOpacity
-                style={styles.errorRetryBtn}
-                onPress={handleOpenFullScreenCamera}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="camera" size={14} color="#FFFFFF" />
-                <Text style={styles.errorRetryBtnText}>Chụp lại ảnh</Text>
-              </TouchableOpacity>
+              {!isAuthenticated || scanError.includes("đăng nhập") ? (
+                <TouchableOpacity
+                  style={[styles.errorRetryBtn, { backgroundColor: "#FF6B35" }]}
+                  onPress={() => router.push("/(auth)/login")}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="log-in-outline" size={15} color="#FFFFFF" />
+                  <Text style={styles.errorRetryBtnText}>Đăng nhập ngay</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.errorRetryBtn}
+                  onPress={handleOpenFullScreenCamera}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="camera" size={14} color="#FFFFFF" />
+                  <Text style={styles.errorRetryBtnText}>Chụp lại ảnh</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={styles.errorLiveBtn}
                 onPress={handleResetToLiveCamera}
