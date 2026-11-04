@@ -1,0 +1,27 @@
+[build]
+  publish = "dist"
+  command = "yarn export:web"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+
+[[headers]]
+  for = "/*.ttf"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Content-Type = "font/ttf"
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*.ttf"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Content-Type = "font/ttf"
+    Cache-Control = "public, max-age=31536000, immutable"
