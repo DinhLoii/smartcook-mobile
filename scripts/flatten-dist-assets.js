@@ -110,9 +110,13 @@ const headersContent = `/*
 `;
 fs.writeFileSync(headersFile, headersContent, "utf8");
 
-const netlifyTomlSrc = path.resolve("netlify.toml");
-if (fs.existsSync(netlifyTomlSrc)) {
-  fs.copyFileSync(netlifyTomlSrc, path.join(distDir, "netlify.toml"));
+// IMPORTANT: Do NOT copy netlify.toml into dist/.
+// When dragging dist/ into Netlify Drop, having a netlify.toml with [build] causes
+// Netlify to attempt running a build command in an environment without package.json.
+// _redirects and _headers are the native and recommended configuration for Netlify static drops.
+const distNetlifyToml = path.join(distDir, "netlify.toml");
+if (fs.existsSync(distNetlifyToml)) {
+  fs.rmSync(distNetlifyToml, { force: true });
 }
 
-console.log("[netlify] Wrote _redirects, _headers, and netlify.toml into dist/");
+console.log("[netlify] Wrote _redirects and _headers into dist/ (pure static deployment ready)");
