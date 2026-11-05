@@ -5,10 +5,14 @@ export interface ScanDetectedIngredient {
   confidence: string;
   icon: string;
   source?: "visible" | "inferred";
+  dishNames?: string[];
+  evidence?: string;
 }
 
 export interface ScanPin {
   text: string;
+  icon?: string;
+  confidence?: string;
   top?: number;
   bottom?: number;
   left?: number;
@@ -30,7 +34,7 @@ export interface ScanHistoryItem {
   scannedAt: string; // e.g. "Hôm nay, 12:30", "Hôm qua, 17:45"
   image: any; // local asset or { uri: string }
   accuracy: number; // e.g. 96
-  dishes?: { name: string; confidence: string }[];
+  dishes?: { name: string; confidence: string; icon?: string }[];
   ingredients: ScanDetectedIngredient[];
   pins: ScanPin[];
   suggestedRecipe: ScanSuggestedRecipe;
@@ -76,12 +80,16 @@ export const ScanHistoryService = {
           dishes: item.dishes || [],
           ingredients: (item.ingredients || []).map((ing) => ({
             name: ing.name,
-            confidence: ing.confidence || "95%",
+            confidence: ing.confidence || "Không rõ",
             icon: ing.icon || "food-apple",
             source: ing.source,
+            dishNames: ing.dishNames,
+            evidence: ing.evidence,
           })),
           pins: (item.pins || []).map((pin) => ({
             text: pin.text,
+            icon: pin.icon,
+            confidence: pin.confidence,
             top: pin.top,
             bottom: pin.bottom,
             left: pin.left,
