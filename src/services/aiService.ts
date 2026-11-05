@@ -8,7 +8,7 @@ export interface ScanIngredientResponse {
   id?: string;
   title?: string;
   scannedAt?: string;
-  dishes?: { name: string; confidence: string }[];
+  dishes?: { name: string; confidence: string; icon?: string }[];
   accuracy: number;
   imageUrl?: string;
   ingredients: {
@@ -16,9 +16,13 @@ export interface ScanIngredientResponse {
     confidence: string;
     icon: string;
     source?: "visible" | "inferred";
+    dishNames?: string[];
+    evidence?: string;
   }[];
   pins: {
     text: string;
+    icon?: string;
+    confidence?: string;
     top?: number;
     bottom?: number;
     left?: number;
@@ -134,7 +138,7 @@ export const aiService = {
       response = await apiClient.post<{ data: ScanIngredientResponse }>(
         "/ai/scan-ingredients",
         { imageBase64, mimeType },
-        { timeout: 60000 }
+        { timeout: 150000 }
       );
     } else {
       const formData = new FormData();
@@ -147,12 +151,12 @@ export const aiService = {
       response = await apiClient.post<{ data: ScanIngredientResponse }>(
         "/ai/scan-ingredients",
         formData,
-        { timeout: 60000 }
+        { timeout: 150000 }
       );
     }
 
     const result = response.data?.data;
-    if (!result || !Array.isArray(result.ingredients) || result.ingredients.length === 0) {
+    if (!result || !Array.isArray(result.ingredients) || (result.ingredients.length === 0 && !result.dishes?.length)) {
       throw new Error("AI chưa nhận diện được thực phẩm trong ảnh. Hãy thử ảnh rõ hơn.");
     }
     return result;

@@ -12,7 +12,7 @@ import { hapticSuccess } from "@/utils/haptics";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { CameraType, CameraView, FlashMode, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
-import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -47,6 +47,9 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
   const [isFullScreenCamera, setIsFullScreenCamera] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
 
+  const scanRequestRef = useRef(0);
+  const [imageAspect, setImageAspect] = useState(1);
+  const [detectedDishes, setDetectedDishes] = useState<{ name: string; confidence: string; icon?: string }[]>([]);
   const fullCameraRef = useRef<CameraView>(null);
   const inlineCameraRef = useRef<CameraView>(null);
 
@@ -66,6 +69,14 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
   const [detectedIngredients, setDetectedIngredients] = useState<
     ScanDetectedIngredient[]
   >([]);
+  const [selectedTargetName, setSelectedTargetName] = useState<string | null>(null);
+  const photoTargets = detectedDishes.length ? detectedDishes : detectedIngredients;
+  const selectedTarget = photoTargets.find(target => target.name === selectedTargetName) || photoTargets[0];
+  const selectedIngredients = detectedIngredients.filter(item =>
+    item.source !== "inferred" && (!detectedDishes.length || (!!selectedTarget && item.dishNames?.includes(selectedTarget.name))));
+  const hasIngredientLinks = detectedIngredients.some(item => item.dishNames?.length);
+  const selectedTargetIndex = selectedTarget ? photoTargets.indexOf(selectedTarget) : -1;
+  useEffect(() => { setSelectedTargetName(null); }, [activeImage]);
   const [activePins, setActivePins] = useState<ScanPin[]>([]);
   const [aiRecipe, setAiRecipe] = useState<ScanSuggestedRecipe | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -106,11 +117,11 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
 
   // Save all detected ingredients to user's MongoDB fridge
   const handleSaveAllToFridge = async () => {
-    if (!detectedIngredients || detectedIngredients.length === 0) return;
+    if (!selectedIngredients.length) return;
     setIsSavingToFridge(true);
     try {
       let savedCount = 0;
-      for (const ing of detectedIngredients) {
+      for (const ing of selectedIngredients) {
         await FridgeService.addItem({
           name: ing.name,
           amount: "1 phần",
@@ -123,7 +134,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
       showToast(`✨ Đã lưu ${savedCount} nguyên liệu vào Bếp của bạn!`);
     } catch (e) {
       console.warn("Lỗi lưu nguyên liệu vào tủ lạnh:", e);
-      showToast("Đã lưu nguyên liệu vào Bếp của bạn!");
+      showToast("Không lưu được đầy đủ nguyên liệu. Vui lòng kiểm tra Tủ lạnh và thử lại.");
     } finally {
       setIsSavingToFridge(false);
     }
@@ -157,14 +168,13 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
     try {
       if (fullCameraRef.current) {
         const photo = await fullCameraRef.current.takePictureAsync({
-          quality: 0.7,
+          quality: 0.9,
           skipProcessing: false,
-          base64: true,
         });
 
         if (photo?.uri) {
           setIsFullScreenCamera(false);
-          processUploadedPhoto(photo.uri, "Ảnh chụp từ camera", photo.base64);
+          processUploadedPhoto(photo.uri, "Ảnh chụp từ camera");
           return;
         }
       }
@@ -207,15 +217,14 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
       }
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
-        allowsEditing: true,
+        allowsEditing: false,
         aspect: [4, 3],
-        quality: 0.7,
-        base64: true,
+        quality: 0.9,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         if (isFullScreenCamera) setIsFullScreenCamera(false);
-        processUploadedPhoto(result.assets[0].uri, "Ảnh từ thư viện", result.assets[0].base64);
+        processUploadedPhoto(result.assets[0].uri, "Ảnh từ thư viện");
       }
     } catch (e) {
       console.log("Error picking image:", e);
@@ -234,22 +243,29 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
         return;
       }
       const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
+        allowsEditing: false,
         aspect: [4, 3],
-        quality: 0.7,
+        quality: 0.9,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         if (isFullScreenCamera) setIsFullScreenCamera(false);
-        processUploadedPhoto(result.assets[0].uri, "Ảnh chụp camera mới", result.assets[0].base64);
+        processUploadedPhoto(result.assets[0].uri, "Ảnh chụp camera mới");
       }
     } catch (e) {
       console.log("Error taking photo:", e);
     }
   };
 
-  // Real AI scanning process via Gemini 1.5 Vision API
-  const processUploadedPhoto = async (uri: string, customTitle: string, base64?: string | null) => {
+  // Analyze the captured or selected image via the shared vision endpoint
+  const processUploadedPhoto = async (uri: string, customTitle: string) => {
+    const requestId = ++scanRequestRef.current;
+    setDetectedIngredients([]);
+    setDetectedDishes([]);
+    setActivePins([]);
+    setAiRecipe(null);
+    setActiveAccuracy(0);
+    setActiveHistoryId(null);
     setIsScanning(true);
     setScanCompleted(false);
     setScanError(null);
@@ -268,28 +284,28 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
     }
 
     try {
-      let finalUri = uri;
-      let finalBase64 = base64 || undefined;
-
-      // Nén & tối ưu hoá kích thước ảnh (tối đa 1200px) để chống 504 Gateway Timeout và tăng tốc độ scan
-      try {
-        const manipulated = await manipulateAsync(
-          uri,
-          [{ resize: { width: 1200 } }],
-          { compress: 0.65, format: SaveFormat.JPEG, base64: true }
-        );
-        if (manipulated?.uri) {
-          finalUri = manipulated.uri;
-          finalBase64 = manipulated.base64 || finalBase64;
-        }
-      } catch (manipErr) {
-        console.warn("[ScanAIView] Image resize fallback:", manipErr);
+      // Always send the same oriented JPEG shown in the preview. Never reuse old bytes.
+      const context = ImageManipulator.manipulate(uri);
+      const original = await context.renderAsync();
+      if (Math.max(original.width, original.height) > 2048) {
+        context.resize(original.width >= original.height ? { width: 2048 } : { height: 2048 });
       }
+      const rendered = await context.renderAsync();
+      const photo = await rendered.saveAsync({
+        compress: 0.85, format: SaveFormat.JPEG, base64: true,
+      });
+      if (requestId !== scanRequestRef.current) return;
+      if (!photo.base64) throw new Error("Không đọc được ảnh để phân tích. Vui lòng chọn hoặc chụp lại.");
+      setActiveImage(photo.uri);
+      setImageAspect(photo.width / photo.height);
+      const apiResult = await aiService.scanIngredients(photo.uri, "image/jpeg", photo.base64);
+      if (requestId !== scanRequestRef.current) return;
 
-      const apiResult = await aiService.scanIngredients(finalUri, "image/jpeg", finalBase64);
-
-      if (apiResult && apiResult.ingredients && apiResult.ingredients.length > 0) {
-        const accuracy = apiResult.accuracy || 95;
+      if (apiResult && apiResult.ingredients && (apiResult.ingredients.length > 0 || !!apiResult.dishes?.length)) {
+        const accuracy = apiResult.accuracy ?? 0;
+        const title = apiResult.title || customTitle;
+        setActiveTitle(title);
+        setDetectedDishes(apiResult.dishes || []);
         setActiveAccuracy(accuracy);
         setDetectedIngredients(apiResult.ingredients);
         setActivePins(apiResult.pins || []);
@@ -297,16 +313,16 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
         const suggested: ScanSuggestedRecipe = {
           id:
             apiResult.suggestedRecipe?.id ||
-            `ai-recipe-${Date.now()}`,
+            "",
           title:
             apiResult.suggestedRecipe?.title ||
             "Món ăn sáng tạo từ nguyên liệu vừa quét",
           desc:
             apiResult.suggestedRecipe?.desc ||
-            "Công thức nấu ăn tối ưu từ 100% nguyên liệu sẵn có của bạn.",
-          calories: apiResult.suggestedRecipe?.calories || 420,
-          durationMinutes: apiResult.suggestedRecipe?.durationMinutes || 20,
-          matchPercent: apiResult.suggestedRecipe?.matchPercent || 95,
+            "Gợi ý từ nguyên liệu trong ảnh; cần kiểm tra lại trước khi nấu.",
+          calories: apiResult.suggestedRecipe?.calories ?? 0,
+          durationMinutes: apiResult.suggestedRecipe?.durationMinutes ?? 0,
+          matchPercent: apiResult.suggestedRecipe?.matchPercent ?? 0,
         };
         setAiRecipe(suggested);
 
@@ -317,9 +333,10 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
           .padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
 
         const saved = ScanHistoryService.addHistory({
-          title: customTitle,
+          title,
+          dishes: apiResult.dishes || [],
           scannedAt: timeStr,
-          image: { uri },
+          image: { uri: photo.uri },
           accuracy,
           ingredients: apiResult.ingredients,
           pins: apiResult.pins || [],
@@ -342,6 +359,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
         showToast("⚠️ Không tìm thấy nguyên liệu trong ảnh.");
       }
     } catch (e: any) {
+      if (requestId !== scanRequestRef.current) return;
       console.warn("Scan AI failed:", e);
       setIsScanning(false);
       setScanCompleted(false);
@@ -377,6 +395,8 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
 
   // Handler: Select a scan from past history
   const handleSelectHistoryItem = (item: ScanHistoryItem) => {
+    ++scanRequestRef.current;
+    setDetectedDishes(item.dishes || []);
     setActiveHistoryId(item.id);
     setActiveImage(
       typeof item.image === "string"
@@ -396,6 +416,8 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
 
   // Reset to live camera view
   const handleResetToLiveCamera = () => {
+    ++scanRequestRef.current;
+    setDetectedDishes([]);
     setActiveHistoryId(null);
     setActiveImage(null);
     setActiveTitle("");
@@ -454,11 +476,15 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
       )}
 
       {/* Camera Viewfinder Box (Inline Live Camera or Captured Photo) */}
-      <View style={[styles.cameraViewfinder, { width: width - 36 }]}>
+      <View style={[styles.cameraViewfinder, { width: width - 36 }, activeImage ? { height: (width - 36) / imageAspect } : {}]}>
         {activeImage ? (
           // Captured / Chosen Photo
           <Image
             source={{ uri: activeImage }}
+            onLoad={(event) => {
+              const { width: imageWidth, height: imageHeight } = event.nativeEvent.source;
+              if (imageWidth > 0 && imageHeight > 0) setImageAspect(imageWidth / imageHeight);
+            }}
             style={styles.cameraPreviewImage}
             resizeMode="cover"
           />
@@ -548,45 +574,29 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
         <View style={[styles.corner, styles.cornerBL]} pointerEvents="none" />
         <View style={[styles.corner, styles.cornerBR]} pointerEvents="none" />
 
-        {/* Real-time Detected Ingredient Chips Overlaid on Image */}
-        {scanCompleted &&
-          !isScanning &&
-          activePins.map((pin, idx) => (
-            <View
-              key={idx}
-              style={[
-                styles.detectedPin,
-                {
-                  top:
-                    pin.top != null
-                      ? typeof pin.top === "number" && pin.top <= 100
-                        ? `${pin.top}%`
-                        : pin.top
-                      : undefined,
-                  bottom:
-                    pin.bottom != null
-                      ? typeof pin.bottom === "number" && pin.bottom <= 100
-                        ? `${pin.bottom}%`
-                        : pin.bottom
-                      : undefined,
-                  left:
-                    pin.left != null
-                      ? typeof pin.left === "number" && pin.left <= 100
-                        ? `${pin.left}%`
-                        : pin.left
-                      : undefined,
-                  right:
-                    pin.right != null
-                      ? typeof pin.right === "number" && pin.right <= 100
-                        ? `${pin.right}%`
-                        : pin.right
-                      : undefined,
-                } as any,
-              ]}
-            >
-              <Text style={styles.pinText}>{pin.text}</Text>
-            </View>
-          ))}
+        {/* Keep the photo readable: numbered dish markers and one detail caption. */}
+        {scanCompleted && !isScanning && photoTargets.map((target, index) => {
+          const pin = activePins.find(item => item.text === target.name);
+          const top = pin?.top ?? (pin?.bottom != null ? 100 - pin.bottom : undefined);
+          const left = pin?.left ?? (pin?.right != null ? 100 - pin.right : undefined);
+          if (top == null || left == null || !Number.isFinite(top) || !Number.isFinite(left) || top < 0 || top > 100 || left < 0 || left > 100) return null;
+          const isSelected = selectedTarget?.name === target.name;
+          return (
+            <TouchableOpacity key={target.name} accessibilityRole="button" accessibilityLabel={`Xem món ${index + 1}: ${target.name}`} accessibilityState={{ selected: isSelected }}
+              onPress={() => setSelectedTargetName(target.name)} activeOpacity={0.9}
+              style={[styles.photoMarker, { top: `${top}%`, left: `${left}%`, backgroundColor: isSelected ? "#F97316" : "#FFFFFF", borderColor: isSelected ? "#FFFFFF" : "#FDBA74", zIndex: isSelected ? 3 : 2 }]}>
+              <MaterialCommunityIcons name={((target.icon || pin?.icon || "silverware-fork-knife") as any)} size={15} color={isSelected ? "#FFFFFF" : "#EA580C"} />
+              <Text style={{ color: isSelected ? "#FFFFFF" : "#334155", fontWeight: "800", fontSize: 12 }}>{index + 1}</Text>
+            </TouchableOpacity>
+          );
+        })}
+        {scanCompleted && !isScanning && selectedTarget && (
+          <View pointerEvents="none" style={styles.photoCaption}>
+            <Text style={styles.photoCaptionNumber}>{selectedTargetIndex + 1}</Text>
+            <MaterialCommunityIcons name={((selectedTarget.icon || "silverware-fork-knife") as any)} size={20} color="#FDBA74" />
+            <View style={{ flex: 1 }}><Text style={styles.pinText}>{selectedTarget.name}</Text><Text style={{ fontSize: 10, color: "#CBD5E1", marginTop: 3 }}>AI ước tính · {selectedTarget.confidence}</Text></View>
+          </View>
+        )}
 
         {/* Scanning Laser Animation Bar */}
         {isScanning && (
@@ -786,7 +796,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
       )}
 
       {/* Results Section (Only shown when REAL ingredients are detected) */}
-      {scanCompleted && !isScanning && detectedIngredients.length > 0 && (
+      {scanCompleted && !isScanning && (detectedIngredients.length > 0 || detectedDishes.length > 0) && (
         <View style={styles.resultsContainer}>
           <View style={styles.resultHeaderRow}>
             <View
@@ -799,13 +809,13 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
             >
               <Ionicons name="sparkles" size={16} color="#E65100" />
               <Text style={styles.resultsHeading} numberOfLines={1}>
-                {detectedIngredients.length} nguyên liệu ({activeAccuracy}%)
+                Kết quả phân tích ({activeAccuracy}%)
               </Text>
             </View>
             <TouchableOpacity
               style={styles.saveToFridgeBtn}
               onPress={handleSaveAllToFridge}
-              disabled={isSavingToFridge}
+              disabled={isSavingToFridge || !selectedIngredients.length}
               activeOpacity={0.8}
             >
               {isSavingToFridge ? (
@@ -813,22 +823,42 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
               ) : (
                 <>
                   <Ionicons name="archive-outline" size={13} color="#FFFFFF" />
-                  <Text style={styles.saveToFridgeBtnText}>Lưu vào Tủ Lạnh</Text>
+                  <Text style={styles.saveToFridgeBtnText}>Lưu nguyên liệu món này</Text>
                 </>
               )}
             </TouchableOpacity>
           </View>
 
+          <Text style={styles.aiDishTitle}>{activeTitle}</Text>
+          <Text style={styles.resultsHeading}>{detectedDishes.length ? "Món ăn trong ảnh" : "Thực phẩm trong ảnh"} ({photoTargets.length})</Text>
+          <Text style={styles.aiDishDesc}>Chọn số trên ảnh hoặc chọn món bên dưới để xem chi tiết.</Text>
+          <View style={{ gap: 8 }}>
+            {photoTargets.map((target, index) => {
+              const isSelected = selectedTarget?.name === target.name;
+              return (
+                <TouchableOpacity key={target.name} accessibilityRole="button" accessibilityState={{ selected: isSelected }} onPress={() => setSelectedTargetName(target.name)}
+                  style={[styles.dishLegendCard, { backgroundColor: isSelected ? "#FFF7ED" : "#FFFFFF", borderColor: isSelected ? "#FB923C" : "#E2E8F0" }]} activeOpacity={0.85}>
+                  <Text style={[styles.dishLegendNumber, { backgroundColor: isSelected ? "#F97316" : "#F1F5F9", color: isSelected ? "#FFFFFF" : "#64748B" }]}>{index + 1}</Text>
+                  <MaterialCommunityIcons name={((target.icon || "silverware-fork-knife") as any)} size={20} color="#EA580C" />
+                  <View style={{ flex: 1 }}><Text style={styles.detectedChipText}>{target.name}</Text><Text style={{ fontSize: 10, color: "#64748B", marginTop: 4 }}>AI ước tính · {target.confidence}</Text></View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <Text style={styles.aiDishDesc}>Kết quả và độ tin cậy do AI ước tính. Hãy kiểm tra lại trước khi sử dụng.</Text>
+          <Text style={styles.resultsHeading}>{detectedDishes.length ? "Nguyên liệu của món" : "Nguyên liệu nhận diện"} ({selectedIngredients.length})</Text>
+          {detectedDishes.length > 0 && <Text style={styles.aiDishDesc}>{selectedTarget?.name}</Text>}
+          {!selectedIngredients.length && <Text style={styles.aiDishDesc}>{detectedDishes.length && !hasIngredientLinks ? "Lần quét này chưa liên kết nguyên liệu theo món. Vui lòng quét lại ảnh để phân tích từng món." : "Chưa xác định rõ nguyên liệu nhìn thấy của món này. Không tự suy đoán thành phần bị che."}</Text>}
           {/* Chips Row */}
           <View style={styles.detectedChipsRow}>
-            {detectedIngredients.map((item, index) => (
-              <View key={index} style={styles.detectedChip}>
+            {selectedIngredients.map((item, index) => (
+              <View key={index} style={[styles.detectedChip, { width: "100%" }]}>
                 <MaterialCommunityIcons
                   name={(item.icon as any) || "food-apple"}
                   size={15}
                   color="#E65100"
                 />
-                <Text style={styles.detectedChipText}>{item.name}</Text>
+                <View style={{ flex: 1 }}><Text style={styles.detectedChipText}>{item.name}</Text><Text style={{ fontSize: 10, color: "#64748B", marginTop: 3 }}>{item.evidence || "Quan sát trong ảnh"}</Text></View>
                 <Text style={styles.detectedChipConf}>{item.confidence}</Text>
               </View>
             ))}
@@ -1332,15 +1362,20 @@ const styles = StyleSheet.create({
     borderRightWidth: 3,
     borderBottomRightRadius: 6,
   },
-  detectedPin: {
-    position: "absolute",
-    backgroundColor: "rgba(0, 0, 0, 0.78)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#FF7043",
+  photoMarker: {
+    position: "absolute", minWidth: 44, height: 40, paddingHorizontal: 6, borderRadius: 20, borderWidth: 2,
+    transform: [{ translateX: -22 }, { translateY: -20 }], flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 3,
+    shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 4, elevation: 4,
   },
+  photoCaption: {
+    position: "absolute", left: 10, right: 10, bottom: 10, padding: 10, borderRadius: 14, zIndex: 4,
+    backgroundColor: "rgba(15,23,42,0.95)", flexDirection: "row", alignItems: "center", gap: 10,
+  },
+  photoCaptionNumber: {
+    width: 28, height: 28, borderRadius: 8, textAlign: "center", lineHeight: 28, backgroundColor: "#F97316", color: "white", fontWeight: "800",
+  },
+  dishLegendCard: { borderWidth: 1, borderRadius: 14, padding: 12, flexDirection: "row", alignItems: "center", gap: 10 },
+  dishLegendNumber: { width: 28, height: 28, borderRadius: 8, lineHeight: 28, textAlign: "center", fontWeight: "800", fontSize: 12 },
   pinText: {
     color: "#FFFFFF",
     fontSize: 11,

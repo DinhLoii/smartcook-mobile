@@ -401,6 +401,7 @@ export default function CookingModeScreen() {
   };
 
   const readNavigatedStep = useEffectEvent((index: number) => {
+    if (cookingVoice.isSpeaking) return;
     if (isVoiceActiveRef.current) {
       if (speechTimerRef.current) clearTimeout(speechTimerRef.current);
       speechTimerRef.current = setTimeout(() => {
@@ -469,7 +470,9 @@ export default function CookingModeScreen() {
 
   const navigateToStep = (index: number, completeCurrent = false) => {
     if (index < 0 || index >= steps.length || index === currentStepIndex) return;
-    void stopSpeaking();
+    if (!cookingVoice.isSpeaking) {
+      void stopSpeaking();
+    }
     dispatchTimer({ type: "navigate", index, fromIndex: currentStepIndex, completeCurrent });
     void hapticLightImpact();
   };

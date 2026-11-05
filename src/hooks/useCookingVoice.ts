@@ -70,6 +70,7 @@ export function useCookingVoice({
     turns: NonNullable<CookingVoiceCopilotRequestDTO["conversationHistory"]>;
   }>({ recipeTitle, stepNumber: currentStep.stepNumber, turns: [] });
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navigationReplyRef = useRef(false);
 
   // Clean text before reading out with TTS
   const cleanSpeechText = (text: string): string => {
@@ -163,10 +164,12 @@ export function useCookingVoice({
           setQuickReplies(response.suggestedQuickReplies);
         }
 
+        navigationReplyRef.current = ["GO_TO_STEP", "NEXT_STEP", "PREV_STEP"].includes(response.action);
         applyCookingVoiceAction(response, { onExtendTimer, onReduceTimer, onNextStep, onPrevStep, onGoToStep });
 
         // Reading a confirmation must never delay the requested UI action.
         await speakAiResponse(response.speechReply);
+        navigationReplyRef.current = false;
         if (!mountedRef.current || session !== sessionRef.current) return;
 
       } catch {
@@ -265,7 +268,7 @@ export function useCookingVoice({
     }
   }, [recorder, stopListening]);
 
-  const cancelListening = useCallback(() => {
+  const cancelListening = useCallback((preserveSpeech = false) => {
     sessionRef.current += 1;
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     if (recordingRef.current) {
@@ -278,14 +281,20 @@ export function useCookingVoice({
         return setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
       }).catch(() => {});
     }
-    void Speech.stop();
+    if (!preserveSpeech) {
+      void Speech.stop();
+      setIsSpeaking(false);
+    }
     setIsListening(false);
-    setIsSpeaking(false);
   }, [recorder]);
 
   // A reply for the previous step must never adjust the newly selected step's timer.
   useEffect(() => {
-    return () => cancelListening();
+    return () => {
+      const preserve = navigationReplyRef.current;
+      navigationReplyRef.current = false;
+      cancelListening(preserve);
+    };
   }, [recipeTitle, currentStep.stepNumber, cancelListening]);
 
   useEffect(() => {
