@@ -46,8 +46,9 @@ export const AuthInput: React.FC<AuthInputProps> = ({
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
 
-      {/* Direct View wrapper: does not hijack touch responders or suppress native keyboard on mobile */}
+      {/* Keep the native wrapper mounted when focus adds a shadow or elevation. */}
       <View
+        collapsable={false}
         style={[
           styles.inputWrapper,
           isFocused && styles.inputWrapperFocused,
