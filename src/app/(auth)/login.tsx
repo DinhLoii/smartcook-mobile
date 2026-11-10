@@ -194,7 +194,7 @@ export default function LoginScreen() {
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         enabled={Platform.OS !== "web"}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior="padding"
       >
         <ScrollView
           style={styles.scrollView}
