@@ -209,7 +209,7 @@ export default function CreatePostModal({
               <TextInput
                 style={styles.contentInput}
                 placeholder="Chia sẻ về món ăn của bạn hôm nay, cảm nhận hoặc đặt câu hỏi cùng mọi người..."
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={BrandColors.textPlaceholder}
                 value={content}
                 onChangeText={setContent}
                 multiline
@@ -231,7 +231,7 @@ export default function CreatePostModal({
                     style={styles.removePhotoBtn}
                     onPress={() => setSelectedPhoto(null)}
                   >
-                    <Ionicons name="close-circle" size={24} color="#EF4444" />
+                    <Ionicons name="close-circle" size={24} color="#242424" />
                   </TouchableOpacity>
                 </View>
               )}
@@ -330,11 +330,11 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(15, 23, 42, 0.45)",
+    backgroundColor: "rgba(27, 27, 27, 0.45)",
   },
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     marginTop: 40,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -346,20 +346,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: BrandColors.borderLight,
   },
   cancelBtn: {
     padding: 6,
   },
   cancelText: {
     fontSize: 14.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "500",
   },
   modalTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   publishBtn: {
     paddingHorizontal: 18,
@@ -381,30 +381,30 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#475569",
+    color: BrandColors.textBody,
     marginBottom: 6,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   titleInput: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 14,
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   contentInput: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 14,
-    color: "#0F172A",
+    color: BrandColors.textDark,
     minHeight: 90,
   },
   photoSection: {
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 8,
     right: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 14,
   },
   photoActionsRow: {
@@ -437,12 +437,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFF3E0",
+    backgroundColor: BrandColors.inputBg,
     paddingVertical: 10,
     borderRadius: 12,
     gap: 6,
     borderWidth: 1,
-    borderColor: "#FFE0B2",
+    borderColor: "#DADADA",
   },
   photoActionText: {
     fontSize: 12.5,
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
   },
   samplePhotoLabel: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginBottom: 8,
   },
   sampleScroll: {
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
   },
   sampleThumbnailText: {
     fontSize: 10,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 3,
   },
   tagsSection: {
@@ -486,21 +486,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tagPill: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   tagPillSelected: {
-    backgroundColor: "#FFF3E0",
+    backgroundColor: BrandColors.inputBg,
     borderColor: BrandColors.primary,
   },
   tagText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   tagTextSelected: {
     color: BrandColors.primaryDark,

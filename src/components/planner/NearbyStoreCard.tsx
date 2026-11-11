@@ -138,7 +138,7 @@ export default function NearbyStoreCard({
       {/* 1. Header Row */}
       <View style={styles.headerRow}>
         <View style={styles.titleGroup}>
-          <MaterialCommunityIcons name="google-maps" size={18} color="#EA580C" />
+          <MaterialCommunityIcons name="google-maps" size={18} color={BrandColors.textDark} />
           <View style={{ flexShrink: 1, paddingRight: 6 }}>
             <Text style={styles.headerTitle}>
               {selectedProduct ? `Địa chỉ bán "${selectedProduct}" gần bạn` : title}
@@ -164,10 +164,10 @@ export default function NearbyStoreCard({
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             {isRefreshing ? (
-              <ActivityIndicator size="small" color="#EA580C" />
+              <ActivityIndicator size="small" color={BrandColors.textDark} />
             ) : (
               <>
-                <Ionicons name="refresh-outline" size={13} color="#EA580C" />
+                <Ionicons name="refresh-outline" size={13} color={BrandColors.textDark} />
                 <Text style={styles.refreshText}>Cập nhật GPS</Text>
               </>
             )}
@@ -213,7 +213,7 @@ export default function NearbyStoreCard({
           {selectedProduct && (
             <View style={styles.selectedProductBanner}>
               <View style={styles.selectedProductLeft}>
-                <Ionicons name="cart" size={15} color="#EA580C" />
+                <Ionicons name="cart" size={15} color={BrandColors.textDark} />
                 <Text style={styles.selectedProductText} numberOfLines={1}>
                   Nơi bán: <Text style={styles.selectedProductBold}>{selectedProduct}</Text>
                 </Text>
@@ -224,7 +224,7 @@ export default function NearbyStoreCard({
                   style={styles.clearProductBtn}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="close-circle" size={15} color="#94A3B8" />
+                  <Ionicons name="close-circle" size={15} color={BrandColors.textPlaceholder} />
                   <Text style={styles.clearProductBtnText}>Xem tất cả</Text>
                 </TouchableOpacity>
               )}
@@ -333,7 +333,7 @@ export default function NearbyStoreCard({
                       </View>
 
                       <View style={styles.distanceBadge}>
-                        <Ionicons name="location-sharp" size={12} color="#EA580C" />
+                        <Ionicons name="location-sharp" size={12} color={BrandColors.textDark} />
                         <Text style={styles.distanceText}>
                           {item.formattedDistance}
                         </Text>
@@ -343,7 +343,7 @@ export default function NearbyStoreCard({
                     {/* Badge thông báo siêu thị có bán món đang chọn */}
                     {selectedProduct && (
                       <View style={styles.productStockTag}>
-                        <Ionicons name="checkmark-circle" size={12} color="#059669" />
+                        <Ionicons name="checkmark-circle" size={12} color="#262626" />
                         <Text style={styles.productStockTagText}>
                           Có bán {selectedProduct}
                         </Text>
@@ -388,7 +388,7 @@ export default function NearbyStoreCard({
                           )
                         }
                       >
-                        <MaterialCommunityIcons name="google-maps" size={14} color="#0284C7" />
+                        <MaterialCommunityIcons name="google-maps" size={14} color="#262626" />
                         <Text style={styles.mapBtnText}>Mở Google Maps</Text>
                       </TouchableOpacity>
                     </View>
@@ -403,7 +403,7 @@ export default function NearbyStoreCard({
       {/* 5. State: DENIED (User từ chối quyền GPS) */}
       {status === "denied" && (
         <View style={styles.deniedBody}>
-          <Ionicons name="location-outline" size={24} color="#DC2626" />
+          <Ionicons name="location-outline" size={24} color="#212121" />
           <Text style={styles.deniedTitle}>Vui lòng cho phép truy cập vị trí</Text>
           <Text style={styles.deniedDesc}>
             SmartCook cần quyền GPS để tự động tính khoảng cách và gợi ý các siêu thị gần bạn nhất.
@@ -421,7 +421,7 @@ export default function NearbyStoreCard({
       {/* 6. State: EMPTY (Không có dữ liệu) */}
       {status === "empty" && (
         <View style={styles.deniedBody}>
-          <Ionicons name="alert-circle-outline" size={24} color="#64748B" />
+          <Ionicons name="alert-circle-outline" size={24} color={BrandColors.textMuted} />
           <Text style={styles.emptyTitle}>Không tìm thấy siêu thị gần bạn</Text>
           <Text style={styles.deniedDesc}>
             Hiện chưa có dữ liệu siêu thị tại khu vực hiện tại của bạn.
@@ -441,12 +441,12 @@ export default function NearbyStoreCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 1.5 },
     shadowOpacity: 0.04,
@@ -468,21 +468,21 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 13.5,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   headerSubtext: {
     fontSize: 10.5,
     fontWeight: "500",
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 1,
   },
   refreshBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
     paddingHorizontal: 8,
     paddingVertical: 3.5,
     borderRadius: 6,
@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
   refreshText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
 
   /* Filter Pills */
@@ -504,18 +504,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4.5,
     borderRadius: 14,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   filterPillActive: {
-    backgroundColor: "#EA580C",
-    borderColor: "#EA580C",
+    backgroundColor: "#171717",
+    borderColor: "#171717",
   },
   filterPillText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   filterPillTextActive: {
     color: "#FFFFFF",
@@ -528,11 +528,11 @@ const styles = StyleSheet.create({
   },
   emptyFilteredText: {
     fontSize: 12,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
   },
   resetFilterText: {
     fontSize: 12,
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontWeight: "700",
   },
 
@@ -542,11 +542,11 @@ const styles = StyleSheet.create({
   },
   idleDesc: {
     fontSize: 11.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     lineHeight: 16,
   },
   actionBtn: {
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 12.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "600",
   },
 
@@ -579,18 +579,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   storeItemCard: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     gap: 8,
   },
   storeItemCardClosest: {
-    backgroundColor: "#FFFDF9",
-    borderColor: "#FED7AA",
+    backgroundColor: BrandColors.background,
+    borderColor: BrandColors.borderLight,
     borderLeftWidth: 3.5,
-    borderLeftColor: "#EA580C",
+    borderLeftColor: "#171717",
   },
   storeItemTopRow: {
     flexDirection: "row",
@@ -601,39 +601,39 @@ const styles = StyleSheet.create({
   storeRankBadge: {
     fontSize: 12,
     fontWeight: "800",
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
   },
   storeName: {
     fontSize: 13.5,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     flex: 1,
   },
   closestTag: {
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 6,
     paddingVertical: 1.5,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
   },
   closestTagText: {
     fontSize: 9.5,
     fontWeight: "700",
-    color: "#C2410C",
+    color: "#282828",
   },
   storeAddress: {
     fontSize: 11.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     lineHeight: 16,
     marginTop: 3,
   },
   distanceBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 6,
@@ -643,7 +643,7 @@ const styles = StyleSheet.create({
   distanceText: {
     fontSize: 11,
     fontWeight: "800",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
 
   /* Travel Times */
@@ -656,7 +656,7 @@ const styles = StyleSheet.create({
   travelTimeChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 7,
     paddingVertical: 2.5,
     borderRadius: 6,
@@ -667,11 +667,11 @@ const styles = StyleSheet.create({
   },
   travelTimeLabel: {
     fontSize: 10.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   travelTimeValue: {
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
 
   storeItemBottomRow: {
@@ -680,18 +680,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingTop: 4,
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: BrandColors.borderLight,
   },
   storeHoursText: {
     fontSize: 10.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   mapBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F0F9FF",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#BAE6FD",
+    borderColor: "#DADADA",
     paddingHorizontal: 9,
     paddingVertical: 4.5,
     borderRadius: 6,
@@ -700,7 +700,7 @@ const styles = StyleSheet.create({
   mapBtnText: {
     fontSize: 11.5,
     fontWeight: "700",
-    color: "#0284C7",
+    color: "#262626",
   },
 
   /* Denied & Empty */
@@ -712,18 +712,18 @@ const styles = StyleSheet.create({
   deniedTitle: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#DC2626",
+    color: "#212121",
     textAlign: "center",
   },
   emptyTitle: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#64748B",
+    color: BrandColors.textMuted,
     textAlign: "center",
   },
   deniedDesc: {
     fontSize: 11.5,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     textAlign: "center",
     lineHeight: 16,
     paddingHorizontal: 16,
@@ -732,23 +732,23 @@ const styles = StyleSheet.create({
     marginTop: 6,
     paddingHorizontal: 16,
     paddingVertical: 7,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   retryBtnText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   selectedProductBanner: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 7,
@@ -761,11 +761,11 @@ const styles = StyleSheet.create({
   },
   selectedProductText: {
     fontSize: 12,
-    color: "#9A3412",
+    color: "#292929",
   },
   selectedProductBold: {
     fontWeight: "800",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   clearProductBtn: {
     flexDirection: "row",
@@ -775,16 +775,16 @@ const styles = StyleSheet.create({
   },
   clearProductBtnText: {
     fontSize: 11,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "600",
   },
   productStockTag: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
-    backgroundColor: "#ECFDF5",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#A7F3D0",
+    borderColor: BrandColors.borderLight,
     paddingHorizontal: 7,
     paddingVertical: 2.5,
     borderRadius: 6,
@@ -793,6 +793,6 @@ const styles = StyleSheet.create({
   productStockTagText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#059669",
+    color: "#262626",
   },
 });

@@ -557,7 +557,7 @@ export default function PlannerView({
           <Ionicons
             name="calendar"
             size={14}
-            color={activeSubTab === "calendar" ? "#FF5722" : "#64748B"}
+            color={activeSubTab === "calendar" ? "#171717" : "#5E5E5E"}
           />
           <Text
             style={[
@@ -580,7 +580,7 @@ export default function PlannerView({
           <Ionicons
             name="cart"
             size={14}
-            color={activeSubTab === "shopping" ? "#FF5722" : "#64748B"}
+            color={activeSubTab === "shopping" ? "#171717" : "#5E5E5E"}
           />
           <Text
             style={[
@@ -603,7 +603,7 @@ export default function PlannerView({
           <Ionicons
             name="gift"
             size={14}
-            color={activeSubTab === "rewards" ? "#FF5722" : "#64748B"}
+            color={activeSubTab === "rewards" ? "#171717" : "#5E5E5E"}
           />
           <Text
             style={[
@@ -696,7 +696,7 @@ export default function PlannerView({
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  backgroundColor: "#FFF3E0",
+                  backgroundColor: BrandColors.inputBg,
                   paddingHorizontal: 10,
                   paddingVertical: 5,
                   borderRadius: 12,
@@ -750,7 +750,7 @@ export default function PlannerView({
                     style={{ padding: 6 }}
                     onPress={() => handleRemoveMeal(meal.slot, meal.customTitle)}
                   >
-                    <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                    <Ionicons name="trash-outline" size={18} color="#242424" />
                   </TouchableOpacity>
                 </View>
               ))
@@ -768,7 +768,7 @@ export default function PlannerView({
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Thêm món vào {selectedDay}</Text>
                   <TouchableOpacity onPress={() => setShowAddMealModal(false)}>
-                    <Ionicons name="close" size={22} color="#64748B" />
+                    <Ionicons name="close" size={22} color={BrandColors.textMuted} />
                   </TouchableOpacity>
                 </View>
 
@@ -817,7 +817,7 @@ export default function PlannerView({
                 <TextInput
                   style={styles.modalInput}
                   placeholder="Ví dụ: Bò xào hành cần tây"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={BrandColors.textPlaceholder}
                   value={mealTitle}
                   onChangeText={setMealTitle}
                 />
@@ -884,7 +884,7 @@ export default function PlannerView({
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
-                      backgroundColor: "#FEE2E2",
+                      backgroundColor: "#EEEEEE",
                       paddingHorizontal: 8,
                       paddingVertical: 5,
                       borderRadius: 10,
@@ -892,8 +892,8 @@ export default function PlannerView({
                     }}
                     onPress={handleClearBoughtItems}
                   >
-                    <Ionicons name="trash-bin-outline" size={13} color="#DC2626" />
-                    <Text style={{ fontSize: 11, fontWeight: "700", color: "#DC2626" }}>
+                    <Ionicons name="trash-bin-outline" size={13} color="#212121" />
+                    <Text style={{ fontSize: 11, fontWeight: "700", color: "#212121" }}>
                       Dọn đồ đã mua
                     </Text>
                   </TouchableOpacity>
@@ -902,7 +902,7 @@ export default function PlannerView({
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    backgroundColor: "#FFF3E0",
+                    backgroundColor: BrandColors.inputBg,
                     paddingHorizontal: 8,
                     paddingVertical: 5,
                     borderRadius: 10,
@@ -959,7 +959,7 @@ export default function PlannerView({
                   <Text
                     style={[
                       styles.shopItemPrice,
-                      item.bought && { color: "#94A3B8" },
+                      item.bought && { color: BrandColors.textPlaceholder },
                     ]}
                   >
                     {item.price}
@@ -970,7 +970,7 @@ export default function PlannerView({
                   style={{ padding: 4, marginLeft: 6 }}
                   onPress={() => handleRemoveShoppingItem(item.id, item.name)}
                 >
-                  <Ionicons name="close-circle-outline" size={18} color="#CBD5E1" />
+                  <Ionicons name="close-circle-outline" size={18} color="#C7C7C7" />
                 </TouchableOpacity>
               </View>
             ))}
@@ -982,7 +982,7 @@ export default function PlannerView({
                   flexDirection: "row",
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: "#10B981",
+                  backgroundColor: "#353535",
                   marginTop: 12,
                   paddingVertical: 13,
                   borderRadius: 14,
@@ -1011,7 +1011,7 @@ export default function PlannerView({
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Thêm nguyên liệu cần mua</Text>
                   <TouchableOpacity onPress={() => setShowAddCartModal(false)}>
-                    <Ionicons name="close" size={22} color="#64748B" />
+                    <Ionicons name="close" size={22} color={BrandColors.textMuted} />
                   </TouchableOpacity>
                 </View>
 
@@ -1019,7 +1019,7 @@ export default function PlannerView({
                 <TextInput
                   style={styles.modalInput}
                   placeholder="Ví dụ: Tôm tươi, Nấm đông cô"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={BrandColors.textPlaceholder}
                   value={newCartName}
                   onChangeText={setNewCartName}
                 />
@@ -1099,7 +1099,7 @@ export default function PlannerView({
         >
           {isLoadingRewards && !rewardStatus ? (
             <View style={styles.rewardsLoadingBox}>
-              <ActivityIndicator size="large" color="#EA580C" />
+              <ActivityIndicator size="large" color={BrandColors.textDark} />
               <Text style={styles.rewardsLoadingText}>Đang tải hộp quà & điểm thưởng...</Text>
             </View>
           ) : (
@@ -1109,12 +1109,12 @@ export default function PlannerView({
                 {/* Top: Rank badge + Streak pill */}
                 <View style={styles.chefCardTopRow}>
                   <View style={styles.chefRankBadge}>
-                    <Ionicons name="ribbon-outline" size={13} color="#475569" />
+                    <Ionicons name="ribbon-outline" size={13} color={BrandColors.textBody} />
                     <Text style={styles.chefRankText}>{rewardStatus?.level || "Tập sự"}</Text>
                   </View>
 
                   <View style={styles.streakFlamePill}>
-                    <Ionicons name="flame" size={15} color="#FF5722" />
+                    <Ionicons name="flame" size={15} color={BrandColors.textDark} />
                     <Text style={styles.streakFlameNum}>{rewardStatus?.streakDays ?? 0}</Text>
                     <Text style={styles.streakFlameLabel}>ngày liên tiếp</Text>
                   </View>
@@ -1186,18 +1186,18 @@ export default function PlannerView({
                             </Text>
                             <View style={styles.streakDayIcon}>
                               {isPassed ? (
-                                <Ionicons name="checkmark-circle" size={15} color="#10B981" />
+                                <Ionicons name="checkmark-circle" size={15} color={BrandColors.textBody} />
                               ) : dayNum === 7 ? (
                                 <Ionicons
                                   name="gift-outline"
                                   size={14}
-                                  color={isToday ? "#FF5722" : "#475569"}
+                                  color={isToday ? "#171717" : "#4A4A4A"}
                                 />
                               ) : (
                                 <Ionicons
                                   name="sparkles"
                                   size={12}
-                                  color={isToday ? "#FF5722" : "#CBD5E1"}
+                                  color={isToday ? "#171717" : "#C7C7C7"}
                                 />
                               )}
                             </View>
@@ -1230,14 +1230,14 @@ export default function PlannerView({
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : rewardStatus?.hasCheckedInToday ? (
                     <View style={styles.checkedInRow}>
-                      <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+                      <Ionicons name="checkmark-circle" size={16} color={BrandColors.textBody} />
                       <Text style={styles.checkedInText}>
                         Đã điểm danh hôm nay (Quay lại vào ngày mai)
                       </Text>
                     </View>
                   ) : (
                     <LinearGradient
-                      colors={["#FF5722", "#FF7043"]}
+                      colors={["#171717", "#292929"]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.checkInGradientBtn}
@@ -1264,7 +1264,7 @@ export default function PlannerView({
                   <Ionicons
                     name="pricetags-outline"
                     size={14}
-                    color={rewardsSubTab === "catalog" ? "#0F172A" : "#64748B"}
+                    color={rewardsSubTab === "catalog" ? "#171717" : "#5E5E5E"}
                   />
                   <Text
                     style={[
@@ -1287,7 +1287,7 @@ export default function PlannerView({
                   <Ionicons
                     name="wallet-outline"
                     size={14}
-                    color={rewardsSubTab === "my_rewards" ? "#0F172A" : "#64748B"}
+                    color={rewardsSubTab === "my_rewards" ? "#171717" : "#5E5E5E"}
                   />
                   <Text
                     style={[
@@ -1335,7 +1335,7 @@ export default function PlannerView({
                                   : "gift-outline"
                               }
                               size={22}
-                              color="#334155"
+                              color={BrandColors.textBody}
                             />
                           )}
                         </View>
@@ -1375,7 +1375,7 @@ export default function PlannerView({
                               <Ionicons
                                 name={canAfford ? "sparkles" : "lock-closed-outline"}
                                 size={12}
-                                color={canAfford ? "#FFFFFF" : "#94A3B8"}
+                                color={canAfford ? "#FFFFFF" : "#686868"}
                               />
                               <Text
                                 style={[
@@ -1400,7 +1400,7 @@ export default function PlannerView({
                   {!rewardStatus?.claimedRewards ||
                   rewardStatus.claimedRewards.length === 0 ? (
                     <View style={styles.emptyClaimedBox}>
-                      <Ionicons name="ticket-outline" size={38} color="#CBD5E1" />
+                      <Ionicons name="ticket-outline" size={38} color="#C7C7C7" />
                       <Text style={styles.emptyClaimedTitle}>
                         Chưa có voucher nào
                       </Text>
@@ -1431,7 +1431,7 @@ export default function PlannerView({
                                 </View>
                               )}
                               <View style={styles.claimedTag}>
-                                <Ionicons name="pricetag-outline" size={11} color="#0F172A" />
+                                <Ionicons name="pricetag-outline" size={11} color={BrandColors.textDark} />
                                 <Text style={styles.claimedTagText}>
                                   {reward.discountValue}
                                 </Text>
@@ -1456,7 +1456,7 @@ export default function PlannerView({
                               activeOpacity={0.8}
                               onPress={() => handleCopyCode(reward.code)}
                             >
-                              <Ionicons name="copy-outline" size={14} color="#FF5722" />
+                              <Ionicons name="copy-outline" size={14} color={BrandColors.textDark} />
                               <Text style={styles.claimedCopyBtnText}>Sao chép</Text>
                             </TouchableOpacity>
                           </View>
@@ -1478,7 +1478,7 @@ export default function PlannerView({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
   },
   header: {
     flexDirection: "row",
@@ -1490,18 +1490,18 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#64748B",
+    color: BrandColors.textMuted,
     letterSpacing: 0.8,
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginTop: 2,
   },
   subTabSegmentContainer: {
     flexDirection: "row",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     marginHorizontal: 16,
     padding: 3,
     borderRadius: 14,
@@ -1518,8 +1518,8 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   subTabSegmentBtnActive: {
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#0F172A",
+    backgroundColor: BrandColors.surfaceCard,
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -1528,17 +1528,17 @@ const styles = StyleSheet.create({
   subTabSegmentText: {
     fontSize: 12.5,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   subTabSegmentTextActive: {
-    color: "#0F172A",
+    color: BrandColors.textDark,
     fontWeight: "700",
   },
   rewardsBadgeDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#FF5722",
+    backgroundColor: "#171717",
     position: "absolute",
     top: 8,
     right: 8,
@@ -1554,18 +1554,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 8,
     borderRadius: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
     width: 44,
   },
   dayChipActive: {
-    backgroundColor: "#FFF3E0",
+    backgroundColor: BrandColors.inputBg,
     borderColor: BrandColors.primary,
   },
   dayText: {
     fontSize: 11,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "600",
     marginBottom: 2,
   },
@@ -1576,7 +1576,7 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 14,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   dateTextActive: {
     color: BrandColors.primary,
@@ -1590,11 +1590,11 @@ const styles = StyleSheet.create({
   },
   dailyCalorieCard: {
     marginHorizontal: 20,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 18,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
     marginBottom: 20,
   },
   calorieCardTop: {
@@ -1606,15 +1606,15 @@ const styles = StyleSheet.create({
   calorieCardTitle: {
     fontSize: 14,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   calorieCardSub: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 2,
   },
   calorieTag: {
-    backgroundColor: "#ECFDF5",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
@@ -1622,18 +1622,18 @@ const styles = StyleSheet.create({
   calorieTagText: {
     fontSize: 11,
     fontWeight: "800",
-    color: "#059669",
+    color: "#262626",
   },
   calorieBarBg: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     overflow: "hidden",
   },
   calorieBarFill: {
     height: "100%",
     borderRadius: 4,
-    backgroundColor: "#10B981",
+    backgroundColor: "#353535",
   },
   mealsListSection: {
     paddingHorizontal: 20,
@@ -1641,18 +1641,18 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontSize: 15,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginBottom: 12,
   },
   mealSlotCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 18,
     padding: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
     gap: 12,
   },
   mealSlotImg: {
@@ -1670,7 +1670,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   slotBadge: {
-    backgroundColor: "#FFF3E0",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -1678,62 +1678,62 @@ const styles = StyleSheet.create({
   slotBadgeText: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#E65100",
+    color: BrandColors.textDark,
   },
   slotTimeText: {
     fontSize: 11,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     fontWeight: "600",
   },
   mealSlotTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#1E293B",
+    color: BrandColors.textDark,
     marginBottom: 3,
   },
   mealSlotMeta: {
     fontSize: 11.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   slotDetailBtn: {
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
   },
   slotDetailBtnText: {
     fontSize: 10.5,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   shoppingSummaryCard: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginHorizontal: 20,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     borderRadius: 18,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
     marginBottom: 20,
   },
   shopSumTitle: {
     fontSize: 13.5,
     fontWeight: "800",
-    color: "#9A3412",
+    color: "#292929",
   },
   shopSumSub: {
     fontSize: 11,
-    color: "#C2410C",
+    color: "#282828",
     marginTop: 2,
   },
   shopSumPrice: {
     fontSize: 18,
     fontWeight: "900",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   shoppingListSection: {
     paddingHorizontal: 20,
@@ -1741,16 +1741,16 @@ const styles = StyleSheet.create({
   shopItemRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
     gap: 12,
   },
   shopItemRowBought: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     opacity: 0.65,
   },
   shopCheckbox: {
@@ -1758,43 +1758,43 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: "#CBD5E1",
+    borderColor: "#C7C7C7",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
   },
   shopCheckboxChecked: {
-    backgroundColor: "#10B981",
-    borderColor: "#10B981",
+    backgroundColor: "#353535",
+    borderColor: "#353535",
   },
   shopItemName: {
     fontSize: 13.5,
     fontWeight: "700",
-    color: "#1E293B",
+    color: BrandColors.textDark,
   },
   shopItemNameCrossed: {
     textDecorationLine: "line-through",
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
   },
   shopItemCategory: {
     fontSize: 11,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 2,
   },
   shopItemPrice: {
     fontSize: 12.5,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.5)",
+    backgroundColor: "rgba(27, 27, 27, 0.5)",
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
   modalContent: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 20,
     padding: 20,
     width: "100%",
@@ -1814,30 +1814,30 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 17,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   inputLabel: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#475569",
+    color: BrandColors.textBody,
     marginBottom: 6,
   },
   modalInput: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 13.5,
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginBottom: 12,
   },
   slotOption: {
     flex: 1,
     paddingVertical: 8,
     borderRadius: 10,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     alignItems: "center",
   },
   slotOptionActive: {
@@ -1846,30 +1846,30 @@ const styles = StyleSheet.create({
   slotOptionText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   slotOptionTextActive: {
     color: "#FFFFFF",
   },
   quickRecipeChip: {
-    backgroundColor: "#FFF3E0",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 12,
     marginRight: 6,
     borderWidth: 1,
-    borderColor: "#FFE0B2",
+    borderColor: "#DADADA",
   },
   quickRecipeText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#E65100",
+    color: BrandColors.textDark,
   },
   catOption: {
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 10,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
   },
   catOptionActive: {
     backgroundColor: BrandColors.primary,
@@ -1877,7 +1877,7 @@ const styles = StyleSheet.create({
   catOptionText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   catOptionTextActive: {
     color: "#FFFFFF",
@@ -1904,19 +1904,19 @@ const styles = StyleSheet.create({
   },
   rewardsLoadingText: {
     fontSize: 13,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "600",
   },
   chefStatusCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 20,
     padding: 16,
     marginHorizontal: 16,
     marginTop: 4,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    borderColor: BrandColors.borderLight,
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -1931,39 +1931,39 @@ const styles = StyleSheet.create({
   chefRankBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     gap: 5,
   },
   chefRankText: {
     fontSize: 11.5,
     fontWeight: "700",
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   streakFlamePill: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     paddingHorizontal: 10,
     paddingVertical: 4.5,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     gap: 4,
   },
   streakFlameNum: {
     fontSize: 13,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   streakFlameLabel: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   chefBalanceBox: {
     marginTop: 2,
@@ -1972,7 +1972,7 @@ const styles = StyleSheet.create({
   chefBalanceLabel: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     letterSpacing: 0.8,
     marginBottom: 2,
   },
@@ -1984,17 +1984,17 @@ const styles = StyleSheet.create({
   chefXpNumber: {
     fontSize: 32,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     letterSpacing: -0.5,
   },
   chefXpUnit: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   chefCardDivider: {
     height: 1,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     marginVertical: 14,
   },
   streakTrackerSection: {
@@ -2009,7 +2009,7 @@ const styles = StyleSheet.create({
   streakTrackerTitle: {
     fontSize: 12.5,
     fontWeight: "700",
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   streakTrackerStatusRow: {
     flexDirection: "row",
@@ -2020,18 +2020,18 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#CBD5E1",
+    backgroundColor: "#C7C7C7",
   },
   streakTrackerStatusDotDone: {
-    backgroundColor: "#10B981",
+    backgroundColor: "#353535",
   },
   streakTrackerStatus: {
     fontSize: 11.5,
     fontWeight: "600",
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
   },
   streakTrackerStatusDone: {
-    color: "#16A34A",
+    color: "#262626",
     fontWeight: "600",
   },
   streakPillRow: {
@@ -2044,19 +2044,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
     borderRadius: 10,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   streakDayBoxPassed: {
-    backgroundColor: "#F8FAFC",
-    borderColor: "#CBD5E1",
+    backgroundColor: BrandColors.background,
+    borderColor: "#C7C7C7",
   },
   streakDayBoxToday: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#FF5722",
+    backgroundColor: BrandColors.surfaceCard,
+    borderColor: "#171717",
     borderWidth: 1.5,
-    shadowColor: "#FF5722",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
     shadowRadius: 4,
@@ -2065,11 +2065,11 @@ const styles = StyleSheet.create({
   streakDayLabel: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginBottom: 2,
   },
   streakDayLabelToday: {
-    color: "#FF5722",
+    color: BrandColors.textDark,
     fontWeight: "800",
   },
   streakDayIcon: {
@@ -2080,11 +2080,11 @@ const styles = StyleSheet.create({
   streakDayXp: {
     fontSize: 9.5,
     fontWeight: "700",
-    color: "#475569",
+    color: BrandColors.textBody,
     marginTop: 2,
   },
   streakDayXpToday: {
-    color: "#FF5722",
+    color: BrandColors.textDark,
     fontWeight: "800",
   },
   checkInBtnWrapper: {
@@ -2098,9 +2098,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     paddingVertical: 12,
     borderRadius: 14,
     gap: 6,
@@ -2108,7 +2108,7 @@ const styles = StyleSheet.create({
   checkedInText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   checkInGradientBtn: {
     flexDirection: "row",
@@ -2125,7 +2125,7 @@ const styles = StyleSheet.create({
   },
   rewardsSegmentRow: {
     flexDirection: "row",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     marginHorizontal: 16,
     borderRadius: 12,
     padding: 3,
@@ -2141,8 +2141,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   rewardsSegmentBtnActive: {
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#0F172A",
+    backgroundColor: BrandColors.surfaceCard,
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 2,
@@ -2151,10 +2151,10 @@ const styles = StyleSheet.create({
   rewardsSegmentText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   rewardsSegmentTextActive: {
-    color: "#0F172A",
+    color: BrandColors.textDark,
     fontWeight: "700",
   },
   voucherListSection: {
@@ -2163,14 +2163,14 @@ const styles = StyleSheet.create({
   voucherCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     padding: 12,
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    borderColor: BrandColors.borderLight,
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 4,
@@ -2181,13 +2181,13 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     padding: 4,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#0F172A",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 2,
@@ -2209,13 +2209,13 @@ const styles = StyleSheet.create({
   voucherBrandLabel: {
     fontSize: 10.5,
     fontWeight: "800",
-    color: "#64748B",
+    color: BrandColors.textMuted,
     letterSpacing: 0.5,
   },
   voucherValueBadge: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 6,
@@ -2223,31 +2223,31 @@ const styles = StyleSheet.create({
   voucherValueBadgeText: {
     fontSize: 10.5,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   voucherTitle: {
     fontSize: 13.5,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginBottom: 2,
   },
   voucherDesc: {
     fontSize: 11.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   voucherRedeemBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FF5722",
+    backgroundColor: "#171717",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
     gap: 4,
   },
   voucherRedeemBtnDisabled: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   voucherRedeemBtnText: {
     fontSize: 12,
@@ -2255,7 +2255,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   voucherRedeemBtnTextDisabled: {
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     fontWeight: "600",
   },
   claimedListSection: {
@@ -2271,23 +2271,23 @@ const styles = StyleSheet.create({
   emptyClaimedTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   emptyClaimedDesc: {
     fontSize: 12.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     textAlign: "center",
     lineHeight: 18,
   },
   claimedCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 16,
     padding: 14,
     marginHorizontal: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    borderColor: BrandColors.borderLight,
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 4,
@@ -2308,9 +2308,9 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 7,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     padding: 2,
     justifyContent: "center",
     alignItems: "center",
@@ -2318,9 +2318,9 @@ const styles = StyleSheet.create({
   claimedTag: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 6,
@@ -2329,17 +2329,17 @@ const styles = StyleSheet.create({
   claimedTagText: {
     fontSize: 11,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   claimedExpiry: {
     fontSize: 11,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "500",
   },
   claimedCardTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginBottom: 10,
   },
   claimedCodeRow: {
@@ -2349,9 +2349,9 @@ const styles = StyleSheet.create({
   },
   claimedCodeBox: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#CBD5E1",
+    borderColor: "#C7C7C7",
     borderStyle: "dashed",
     borderRadius: 8,
     paddingVertical: 7,
@@ -2361,15 +2361,15 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
     fontSize: 13.5,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     letterSpacing: 1,
   },
   claimedCopyBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 8,
@@ -2378,7 +2378,7 @@ const styles = StyleSheet.create({
   claimedCopyBtnText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#FF5722",
+    color: BrandColors.textDark,
   },
 });
 

@@ -82,7 +82,7 @@ export default function FavoriteRecipesModal({
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={styles.iconCircle}>
-              <Ionicons name="heart" size={20} color="#EF4444" />
+              <Ionicons name="heart" size={20} color="#242424" />
             </View>
             <View>
               <Text style={styles.headerTitle}>Công thức đã lưu</Text>
@@ -96,23 +96,23 @@ export default function FavoriteRecipesModal({
             onPress={onClose}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="close" size={22} color="#64748B" />
+            <Ionicons name="close" size={22} color={BrandColors.textMuted} />
           </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
         <View style={styles.searchBox}>
-          <Ionicons name="search" size={18} color="#94A3B8" />
+          <Ionicons name="search" size={18} color={BrandColors.textPlaceholder} />
           <TextInput
             style={styles.searchInput}
             placeholder="Tìm trong danh sách đã lưu..."
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={BrandColors.textPlaceholder}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Ionicons name="close-circle" size={16} color="#94A3B8" />
+              <Ionicons name="close-circle" size={16} color={BrandColors.textPlaceholder} />
             </TouchableOpacity>
           )}
         </View>
@@ -125,7 +125,7 @@ export default function FavoriteRecipesModal({
           </View>
         ) : filteredRecipes.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="heart-dislike-outline" size={54} color="#CBD5E1" />
+            <Ionicons name="heart-dislike-outline" size={54} color="#C7C7C7" />
             <Text style={styles.emptyTitle}>
               {searchQuery ? "Không tìm thấy món ăn phù hợp" : "Chưa có công thức đã lưu"}
             </Text>
@@ -171,15 +171,15 @@ export default function FavoriteRecipesModal({
                   </Text>
                   <View style={styles.metaRow}>
                     <View style={styles.metaBadge}>
-                      <Ionicons name="time-outline" size={12} color="#64748B" />
+                      <Ionicons name="time-outline" size={12} color={BrandColors.textMuted} />
                       <Text style={styles.metaText}>{item.minutes}p</Text>
                     </View>
                     <View style={styles.metaBadge}>
-                      <Ionicons name="flame-outline" size={12} color="#F97316" />
+                      <Ionicons name="flame-outline" size={12} color="#363636" />
                       <Text style={styles.metaText}>{item.calories} kcal</Text>
                     </View>
                     <View style={styles.metaBadge}>
-                      <Ionicons name="star" size={11} color="#F59E0B" />
+                      <Ionicons name="star" size={11} color="#404040" />
                       <Text style={styles.metaText}>{item.rating.toFixed(1)}</Text>
                     </View>
                   </View>
@@ -189,7 +189,7 @@ export default function FavoriteRecipesModal({
                   onPress={() => handleRemoveFavorite(item.id)}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="heart" size={22} color="#EF4444" />
+                  <Ionicons name="heart" size={22} color="#242424" />
                 </TouchableOpacity>
               </TouchableOpacity>
             )}
@@ -203,7 +203,7 @@ export default function FavoriteRecipesModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
   },
   header: {
     flexDirection: "row",
@@ -211,9 +211,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 14,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: BrandColors.borderLight,
   },
   headerLeft: {
     flexDirection: "row",
@@ -224,29 +224,29 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: "#FEF2F2",
+    backgroundColor: "#F4F4F4",
     justifyContent: "center",
     alignItems: "center",
   },
   headerTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 2,
   },
   closeBtn: {
     padding: 6,
     borderRadius: 20,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
   },
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     marginHorizontal: 16,
     marginTop: 12,
     marginBottom: 8,
@@ -254,13 +254,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     gap: 8,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   loadingContainer: {
     flex: 1,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 13,
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   emptyContainer: {
     flex: 1,
@@ -282,13 +282,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#334155",
+    color: BrandColors.textBody,
     marginTop: 8,
     textAlign: "center",
   },
   emptySubtitle: {
     fontSize: 13,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     textAlign: "center",
     lineHeight: 18,
   },
@@ -300,11 +300,11 @@ const styles = StyleSheet.create({
   recipeCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 16,
     padding: 10,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     width: 68,
     height: 68,
     borderRadius: 12,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
   },
   recipeInfo: {
     flex: 1,
@@ -324,11 +324,11 @@ const styles = StyleSheet.create({
   recipeTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   recipeSub: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 2,
   },
   metaRow: {
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   removeBtn: {
     padding: 8,

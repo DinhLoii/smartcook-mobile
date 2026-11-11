@@ -6,8 +6,8 @@ import {
   CommunityPost,
   DirectConversation,
 } from "@/types";
-import { apiClient } from "./apiClient";
-import { socketService } from "./socketService";
+import { apiClient, type ApiResponse } from "./apiClient";
+import { socketService, type RealtimeMessage } from "./socketService";
 import { tokenStorage } from "@/utils/tokenStorage";
 
 type Listener = () => void;
@@ -29,52 +29,6 @@ tokenStorage.getUser().then((user) => {
     CURRENT_USER.name = user.fullName || `${user.firstName} ${user.lastName}`.trim();
   }
 }).catch(() => {});
-
-// Initial preset contacts / conversations for Messenger list (fallback)
-const INITIAL_CONVERSATIONS: DirectConversation[] = [
-  {
-    id: "chef-lan",
-    user: {
-      id: "chef-lan",
-      name: "Lan Anh Nguyễn",
-      avatar: require("@/assets/images/hero-teriyaki-bowl.jpg"),
-      badge: "Master Chef",
-      isChef: true,
-    },
-    lastMessage: "Mình tự pha tỉ lệ: 2 xì dầu Kikkoman + 2 mirin + 1 rượu sake...",
-    lastMessageTime: "5 phút trước",
-    unreadCount: 1,
-    isOnline: true,
-  },
-  {
-    id: "chef-quoc",
-    user: {
-      id: "chef-quoc",
-      name: "Quốc Bảo FitLife",
-      avatar: require("@/assets/images/salad-salmon.jpg"),
-      badge: "Chuyên Gia Eat Clean",
-      isChef: false,
-    },
-    lastMessage: "Cá hồi bạn áp chảo mặt da 3 phút lửa vừa là giòn rụm nha!",
-    lastMessageTime: "25 phút trước",
-    unreadCount: 0,
-    isOnline: true,
-  },
-  {
-    id: "chef-mai",
-    user: {
-      id: "chef-mai",
-      name: "Mai Anh Cooking",
-      avatar: require("@/assets/images/steak-asparagus.jpg"),
-      badge: "Đầu Bếp Gia Đình",
-      isChef: false,
-    },
-    lastMessage: "Thịt bò Tenderloin mình mua ở WinMart tươi lắm bạn ơi!",
-    lastMessageTime: "1 giờ trước",
-    unreadCount: 0,
-    isOnline: false,
-  },
-];
 
 const INITIAL_POSTS: CommunityPost[] = [
   {
@@ -175,12 +129,14 @@ const INITIAL_ROOMS: ChatRoom[] = [
 
 class CommunityServiceClass {
   private posts: CommunityPost[] = [...INITIAL_POSTS];
-  private conversations: DirectConversation[] = [...INITIAL_CONVERSATIONS];
+  private conversations: DirectConversation[] = [];
+  private chatUserId: string | undefined;
+  private chatSession = 0;
+  private activeConversationId = "";
   private chatRooms: ChatRoom[] = [...INITIAL_ROOMS];
   private messages: Record<string, ChatMessage[]> = {};
   private listeners: Set<Listener> = new Set();
   private hasFetchedPosts = false;
-  private hasFetchedConversations = false;
   private hasFetchedRooms = false;
 
   constructor() {
@@ -288,37 +244,40 @@ class CommunityServiceClass {
   /**
    * Handle incoming message from Socket.io Gateway
    */
-  private handleIncomingRealtimeMessage(msg: any) {
-    const convId = msg.conversationId;
-    if (!convId) return;
+  private handleIncomingRealtimeMessage(msg: RealtimeMessage) {
+    if (this.chatUserId && msg.id && msg.conversationId) this.storeChatMessage(msg.conversationId, msg);
+  }
 
-    const chatMsg: ChatMessage = {
-      id: msg.id || `msg-${Date.now()}`,
-      sender: this.normalizeAuthor(msg.sender),
-      text: msg.text || "",
-      imageUri: msg.imageUri,
-      timestamp: msg.timestamp || new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-      isMe: msg.sender?.id === CURRENT_USER.id,
+  private normalizeChatMessage(message: RealtimeMessage): ChatMessage {
+    const sender = this.normalizeAuthor(message.sender);
+    return {
+      id: message.id,
+      sender,
+      text: message.text || "",
+      imageUri: message.imageUri,
+      timestamp: message.timestamp,
+      isMe: sender.id === this.chatUserId,
     };
+  }
 
-    if (!this.messages[convId]) {
-      this.messages[convId] = [];
-    }
-    // Prevent duplicate messages
-    if (!this.messages[convId].some((m) => m.id === chatMsg.id)) {
-      this.messages[convId].push(chatMsg);
-    }
+  private storeChatMessage(conversationId: string, message: RealtimeMessage) {
+    const messages = this.messages[conversationId] ?? [];
+    if (messages.some((item) => item.id === message.id)) return;
 
-    // Update conversation in list
-    const conv = this.conversations.find((c) => c.id === convId || (c as any).conversationId === convId);
-    if (conv) {
-      conv.lastMessage = chatMsg.text || "[Hình ảnh]";
-      conv.lastMessageTime = "Vừa xong";
-      if (!chatMsg.isMe) {
-        conv.unreadCount = (conv.unreadCount || 0) + 1;
-      }
+    const normalized = this.normalizeChatMessage(message);
+    this.messages[conversationId] = [...messages, normalized];
+    const conversation = this.conversations.find((item) => item.conversationId === conversationId);
+    if (conversation) {
+      const incoming = !normalized.isMe && this.activeConversationId !== conversationId;
+      this.conversations = [{
+        ...conversation,
+        lastMessage: normalized.text || "[Hình ảnh]",
+        lastMessageTime: "Vừa xong",
+        unreadCount: conversation.unreadCount + Number(incoming),
+      }, ...this.conversations.filter((item) => item !== conversation)];
+    } else {
+      void this.fetchConversations().catch(() => {});
     }
-
     this.notify();
   }
 
@@ -666,212 +625,93 @@ class CommunityServiceClass {
     return [...this.chatRooms];
   }
 
-  /**
-   * Fetch direct conversations from backend (GET /api/v1/chat/conversations)
-   */
-  async fetchConversations(): Promise<DirectConversation[]> {
-    try {
-      const res = await apiClient.get("/chat/conversations");
-      const list = res.data?.data;
-      if (Array.isArray(list)) {
-        this.conversations = list.map((conv: any) => ({
-          id: conv.id || conv._id,
-          conversationId: conv.conversationId || conv.id || conv._id,
-          user: this.normalizeAuthor(conv.user || conv.targetUser),
-          lastMessage: conv.lastMessage || "Bắt đầu cuộc trò chuyện...",
-          lastMessageTime: conv.lastMessageTime || "Vừa xong",
-          unreadCount: conv.unreadCount || 0,
-          isOnline: conv.isOnline ?? true,
-        }));
-        this.hasFetchedConversations = true;
-        this.notify();
-        return this.conversations;
-      }
-    } catch (e) {
-      console.warn("⚠️ [CommunityService] Lỗi lấy danh sách hội thoại, dùng dữ liệu sẵn có:", e);
-    }
-    return [...this.conversations];
+  setChatUser(userId?: string) {
+    if (this.chatUserId === userId) return;
+    this.setActiveConversation("");
+    this.chatUserId = userId;
+    this.chatSession++;
+    this.conversations = [];
+    this.messages = {};
   }
 
-  /**
-   * Synchronous getter for conversations
-   */
-  getConversations(): DirectConversation[] {
-    if (!this.hasFetchedConversations) {
-      this.fetchConversations().catch(() => {});
-    }
-    return [...this.conversations];
-  }
-
-  /**
-   * Get or create 1-1 conversation with target user (POST /api/v1/chat/direct)
-   */
-  async getOrCreateDirectChat(targetUserId: string): Promise<{ conversationId: string; user: CommunityAuthor }> {
-    try {
-      const res = await apiClient.post("/chat/direct", { targetUserId });
-      if (res.data?.success && res.data?.data) {
-        const conv = res.data.data;
-        const convId = conv.conversationId || conv.id || conv._id;
-        const targetUser = this.normalizeAuthor(conv.user || conv.targetUser);
-
-        // Join room on Socket.io for realtime messages
-        socketService.joinRoom(convId);
-
-        return {
-          conversationId: convId,
-          user: targetUser,
-        };
-      }
-    } catch (e) {
-      console.warn("⚠️ [CommunityService] Lỗi khởi tạo chat 1-1, dùng fallback key:", e);
-    }
-
-    const fallbackKey = `direct-${targetUserId}`;
-    socketService.joinRoom(fallbackKey);
-    const existing = this.conversations.find((c) => c.id === targetUserId);
-    return {
-      conversationId: fallbackKey,
-      user: existing ? existing.user : { id: targetUserId, name: "Đầu Bếp", avatar: require("@/assets/images/salad-salmon.jpg") },
-    };
-  }
-
-  /**
-   * Fetch message history of a room or conversation (GET /api/v1/chat/conversations/:id/messages)
-   */
-  async fetchMessageHistory(conversationId: string): Promise<ChatMessage[]> {
-    try {
-      socketService.joinRoom(conversationId);
-      const res = await apiClient.get(`/chat/conversations/${conversationId}/messages`);
-      const list = res.data?.data;
-      if (Array.isArray(list)) {
-        const normalized: ChatMessage[] = list.map((m: any) => {
-          const sId = m.sender?.id || m.sender?._id || m.user?._id;
-          const isSenderMe =
-            typeof m.isMe === "boolean"
-              ? m.isMe
-              : Boolean(sId && (sId === CURRENT_USER.id || sId === "user-me"));
-
-          return {
-            id: m.id || m._id || `m-${Date.now()}`,
-            sender: this.normalizeAuthor(m.sender || m.user),
-            text: m.text || "",
-            imageUri: m.imageUri || m.imageUrl,
-            timestamp: m.timestamp || new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-            isMe: isSenderMe,
-          };
-        });
-
-        this.messages[conversationId] = normalized;
-        this.notify();
-        return normalized;
-      }
-    } catch (e) {
-      console.warn(`⚠️ [CommunityService] Lỗi lấy lịch sử tin nhắn của ${conversationId}:`, e);
-    }
-
-    return this.messages[conversationId] || [];
-  }
-
-  /**
-   * Get direct messages for conversation
-   */
-  getDirectMessages(targetUserIdOrConvId: string): ChatMessage[] {
-    const key = this.messages[targetUserIdOrConvId]
-      ? targetUserIdOrConvId
-      : `direct-${targetUserIdOrConvId}`;
-    return [...(this.messages[key] || this.messages[targetUserIdOrConvId] || [])];
-  }
-
-  /**
-   * Send a direct message via Socket.io Realtime (with REST API fallback)
-   */
-  async sendDirectMessage(
-    targetUser: CommunityAuthor,
-    text: string,
-    imageUri?: string,
-    explicitConversationId?: string
-  ): Promise<ChatMessage> {
-    const cleanText = text.trim();
-    const convId = explicitConversationId || `direct-${targetUser.id}`;
-
-    const newMsg: ChatMessage = {
-      id: `m-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      sender: CURRENT_USER,
-      text: cleanText,
-      imageUri,
-      timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-      isMe: true,
-    };
-
-    if (!this.messages[convId]) {
-      this.messages[convId] = [];
-    }
-    this.messages[convId].push(newMsg);
-
-    // Update conversation in list
-    const existingIndex = this.conversations.findIndex(
-      (c) => c.id === targetUser.id || (c as any).conversationId === convId
-    );
-    const lastMsgText = `Bạn: ${cleanText || "[Hình ảnh]"}`;
-
-    if (existingIndex >= 0) {
-      const conv = this.conversations[existingIndex];
-      conv.lastMessage = lastMsgText;
-      conv.lastMessageTime = "Vừa xong";
-      this.conversations.splice(existingIndex, 1);
-      this.conversations.unshift(conv);
-    } else {
-      this.conversations.unshift({
-        id: targetUser.id,
-        user: targetUser,
-        lastMessage: lastMsgText,
-        lastMessageTime: "Vừa xong",
-        unreadCount: 0,
-        isOnline: true,
-      });
-    }
-
+  setActiveConversation(conversationId: string) {
+    if (this.activeConversationId === conversationId) return;
+    if (this.activeConversationId) socketService.leaveRoom(this.activeConversationId);
+    this.activeConversationId = conversationId;
+    if (!conversationId) return;
+    socketService.joinRoom(conversationId);
+    this.conversations = this.conversations.map((conversation) =>
+      conversation.conversationId === conversationId ? { ...conversation, unreadCount: 0 } : conversation);
     this.notify();
-
-    // 1. Try sending via Realtime Socket
-    if (socketService.isConnected()) {
-      socketService.sendMessage(convId, cleanText, imageUri, (ack) => {
-        if (!ack?.success) {
-          console.warn("⚠️ [SocketService] ACK trả về false, fallback REST API:", ack?.error);
-          this.sendMessageViaRest(convId, cleanText, imageUri);
-        }
-      });
-    } else {
-      // 2. Fallback via REST API
-      this.sendMessageViaRest(convId, cleanText, imageUri);
-    }
-
-    return newMsg;
   }
 
-  /**
-   * REST fallback for sending chat message
-   */
-  private async sendMessageViaRest(conversationId: string, text: string, imageUri?: string) {
-    try {
-      await apiClient.post(`/chat/conversations/${conversationId}/messages`, {
-        text,
-        imageUri,
-      });
-    } catch (e) {
-      console.warn("⚠️ [CommunityService] Gửi tin nhắn qua REST API thất bại:", e);
+  async fetchConversations(): Promise<DirectConversation[]> {
+    const session = this.chatSession;
+    const { data } = await apiClient.get<ApiResponse<DirectConversation[]>>("/chat/conversations");
+    if (session !== this.chatSession) return [];
+    if (!data?.success || !Array.isArray(data.data)) throw new Error("Không tải được hộp thư.");
+    const uniqueConversations = new Map<string, DirectConversation>();
+    for (const conversation of data.data) {
+      if (conversation.conversationId && !uniqueConversations.has(conversation.conversationId)) {
+        uniqueConversations.set(conversation.conversationId, conversation);
+      }
     }
+    this.conversations = Array.from(uniqueConversations.values(), (conversation) => ({
+      ...conversation,
+      user: this.normalizeAuthor(conversation.user),
+      unreadCount: conversation.conversationId === this.activeConversationId ? 0
+        : this.conversations.find((item) => item.conversationId === conversation.conversationId)?.unreadCount
+          ?? (this.messages[conversation.conversationId]?.filter((message) => !message.isMe).length || conversation.unreadCount),
+    }));
+    this.notify();
+    return this.getConversations();
   }
 
-  /**
-   * Mark conversation as read
-   */
-  markConversationAsRead(targetUserId: string): void {
-    const conv = this.conversations.find((c) => c.id === targetUserId);
-    if (conv && conv.unreadCount > 0) {
-      conv.unreadCount = 0;
-      this.notify();
+  getConversations(): DirectConversation[] {
+    return [...this.conversations];
+  }
+
+  async getOrCreateDirectChat(targetUserId: string): Promise<DirectConversation> {
+    const session = this.chatSession;
+    const { data } = await apiClient.post<ApiResponse<DirectConversation>>("/chat/direct", { targetUserId });
+    if (session !== this.chatSession || !data?.success || !data.data?.conversationId) {
+      throw new Error("Không mở được cuộc trò chuyện.");
     }
+    const existing = this.conversations.find((item) => item.conversationId === data.data.conversationId);
+    if (existing) return existing;
+    const conversation = { ...data.data, user: this.normalizeAuthor(data.data.user), unreadCount: 0, isOnline: false };
+    this.conversations = [conversation, ...this.conversations];
+    this.notify();
+    return conversation;
+  }
+
+  async fetchMessageHistory(conversationId: string): Promise<ChatMessage[]> {
+    const session = this.chatSession;
+    const previousIds = new Set(this.messages[conversationId]?.map((message) => message.id));
+    const { data } = await apiClient.get<ApiResponse<RealtimeMessage[]>>("/chat/conversations/" + conversationId + "/messages");
+    if (session !== this.chatSession) return [];
+    if (!data?.success || !Array.isArray(data.data)) throw new Error("Không tải được tin nhắn.");
+    const history = data.data.map((message) => this.normalizeChatMessage(message));
+    const historyIds = new Set(history.map((message) => message.id));
+    const arrived = (this.messages[conversationId] ?? []).filter((message) =>
+      !previousIds.has(message.id) && !historyIds.has(message.id));
+    this.messages[conversationId] = [...history, ...arrived];
+    this.notify();
+    return this.getDirectMessages(conversationId);
+  }
+
+  getDirectMessages(conversationId: string): ChatMessage[] {
+    return [...(this.messages[conversationId] ?? [])];
+  }
+
+  async sendDirectMessage(conversationId: string, text: string, imageUri?: string): Promise<void> {
+    const session = this.chatSession;
+    const { data } = await apiClient.post<ApiResponse<RealtimeMessage>>(
+      "/chat/conversations/" + conversationId + "/messages", { text: text.trim(), imageUri });
+    if (session !== this.chatSession || !data?.success || !data.data?.id) {
+      throw new Error("Chưa gửi được tin nhắn.");
+    }
+    this.storeChatMessage(conversationId, data.data);
   }
 
   /**

@@ -25,6 +25,17 @@ interface PostCardProps {
   onTagPress?: (tag: string) => void;
 }
 
+const REACTIONS = {
+  like: { icon: "thumb-up-outline", label: "Thích" },
+  love: { icon: "heart-outline", label: "Yêu thích" },
+  haha: { icon: "emoticon-lol-outline", label: "Haha" },
+  wow: { icon: "emoticon-excited-outline", label: "Ngạc nhiên" },
+  sad: { icon: "emoticon-sad-outline", label: "Buồn" },
+  angry: { icon: "emoticon-angry-outline", label: "Phẫn nộ" },
+} as const;
+type Reaction = keyof typeof REACTIONS;
+const reactionTypes = Object.keys(REACTIONS) as Reaction[];
+
 export default function PostCard({
   post,
   onLike,
@@ -36,9 +47,12 @@ export default function PostCard({
 }: PostCardProps) {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
-  const [userReaction, setUserReaction] = useState<string | null>(
+  const [userReaction, setUserReaction] = useState<Reaction | null>(
     (post as any).userReaction || null
   );
+  const reactionIcon = userReaction && userReaction !== "like" && userReaction !== "love"
+    ? REACTIONS[userReaction]?.icon
+    : undefined;
 
   const handleToggleLike = () => {
     void hapticSelection();
@@ -50,7 +64,7 @@ export default function PostCard({
     setShowReactionPicker(!showReactionPicker);
   };
 
-  const handleSelectReaction = (type: "like" | "love" | "haha" | "wow" | "sad" | "angry") => {
+  const handleSelectReaction = (type: Reaction) => {
     setUserReaction(type);
     setShowReactionPicker(false);
     void hapticSelection();
@@ -146,7 +160,7 @@ export default function PostCard({
           activeOpacity={0.6}
           onPress={handleMorePress}
         >
-          <Ionicons name="ellipsis-horizontal" size={18} color="#94A3B8" />
+          <Ionicons name="ellipsis-horizontal" size={18} color={BrandColors.textPlaceholder} />
         </TouchableOpacity>
       </View>
 
@@ -192,21 +206,16 @@ export default function PostCard({
       {/* Floating Reaction Picker Bar */}
       {showReactionPicker && (
         <View style={styles.reactionPickerBar}>
-          {[
-            { type: "like" as const, emoji: "👍" },
-            { type: "love" as const, emoji: "❤️" },
-            { type: "haha" as const, emoji: "😂" },
-            { type: "wow" as const, emoji: "😮" },
-            { type: "sad" as const, emoji: "😢" },
-            { type: "angry" as const, emoji: "😡" },
-          ].map((r) => (
+          {reactionTypes.map((type) => (
             <TouchableOpacity
-              key={r.type}
-              style={styles.reactionEmojiBtn}
-              onPress={() => handleSelectReaction(r.type)}
+              key={type}
+              style={styles.reactionButton}
+              accessibilityRole="button"
+              accessibilityLabel={REACTIONS[type].label}
+              onPress={() => handleSelectReaction(type)}
               activeOpacity={0.7}
             >
-              <Text style={styles.reactionEmojiText}>{r.emoji}</Text>
+              <MaterialCommunityIcons name={REACTIONS[type].icon} size={23} color={BrandColors.textDark} />
             </TouchableOpacity>
           ))}
         </View>
@@ -226,25 +235,15 @@ export default function PostCard({
             onLongPress={handleLongPressLike}
             delayLongPress={300}
           >
-            <Text style={{ fontSize: 16 }}>
-              {userReaction === "love"
-                ? "❤️"
-                : userReaction === "haha"
-                ? "😂"
-                : userReaction === "wow"
-                ? "😮"
-                : userReaction === "sad"
-                ? "😢"
-                : userReaction === "angry"
-                ? "😡"
-                : post.isLiked
-                ? "❤️"
-                : "🤍"}
-            </Text>
+            <MaterialCommunityIcons
+              name={reactionIcon ?? (post.isLiked || userReaction === "love" ? "heart" : "heart-outline")}
+              size={18}
+              color={BrandColors.textDark}
+            />
             <Text
               style={[
                 styles.actionPillText,
-                post.isLiked && { color: "#EF4444", fontWeight: "700" },
+                post.isLiked && { color: "#242424", fontWeight: "700" },
               ]}
             >
               {post.likesCount > 0 ? post.likesCount : "Thích"}
@@ -258,7 +257,7 @@ export default function PostCard({
             onPress={() => onComment(post)}
           >
             <Ionicons
-              name="chatbubble-ellipses"
+              name="chatbubble-ellipses-outline"
               size={17}
               color={BrandColors.primary}
             />
@@ -278,7 +277,7 @@ export default function PostCard({
             <Ionicons
               name={post.isSaved ? "bookmark" : "bookmark-outline"}
               size={19}
-              color={post.isSaved ? BrandColors.primary : "#64748B"}
+              color={post.isSaved ? BrandColors.primary : "#5E5E5E"}
             />
           </TouchableOpacity>
 
@@ -288,7 +287,7 @@ export default function PostCard({
             activeOpacity={0.7}
             onPress={() => onShare?.(post)}
           >
-            <Ionicons name="share-social-outline" size={19} color="#64748B" />
+            <Ionicons name="share-social-outline" size={19} color={BrandColors.textMuted} />
           </TouchableOpacity>
         </View>
       </View>
@@ -328,19 +327,11 @@ export default function PostCard({
 
 const styles = StyleSheet.create({
   cardContainer: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
-    paddingHorizontal: 14,
+    backgroundColor: BrandColors.surfaceCard,
+    borderBottomWidth: 1,
+    borderBottomColor: BrandColors.borderLight,
     paddingTop: 14,
     paddingBottom: 12,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 2,
   },
   headerRow: {
     flexDirection: "row",
@@ -361,7 +352,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
   },
   onlineDot: {
     position: "absolute",
@@ -370,7 +361,7 @@ const styles = StyleSheet.create({
     width: 9,
     height: 9,
     borderRadius: 4.5,
-    backgroundColor: "#10B981",
+    backgroundColor: "#353535",
     borderWidth: 1.5,
     borderColor: "#FFFFFF",
   },
@@ -390,7 +381,7 @@ const styles = StyleSheet.create({
   authorName: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   verifiedIcon: {
     marginLeft: 4,
@@ -398,7 +389,7 @@ const styles = StyleSheet.create({
   directChatBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FF6B35",
+    backgroundColor: "#171717",
     paddingHorizontal: 8,
     paddingVertical: 2.5,
     borderRadius: 12,
@@ -415,7 +406,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   badgePill: {
-    backgroundColor: "#FFF3E0",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 6,
@@ -428,11 +419,11 @@ const styles = StyleSheet.create({
   dotSeparator: {
     marginHorizontal: 5,
     fontSize: 10,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
   },
   timestampText: {
     fontSize: 11,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
   },
   moreButton: {
     padding: 6,
@@ -449,7 +440,7 @@ const styles = StyleSheet.create({
   bodyText: {
     fontSize: 13.5,
     lineHeight: 20,
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   tagsRow: {
     flexDirection: "row",
@@ -458,12 +449,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   tagPill: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   tagText: {
     fontSize: 11,
@@ -474,7 +465,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     marginBottom: 12,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
   },
   postImage: {
     width: "100%",
@@ -485,7 +476,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderTopWidth: 1,
-    borderTopColor: "#F8FAFC",
+    borderTopColor: "#F7F7F7",
     paddingTop: 10,
   },
   actionLeft: {
@@ -501,38 +492,38 @@ const styles = StyleSheet.create({
   actionPillBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 14,
     gap: 5,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   actionPillBtnLiked: {
-    backgroundColor: "#FEF2F2",
-    borderColor: "#FECACA",
+    backgroundColor: "#F4F4F4",
+    borderColor: "#DADADA",
   },
   actionPillText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   actionIconBtn: {
     padding: 6,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   commentPreviewBox: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
     marginTop: 10,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
   },
   commentPreviewHeader: {
     flexDirection: "row",
@@ -542,11 +533,11 @@ const styles = StyleSheet.create({
   commentAuthor: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   commentContent: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     flex: 1,
   },
   viewMoreCommentsText: {
@@ -557,7 +548,7 @@ const styles = StyleSheet.create({
   },
   reactionPickerBar: {
     flexDirection: "row",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 24,
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -571,13 +562,10 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 6,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
     gap: 6,
   },
-  reactionEmojiBtn: {
+  reactionButton: {
     padding: 4,
-  },
-  reactionEmojiText: {
-    fontSize: 20,
   },
 });

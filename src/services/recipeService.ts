@@ -331,6 +331,7 @@ class RecipeServiceClass {
       fridgeMatchPercent: Number(raw.fridgeMatchPercent ?? 85),
       image: raw.image || require("@/assets/images/hero-teriyaki-bowl.jpg"),
       description: raw.description || "",
+      youtubeVideoId: typeof raw.youtubeVideoId === "string" ? raw.youtubeVideoId : null,
       ingredients: Array.isArray(raw.ingredients)
         ? raw.ingredients.map((ing: any) => ({
             name: ing.name || "",

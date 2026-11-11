@@ -72,13 +72,13 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backgroundColor: 'rgba(27, 27, 27, 0.65)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 28,
     overflow: 'hidden',
     shadowColor: BrandColors.primary,
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -6,
     right: -12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 16,
     padding: 2,
     shadowColor: '#000000',
@@ -122,13 +122,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1E293B',
+    color: BrandColors.textDark,
     textAlign: 'center',
     marginBottom: 8,
   },
   message: {
     fontSize: 13,
-    color: '#64748B',
+    color: BrandColors.textMuted,
     textAlign: 'center',
     lineHeight: 18,
     marginBottom: 22,

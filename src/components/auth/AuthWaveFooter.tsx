@@ -52,7 +52,7 @@ export const AuthWaveFooter: React.FC<AuthWaveFooterProps> = ({
             style={styles.waveSvg}
             pointerEvents="none">
             <Path d={backWavePath} fill="rgba(255, 255, 255, 0.28)" />
-            <Path d={frontWavePath} fill="#FFFFFF" />
+            <Path d={frontWavePath} fill={BrandColors.background} />
           </Svg>
         </View>
 
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 13.5,
-    color: '#FFF9C4', // Soft Golden Sunlight Highlight
+    color: '#DADADA', // Soft Golden Sunlight Highlight
     fontWeight: '800',
     textDecorationLine: 'underline',
   },

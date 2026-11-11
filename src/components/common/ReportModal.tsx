@@ -1,3 +1,4 @@
+import { BrandColors } from "@/constants/brandColors";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -86,11 +87,11 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               {/* Header */}
               <View style={styles.header}>
                 <View style={styles.headerTitleWrap}>
-                  <Ionicons name="flag" size={18} color="#EA580C" />
+                  <Ionicons name="flag" size={18} color={BrandColors.textDark} />
                   <Text style={styles.title}>Báo cáo vi phạm</Text>
                 </View>
                 <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                  <Ionicons name="close" size={20} color="#64748B" />
+                  <Ionicons name="close" size={20} color={BrandColors.textMuted} />
                 </TouchableOpacity>
               </View>
 
@@ -120,7 +121,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                       <Ionicons
                         name={r.icon}
                         size={18}
-                        color={isSelected ? "#EA580C" : "#64748B"}
+                        color={isSelected ? "#171717" : "#5E5E5E"}
                         style={{ marginRight: 10 }}
                       />
                       <Text
@@ -143,7 +144,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               <TextInput
                 style={styles.descInput}
                 placeholder="Nhập thông tin chi tiết để chúng tôi xử lý nhanh hơn..."
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={BrandColors.textPlaceholder}
                 value={description}
                 onChangeText={setDescription}
                 multiline
@@ -180,13 +181,13 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.65)",
+    backgroundColor: "rgba(27, 27, 27, 0.65)",
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     width: "100%",
     maxWidth: 440,
     borderRadius: 24,
@@ -211,14 +212,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   closeBtn: {
     padding: 4,
   },
   subtitle: {
     fontSize: 13,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     lineHeight: 18,
     marginBottom: 16,
   },
@@ -233,21 +234,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: "#F1F5F9",
-    backgroundColor: "#F8FAFC",
+    borderColor: BrandColors.borderLight,
+    backgroundColor: BrandColors.background,
   },
   reasonItemSelected: {
-    borderColor: "#EA580C",
-    backgroundColor: "#FFF7ED",
+    borderColor: "#171717",
+    backgroundColor: BrandColors.surfaceMuted,
   },
   reasonLabel: {
     flex: 1,
     fontSize: 13,
     fontWeight: "500",
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   reasonLabelSelected: {
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontWeight: "700",
   },
   radioCircle: {
@@ -255,33 +256,33 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     borderWidth: 2,
-    borderColor: "#CBD5E1",
+    borderColor: "#C7C7C7",
     justifyContent: "center",
     alignItems: "center",
   },
   radioCircleSelected: {
-    borderColor: "#EA580C",
+    borderColor: "#171717",
   },
   radioInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
   },
   descLabel: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#475569",
+    color: BrandColors.textBody,
     marginBottom: 6,
   },
   descInput: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     borderRadius: 12,
     padding: 10,
     fontSize: 13,
-    color: "#0F172A",
+    color: BrandColors.textDark,
     textAlignVertical: "top",
     minHeight: 70,
     marginBottom: 16,
@@ -295,24 +296,24 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
   },
   cancelBtnText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   submitBtn: {
     flex: 1.5,
     height: 44,
     borderRadius: 12,
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#EA580C",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 6,

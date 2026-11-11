@@ -68,7 +68,7 @@ export const AuthWaveHeader: React.FC<AuthWaveHeaderProps> = ({
             {/* Background Wave with Soft Opacity */}
             <Path d={backWavePath} fill="rgba(255, 255, 255, 0.32)" />
             {/* Foreground Crisp White Wave */}
-            <Path d={frontWavePath} fill="#FFFFFF" />
+            <Path d={frontWavePath} fill={BrandColors.background} />
           </Svg>
         </View>
       </LinearGradient>
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     width: 130,
     height: 130,
     borderRadius: 65,
-    backgroundColor: 'rgba(255, 235, 59, 0.18)',
+    backgroundColor: 'rgba(54, 54, 54, 0.18)',
   },
   headerContent: {
     flex: 1,
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     letterSpacing: 0.4,
     textAlign: 'center',
-    textShadowColor: 'rgba(180, 40, 0, 0.25)',
+    textShadowColor: 'rgba(41, 41, 41, 0.25)',
     textShadowOffset: { width: 0, height: 1.5 },
     textShadowRadius: 4,
   },

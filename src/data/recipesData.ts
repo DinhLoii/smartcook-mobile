@@ -6,6 +6,7 @@ export const RECIPES_DATA: Recipe[] = [
   // 1. Cơm Gà Teriyaki Áp Chảo (Family / Slide 1)
   {
     id: "dish-1",
+    youtubeVideoId: "LZ6rXyFRJjk",
     title: "Cơm Gà Teriyaki Áp Chảo",
     author: "@smartcook.chef",
     calories: 580,
@@ -83,6 +84,7 @@ export const RECIPES_DATA: Recipe[] = [
   // 2. Bò Bít Tết Sốt Tiêu Măng Tây (Family / Slide 3)
   {
     id: "dish-2",
+    youtubeVideoId: "afrDkH5uZpk",
     title: "Bò Bít Tết Sốt Tiêu Măng Tây",
     author: "@chef.nguyen",
     calories: 720,
@@ -159,6 +161,7 @@ export const RECIPES_DATA: Recipe[] = [
   // 3. Salad Cá Hồi Áp Chảo (Healthy / Slide 2)
   {
     id: "dish-3",
+    youtubeVideoId: "vbV1h68Mnms",
     title: "Salad Cá Hồi Áp Chảo Chanh Leo",
     author: "@smartcook.ai",
     calories: 420,
@@ -289,6 +292,7 @@ export const RECIPES_DATA: Recipe[] = [
   // 5. Mỳ Ý Bò Bằm Sốt Cà Bolognese (Quick / Slide 4)
   {
     id: "dish-5",
+    youtubeVideoId: "yShBC-G-jrQ",
     title: "Mỳ Ý Bò Bằm Sốt Cà Bolognese",
     author: "@smartcook.pasta",
     calories: 540,
@@ -657,6 +661,7 @@ export const RECIPES_DATA: Recipe[] = [
   // 11. Phở Bò Tái Lăn Hà Nội (Vietnamese - Món Việt)
   {
     id: "dish-vn-1",
+    youtubeVideoId: "ZNnDDeqtGFc",
     title: "Phở Bò Tái Lăn Hà Nội",
     author: "@amthuc.viet",
     calories: 620,
@@ -672,7 +677,7 @@ export const RECIPES_DATA: Recipe[] = [
     sub: "Nước dùng ngọt thanh",
     tags: ["Phở", "Món Việt", "Bữa sáng", "Truyền thống"],
     fridgeMatchPercent: 85,
-    image: require("@/assets/images/steak-asparagus.jpg"),
+    image: require("@/assets/images/pho-bo.jpg"),
     description: "Thịt bò thăn thái mỏng xào lăn bốc lửa với tỏi gừng, chan nước dùng phở ninh từ xương ống trong veo ngọt thanh thơm nức quế hồi.",
     ingredients: [
       { name: "Bánh phở tươi", amount: "300g", inFridge: true },

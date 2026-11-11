@@ -50,6 +50,7 @@ export interface Recipe {
   image: any;
   description: string;
   ingredients: RecipeIngredient[];
+  youtubeVideoId?: string | null;
   steps: RecipeStep[];
   nutrition: RecipeNutrition;
   cookingNutrition?: import("../utils/cookingScope").CookingNutrition | null;

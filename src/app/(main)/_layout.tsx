@@ -20,7 +20,7 @@ export default function MainLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: BrandColors.background } }}>
       <Stack.Screen name="home" options={{ headerShown: false }} />
       <Stack.Screen name="explore" options={{ headerShown: false }} />
       <Stack.Screen

@@ -132,7 +132,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               style={styles.closeBtn}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Ionicons name="close" size={20} color="#64748B" />
+              <Ionicons name="close" size={20} color={BrandColors.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -187,7 +187,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 <TextInput
                   style={styles.textInput}
                   placeholder="Ví dụ: Nguyễn Văn"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={BrandColors.textPlaceholder}
                   value={firstName}
                   onChangeText={setFirstName}
                 />
@@ -198,7 +198,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 <TextInput
                   style={styles.textInput}
                   placeholder="Ví dụ: An"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={BrandColors.textPlaceholder}
                   value={lastName}
                   onChangeText={setLastName}
                 />
@@ -210,7 +210,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   <Text style={styles.disabledText}>
                     {currentUser?.email || "smartcook.user@gmail.com"}
                   </Text>
-                  <Ionicons name="lock-closed" size={14} color="#94A3B8" />
+                  <Ionicons name="lock-closed" size={14} color={BrandColors.textPlaceholder} />
                 </View>
               </View>
             </View>
@@ -260,7 +260,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 const styles = StyleSheet.create({
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    backgroundColor: "rgba(27, 27, 27, 0.6)",
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 420,
     maxHeight: "85%",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 20,
     padding: 20,
     shadowColor: "#000",
@@ -284,12 +284,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: BrandColors.borderLight,
   },
   headerTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   closeBtn: {
     padding: 4,
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     height: 84,
     borderRadius: 42,
     borderWidth: 3,
-    borderColor: "#FFEDD5",
+    borderColor: BrandColors.borderLight,
   },
   cameraBtn: {
     position: "absolute",
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   },
   avatarHint: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 8,
     textAlign: "center",
   },
@@ -356,27 +356,27 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   textInput: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 14,
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   disabledInput: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
   disabledText: {
     fontSize: 14,
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   actionButtons: {
     flexDirection: "row",
@@ -384,20 +384,20 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: BrandColors.borderLight,
   },
   cancelBtn: {
     flex: 1,
     paddingVertical: 11,
     borderRadius: 12,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     justifyContent: "center",
     alignItems: "center",
   },
   cancelText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   saveBtnWrapper: {
     flex: 1.5,

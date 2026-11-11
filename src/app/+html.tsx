@@ -181,19 +181,19 @@ const FONT_FACES_CSS = `
 export default function HTML({ children }: { children?: ReactNode }) {
   const { bodyAttributes, bodyNodes, htmlAttributes, headNodes } = useServerDocumentContext();
   return (
-    <html lang="en" {...htmlAttributes}>
+    <html {...htmlAttributes} lang="vi">
       <head>
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover, maximum-scale=1, user-scalable=no"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
         <meta name="description" content="Ứng dụng nấu ăn thông minh" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="SmartCook" />
-        <meta name="theme-color" content="#ff6b35" />
+        <meta name="theme-color" content="#F7F8F3" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon-180.png" />
         <link rel="icon" href="/icon-180.png" />

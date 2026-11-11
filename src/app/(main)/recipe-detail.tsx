@@ -4,6 +4,7 @@ import { CartService } from "@/services/cartService";
 import { getRecipeById, RECIPES_DATA } from "@/data/recipesData";
 import { RecipeService } from "@/services/recipeService";
 import { CreateRecipeModal } from "@/components/recipe";
+import { RecipeDetailVideo } from "@/components/recipe/RecipeVideoGuide";
 import { useAuth } from "@/contexts/AuthContext";
 import { Recipe } from "@/types";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -380,7 +381,7 @@ export default function RecipeDetailScreen() {
 
           {/* Top Subtle Dark Vignette for Header Controls */}
           <LinearGradient
-            colors={["rgba(15, 23, 42, 0.75)", "rgba(15, 23, 42, 0.2)", "transparent"]}
+            colors={["rgba(27, 27, 27, 0.75)", "rgba(27, 27, 27, 0.2)", "transparent"]}
             locations={[0, 0.4, 1]}
             style={styles.topVignette}
           />
@@ -434,7 +435,7 @@ export default function RecipeDetailScreen() {
                 <Ionicons
                   name={isFavorite ? "heart" : "heart-outline"}
                   size={19}
-                  color={isFavorite ? "#EF4444" : "#FFFFFF"}
+                  color={isFavorite ? "#242424" : "#FFFFFF"}
                 />
               </TouchableOpacity>
 
@@ -462,7 +463,7 @@ export default function RecipeDetailScreen() {
             ) : null}
 
             <View style={styles.heroRatingBadge}>
-              <Ionicons name="star" size={13} color="#F59E0B" />
+              <Ionicons name="star" size={13} color="#404040" />
               <Text style={styles.heroRatingText}>{recipe.rating || 4.9}</Text>
               <Text style={styles.heroReviewText}>({recipe.reviewCount || 1420})</Text>
             </View>
@@ -483,12 +484,12 @@ export default function RecipeDetailScreen() {
           {/* Author / Chef Row */}
           <View style={styles.authorRow}>
             <View style={styles.chefAvatar}>
-              <MaterialCommunityIcons name="chef-hat" size={16} color="#EA580C" />
+              <MaterialCommunityIcons name="chef-hat" size={16} color={BrandColors.textDark} />
             </View>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                 <Text style={styles.authorName}>{recipe.author}</Text>
-                <Ionicons name="checkmark-circle" size={14} color="#0284C7" />
+                <Ionicons name="checkmark-circle" size={14} color="#262626" />
               </View>
               <Text style={styles.chefRoleText}>Đầu bếp chuyên gia SmartCook</Text>
             </View>
@@ -499,7 +500,7 @@ export default function RecipeDetailScreen() {
             {/* Stat 1: Thời gian */}
             <View style={styles.compactStatCard}>
               <View style={styles.compactStatTopRow}>
-                <Ionicons name="time-outline" size={14} color="#475569" />
+                <Ionicons name="time-outline" size={14} color={BrandColors.textBody} />
                 <Text style={styles.compactStatValue}>{recipe.minutes}p</Text>
               </View>
               <Text style={styles.compactStatLabel}>Thời gian</Text>
@@ -508,7 +509,7 @@ export default function RecipeDetailScreen() {
             {/* Stat 2: Calo */}
             <View style={styles.compactStatCard}>
               <View style={styles.compactStatTopRow}>
-                <Ionicons name="flame-outline" size={14} color="#475569" />
+                <Ionicons name="flame-outline" size={14} color={BrandColors.textBody} />
                 <Text style={styles.compactStatValue}>{recipe.calories}</Text>
               </View>
               <Text style={styles.compactStatLabel}>Calories</Text>
@@ -517,7 +518,7 @@ export default function RecipeDetailScreen() {
             {/* Stat 3: Độ khó */}
             <View style={styles.compactStatCard}>
               <View style={styles.compactStatTopRow}>
-                <Ionicons name="ribbon-outline" size={14} color="#475569" />
+                <Ionicons name="ribbon-outline" size={14} color={BrandColors.textBody} />
                 <Text style={styles.compactStatValue}>{recipe.difficulty || "Dễ"}</Text>
               </View>
               <Text style={styles.compactStatLabel}>Độ khó</Text>
@@ -526,7 +527,7 @@ export default function RecipeDetailScreen() {
             {/* Stat 4: Số bước */}
             <View style={styles.compactStatCard}>
               <View style={styles.compactStatTopRow}>
-                <Ionicons name="list-outline" size={14} color="#475569" />
+                <Ionicons name="list-outline" size={14} color={BrandColors.textBody} />
                 <Text style={styles.compactStatValue}>{recipe.stepsCount} bước</Text>
               </View>
               <Text style={styles.compactStatLabel}>Cách làm</Text>
@@ -541,10 +542,12 @@ export default function RecipeDetailScreen() {
             </Text>
           ) : null}
 
+          {recipe.id === id && <RecipeDetailVideo key={`${recipe.id}:${recipe.youtubeVideoId ?? ""}`} recipe={recipe} />}
+
           {/* 6. ESTIMATED PRICE & FRIDGE MATCH (Streamlined minimal bar) */}
           <View style={styles.smartCostCard}>
             <View style={styles.smartCostLeft}>
-              <Ionicons name="wallet-outline" size={18} color="#475569" />
+              <Ionicons name="wallet-outline" size={18} color={BrandColors.textBody} />
               <View>
                 <Text style={styles.smartCostSub}>Ước tính giá cần mua</Text>
                 <View style={{ flexDirection: "row", alignItems: "baseline", gap: 5 }}>
@@ -571,7 +574,7 @@ export default function RecipeDetailScreen() {
               <Ionicons
                 name={matchPercent > 0 ? "checkmark-circle" : "basket-outline"}
                 size={13}
-                color={matchPercent > 0 ? "#16A34A" : "#64748B"}
+                color={matchPercent > 0 ? "#262626" : "#5E5E5E"}
               />
               <Text
                 style={[
@@ -649,7 +652,7 @@ export default function RecipeDetailScreen() {
               {/* Servings Adjuster Bar */}
               <View style={styles.servingsCard}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                  <Ionicons name="people-outline" size={18} color="#0F172A" />
+                  <Ionicons name="people-outline" size={18} color={BrandColors.textDark} />
                   <Text style={styles.servingsTitle}>Khẩu phần ăn</Text>
                 </View>
 
@@ -659,7 +662,7 @@ export default function RecipeDetailScreen() {
                     activeOpacity={0.7}
                     onPress={() => handleAdjustServings(-1)}
                   >
-                    <Ionicons name="remove" size={16} color="#0F172A" />
+                    <Ionicons name="remove" size={16} color={BrandColors.textDark} />
                   </TouchableOpacity>
 
                   <Text style={styles.servingsNumberText}>{servingsCount} phần</Text>
@@ -669,7 +672,7 @@ export default function RecipeDetailScreen() {
                     activeOpacity={0.7}
                     onPress={() => handleAdjustServings(1)}
                   >
-                    <Ionicons name="add" size={16} color="#0F172A" />
+                    <Ionicons name="add" size={16} color={BrandColors.textDark} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -679,20 +682,20 @@ export default function RecipeDetailScreen() {
                 style={[
                   styles.fridgeReadinessBar,
                   matchPercent === 0 && {
-                    backgroundColor: "#FFF7ED",
-                    borderColor: "#FED7AA",
+                    backgroundColor: BrandColors.surfaceMuted,
+                    borderColor: BrandColors.borderLight,
                   },
                 ]}
               >
                 <MaterialCommunityIcons
                   name="fridge-outline"
                   size={18}
-                  color={matchPercent > 0 ? "#059669" : "#EA580C"}
+                  color={matchPercent > 0 ? "#262626" : "#171717"}
                 />
                 <Text
                   style={[
                     styles.fridgeReadinessText,
-                    matchPercent === 0 && { color: "#C2410C" },
+                    matchPercent === 0 && { color: "#282828" },
                   ]}
                 >
                   {matchPercent === 0
@@ -722,7 +725,7 @@ export default function RecipeDetailScreen() {
                   </TouchableOpacity>
                 ) : (
                   <View style={styles.allReadyBadge}>
-                    <Ionicons name="checkmark-circle" size={13} color="#16A34A" />
+                    <Ionicons name="checkmark-circle" size={13} color="#262626" />
                     <Text style={styles.allReadyBadgeText}>Đã có đủ</Text>
                   </View>
                 )}
@@ -820,7 +823,7 @@ export default function RecipeDetailScreen() {
                               }
                               size={12}
                               color={
-                                addedCartIngredients[idx] ? "#059669" : "#EA580C"
+                                addedCartIngredients[idx] ? "#262626" : "#171717"
                               }
                             />
                             <Text
@@ -870,7 +873,7 @@ export default function RecipeDetailScreen() {
                       {/* Left Column: Number Badge & Vertical Connector Line */}
                       <View style={styles.timelineLeftTrack}>
                         <LinearGradient
-                          colors={["#FF5722", "#FF7043"]}
+                          colors={["#171717", "#292929"]}
                           style={styles.timelineStepNumberBox}
                         >
                           <Text style={styles.timelineStepNumberText}>
@@ -890,7 +893,7 @@ export default function RecipeDetailScreen() {
                         {/* Chef Tip if available */}
                         {step.tip ? (
                           <View style={styles.stepTipBox}>
-                            <Ionicons name="bulb-outline" size={16} color="#D97706" />
+                            <Ionicons name="bulb-outline" size={16} color={BrandColors.textBody} />
                             <Text style={styles.stepTipText}>
                               <Text style={{ fontWeight: "700" }}>Mẹo bếp: </Text>
                               {step.tip}
@@ -913,7 +916,7 @@ export default function RecipeDetailScreen() {
                             <Ionicons
                               name={isTimerActive ? "alarm" : "timer-outline"}
                               size={15}
-                              color={isTimerActive ? "#FFFFFF" : "#EA580C"}
+                              color={isTimerActive ? "#FFFFFF" : "#171717"}
                             />
                             <Text
                               style={[
@@ -942,7 +945,7 @@ export default function RecipeDetailScreen() {
             <View style={styles.tabContentBlock}>
               <View style={styles.nutritionPanel}>
                 <View style={styles.nutritionHeaderRow}>
-                  <Ionicons name="fitness-outline" size={18} color="#475569" />
+                  <Ionicons name="fitness-outline" size={18} color={BrandColors.textBody} />
                   <Text style={styles.nutritionHeaderTitle}>
                     Giá trị dinh dưỡng ({recipe.servings})
                   </Text>
@@ -987,7 +990,7 @@ export default function RecipeDetailScreen() {
                 {recipe.nutrition.advice ? (
                   <View style={styles.nutritionAdviceCard}>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 4 }}>
-                      <Ionicons name="sparkles" size={14} color="#EA580C" />
+                      <Ionicons name="sparkles" size={14} color={BrandColors.textDark} />
                       <Text style={styles.nutritionAdviceTitle}>Lời khuyên chuyên gia</Text>
                     </View>
                     <Text style={styles.nutritionAdviceDesc}>
@@ -1036,7 +1039,7 @@ export default function RecipeDetailScreen() {
             }
           >
             <LinearGradient
-              colors={["#FF5722", "#FF7043"]}
+              colors={["#171717", "#292929"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.startCookingGradient}
@@ -1076,7 +1079,7 @@ export default function RecipeDetailScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.background,
   },
   scrollView: {
     flex: 1,
@@ -1085,7 +1088,7 @@ const styles = StyleSheet.create({
   /* 1. Hero Image & Top Header */
   heroImageContainer: {
     position: "relative",
-    backgroundColor: "#0F172A",
+    backgroundColor: "#171717",
   },
   heroImage: {
     width: "100%",
@@ -1121,7 +1124,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -2,
     right: -2,
-    backgroundColor: "#FF5722",
+    backgroundColor: "#171717",
     borderRadius: 8,
     minWidth: 16,
     height: 16,
@@ -1140,15 +1143,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#FEFCE8",
+    backgroundColor: "#EEEEEE",
     borderWidth: 1.5,
-    borderColor: "#FDE047",
+    borderColor: "#686868",
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginTop: 10,
     marginBottom: 6,
-    shadowColor: "#854D0E",
+    shadowColor: "#292929",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -1163,18 +1166,18 @@ const styles = StyleSheet.create({
   stickyNoteTriggerTitle: {
     fontSize: 13,
     fontWeight: "800",
-    color: "#78350F",
+    color: "#292929",
   },
   stickyNoteTriggerSub: {
     fontSize: 11,
-    color: "#92400E",
+    color: "#292929",
     marginTop: 1,
   },
   stickyNoteTriggerRight: {
     flexDirection: "row",
     alignItems: "center",
     gap: 2,
-    backgroundColor: "#FEF08A",
+    backgroundColor: "#E6E6E6",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -1182,7 +1185,7 @@ const styles = StyleSheet.create({
   stickyNoteOpenText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#B45309",
+    color: "#292929",
   },
   floatingHeroBadgesRow: {
     position: "absolute",
@@ -1194,7 +1197,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   heroCategoryBadge: {
-    backgroundColor: "rgba(15, 23, 42, 0.75)",
+    backgroundColor: "rgba(27, 27, 27, 0.75)",
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 14,
@@ -1223,11 +1226,11 @@ const styles = StyleSheet.create({
   heroRatingText: {
     fontSize: 12.5,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   heroReviewText: {
     fontSize: 11,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "500",
   },
 
@@ -1236,7 +1239,7 @@ const styles = StyleSheet.create({
     marginTop: -26,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     paddingHorizontal: 20,
     paddingTop: 24,
     shadowColor: "#000000",
@@ -1248,7 +1251,7 @@ const styles = StyleSheet.create({
   dishTitle: {
     fontSize: 24,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     letterSpacing: -0.3,
     marginBottom: 8,
     lineHeight: 32,
@@ -1263,20 +1266,20 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#FFEDD5",
+    borderColor: BrandColors.borderLight,
   },
   authorName: {
     fontSize: 13.5,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   chefRoleText: {
     fontSize: 11.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
 
   /* 3. Compact 4-Stat Minimal Underline Row */
@@ -1293,7 +1296,7 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     paddingBottom: 8,
     borderBottomWidth: 1.5,
-    borderBottomColor: "#CBD5E1",
+    borderBottomColor: "#C7C7C7",
     backgroundColor: "transparent",
   },
   compactStatTopRow: {
@@ -1304,12 +1307,12 @@ const styles = StyleSheet.create({
   compactStatValue: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#334155",
+    color: BrandColors.textBody,
     letterSpacing: -0.2,
   },
   compactStatLabel: {
     fontSize: 11,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "500",
     marginTop: 3,
     textAlign: "center",
@@ -1319,13 +1322,13 @@ const styles = StyleSheet.create({
   compactEditorialText: {
     fontSize: 13,
     lineHeight: 19,
-    color: "#475569",
+    color: BrandColors.textBody,
     marginBottom: 12,
   },
   compactEditorialTitle: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#334155",
+    color: BrandColors.textBody,
   },
 
   /* 6. Streamlined Smart Cost & Fridge Bar */
@@ -1333,9 +1336,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -1350,47 +1353,47 @@ const styles = StyleSheet.create({
   smartCostSub: {
     fontSize: 11,
     fontWeight: "500",
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginBottom: 1,
   },
   smartCostPrice: {
     fontSize: 15,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   smartCostPerPerson: {
     fontSize: 11.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "500",
   },
   fridgeMatchChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 8,
     paddingVertical: 4.5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     gap: 4,
   },
   fridgeMatchChipText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   fridgeMatchChipPositive: {
-    backgroundColor: "#F0FDF4",
-    borderColor: "#DCFCE7",
+    backgroundColor: BrandColors.surfaceMuted,
+    borderColor: "#EEEEEE",
   },
   fridgeMatchChipTextPositive: {
-    color: "#16A34A",
+    color: "#262626",
   },
 
   /* 7. Segmented Tab Bar */
   tabBarContainer: {
     flexDirection: "row",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     borderRadius: 16,
     padding: 4,
     marginBottom: 20,
@@ -1403,7 +1406,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   tabItemActive: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -1413,10 +1416,10 @@ const styles = StyleSheet.create({
   tabItemText: {
     fontSize: 12.5,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   tabItemTextActive: {
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontWeight: "800",
   },
 
@@ -1428,9 +1431,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -1439,12 +1442,12 @@ const styles = StyleSheet.create({
   servingsTitle: {
     fontSize: 13.5,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   servingsCounter: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     borderRadius: 10,
     padding: 2,
     gap: 10,
@@ -1453,7 +1456,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000000",
@@ -1465,25 +1468,25 @@ const styles = StyleSheet.create({
   servingsNumberText: {
     fontSize: 12.5,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     minWidth: 50,
     textAlign: "center",
   },
   fridgeReadinessBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F0FDF4",
+    backgroundColor: BrandColors.surfaceMuted,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#DCFCE7",
+    borderColor: "#EEEEEE",
     gap: 8,
   },
   fridgeReadinessText: {
     fontSize: 12,
-    color: "#166534",
+    color: "#292929",
     flex: 1,
   },
   ingredientsSectionHeader: {
@@ -1496,17 +1499,17 @@ const styles = StyleSheet.create({
   ingredientsSectionTitle: {
     fontSize: 13.5,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   addAllToCartBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
     paddingHorizontal: 10,
     paddingVertical: 5.5,
     borderRadius: 8,
     gap: 4,
-    shadowColor: "#EA580C",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 1.5 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
@@ -1520,18 +1523,18 @@ const styles = StyleSheet.create({
   allReadyBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F0FDF4",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 8,
     paddingVertical: 4.5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#DCFCE7",
+    borderColor: "#EEEEEE",
     gap: 4,
   },
   allReadyBadgeText: {
     fontSize: 11.5,
     fontWeight: "600",
-    color: "#16A34A",
+    color: "#262626",
   },
   ingredientsCardList: {
     gap: 8,
@@ -1539,31 +1542,31 @@ const styles = StyleSheet.create({
   ingredientRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 11,
     gap: 10,
   },
   ingredientRowChecked: {
-    backgroundColor: "#F8FAFC",
-    borderColor: "#CBD5E1",
+    backgroundColor: BrandColors.background,
+    borderColor: "#C7C7C7",
   },
   modernCheckbox: {
     width: 20,
     height: 20,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: "#CBD5E1",
-    backgroundColor: "#FFFFFF",
+    borderColor: "#C7C7C7",
+    backgroundColor: BrandColors.surfaceCard,
     justifyContent: "center",
     alignItems: "center",
   },
   modernCheckboxChecked: {
-    backgroundColor: "#059669",
-    borderColor: "#059669",
+    backgroundColor: "#262626",
+    borderColor: "#262626",
   },
   ingredientMainInfo: {
     flexDirection: "row",
@@ -1577,15 +1580,15 @@ const styles = StyleSheet.create({
   ingredientNameText: {
     fontSize: 13.5,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   ingredientNameTextChecked: {
-    color: "#64748B",
+    color: BrandColors.textMuted,
     textDecorationLine: "line-through",
   },
   ingredientAmountText: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 1,
   },
   stockPill: {
@@ -1594,20 +1597,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   stockPillAvailable: {
-    backgroundColor: "#ECFDF5",
+    backgroundColor: BrandColors.surfaceMuted,
   },
   stockPillMissing: {
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
   },
   stockPillText: {
     fontSize: 10.5,
     fontWeight: "700",
   },
   stockPillTextAvailable: {
-    color: "#059669",
+    color: "#262626",
   },
   stockPillTextMissing: {
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   ingredientActionsRow: {
     flexDirection: "row",
@@ -1617,9 +1620,9 @@ const styles = StyleSheet.create({
   addSingleCartBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#FDBA74",
+    borderColor: "#C2C2C2",
     paddingHorizontal: 7,
     paddingVertical: 3.5,
     borderRadius: 7,
@@ -1628,14 +1631,14 @@ const styles = StyleSheet.create({
   addSingleCartBtnText: {
     fontSize: 10.5,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   addedSingleCartBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ECFDF5",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#A7F3D0",
+    borderColor: BrandColors.borderLight,
     paddingHorizontal: 7,
     paddingVertical: 3.5,
     borderRadius: 7,
@@ -1644,7 +1647,7 @@ const styles = StyleSheet.create({
   addedSingleCartBtnText: {
     fontSize: 10.5,
     fontWeight: "700",
-    color: "#059669",
+    color: "#262626",
   },
 
   /* TAB 2: STEPS TIMELINE STYLES */
@@ -1667,7 +1670,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#FF5722",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
@@ -1681,15 +1684,15 @@ const styles = StyleSheet.create({
   timelineConnectingLine: {
     flex: 1,
     width: 2,
-    backgroundColor: "#FED7AA",
+    backgroundColor: "#DEDEDE",
     marginVertical: 4,
   },
   timelineContentCard: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     padding: 14,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 1 },
@@ -1700,37 +1703,37 @@ const styles = StyleSheet.create({
   timelineStepTitle: {
     fontSize: 14.5,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginBottom: 6,
   },
   timelineStepDesc: {
     fontSize: 13,
     lineHeight: 20,
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   stepTipBox: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "#FFFBEB",
+    backgroundColor: "#EEEEEE",
     borderRadius: 10,
     padding: 9,
     marginTop: 8,
     gap: 6,
     borderWidth: 1,
-    borderColor: "#FDE68A",
+    borderColor: "#C2C2C2",
   },
   stepTipText: {
     flex: 1,
     fontSize: 11.5,
     lineHeight: 17,
-    color: "#92400E",
+    color: "#292929",
   },
   stepTimerBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
     paddingHorizontal: 11,
     paddingVertical: 6,
     borderRadius: 10,
@@ -1739,13 +1742,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   stepTimerBtnActive: {
-    backgroundColor: "#EA580C",
-    borderColor: "#EA580C",
+    backgroundColor: "#171717",
+    borderColor: "#171717",
   },
   stepTimerBtnText: {
     fontSize: 11.5,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   stepTimerBtnTextActive: {
     color: "#FFFFFF",
@@ -1765,7 +1768,7 @@ const styles = StyleSheet.create({
   nutritionHeaderTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   macroGridContainer: {
     flexDirection: "row",
@@ -1779,18 +1782,18 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     paddingBottom: 8,
     borderBottomWidth: 1.5,
-    borderBottomColor: "#CBD5E1",
+    borderBottomColor: "#C7C7C7",
     backgroundColor: "transparent",
   },
   macroValueNumber: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#334155",
+    color: BrandColors.textBody,
     letterSpacing: -0.2,
   },
   macroNameLabel: {
     fontSize: 10.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 3,
     fontWeight: "500",
     textAlign: "center",
@@ -1802,12 +1805,12 @@ const styles = StyleSheet.create({
   nutritionAdviceTitle: {
     fontSize: 12.5,
     fontWeight: "600",
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   nutritionAdviceDesc: {
     fontSize: 12.5,
     lineHeight: 18,
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
 
   /* 8. FLOATING BOTTOM ACTION BAR */
@@ -1818,7 +1821,7 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: "rgba(255, 255, 255, 0.96)",
     borderTopWidth: 1,
-    borderTopColor: "#E2E8F0",
+    borderTopColor: BrandColors.borderLight,
     paddingTop: 12,
     paddingHorizontal: 20,
     shadowColor: "#000000",
@@ -1838,23 +1841,23 @@ const styles = StyleSheet.create({
   bottomPriceLabel: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   bottomPriceValue: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginVertical: 1,
   },
   bottomPriceSub: {
     fontSize: 10.5,
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontWeight: "600",
   },
   startCookingBtn: {
     borderRadius: 20,
     overflow: "hidden",
-    shadowColor: "#FF5722",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.22,
     shadowRadius: 4,
@@ -1874,7 +1877,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   cartActionBtn: {
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -1882,7 +1885,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginTop: 12,
     gap: 8,
-    shadowColor: "#EA580C",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 5,
@@ -1894,10 +1897,10 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   allIngredientsReadyBanner: {
-    backgroundColor: "#ECFDF5",
+    backgroundColor: BrandColors.surfaceMuted,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#A7F3D0",
+    borderColor: BrandColors.borderLight,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
@@ -1908,7 +1911,7 @@ const styles = StyleSheet.create({
   allIngredientsReadyText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#065F46",
+    color: "#292929",
     flex: 1,
   },
 });

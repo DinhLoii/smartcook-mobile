@@ -1,11 +1,12 @@
+import { BrandColors } from "@/constants/brandColors";
 import { CookingHistoryModal } from "@/components/recipe";
 import { RECIPES_DATA } from "@/data/recipesData";
-import { FridgeService } from "@/services/fridgeService";
+import { FridgeService, isFridgeConnectionError } from "@/services/fridgeService";
 import { FridgeItem, MatchedRecipeItem } from "@/types";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -273,8 +274,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "meat_fresh",
         subName: "Thịt gia súc & gia cầm",
         icon: "",
-        color: "#EA580C",
-        bgLight: "#FFF7ED",
+        color: BrandColors.textDark,
+        bgLight: "#F6F6F6",
         hint: "Thịt gà, thịt heo, thịt bò, sườn heo...",
         options: [
           "Thịt gà",
@@ -291,8 +292,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "meat_processed",
         subName: "Thịt chế biến sẵn",
         icon: "",
-        color: "#C2410C",
-        bgLight: "#FFEDD5",
+        color: "#282828",
+        bgLight: "#EAEAEA",
         hint: "Xúc xích, lạp xưởng, chả lụa, thịt xông khói...",
         options: [
           "Xúc xích",
@@ -314,8 +315,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "seafood_fresh",
         subName: "Hải sản tươi sống",
         icon: "",
-        color: "#0284C7",
-        bgLight: "#F0F9FF",
+        color: "#262626",
+        bgLight: "#F7F7F7",
         hint: "Tôm, cá, mực, cua ghẹ, bạch tuộc, ngao...",
         options: [
           "Tôm",
@@ -340,8 +341,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "veggie_leaves",
         subName: "Rau ăn lá phổ biến",
         icon: "",
-        color: "#16A34A",
-        bgLight: "#F0FDF4",
+        color: "#262626",
+        bgLight: "#F5F5F5",
         hint: "Rau muống, rau cải, xà lách, bắp cải...",
         options: [
           "Rau cải",
@@ -367,8 +368,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "roots_cooking",
         subName: "Củ quả xào, nấu canh & hầm",
         icon: "",
-        color: "#D97706",
-        bgLight: "#FEF3C7",
+        color: BrandColors.textBody,
+        bgLight: "#DADADA",
         hint: "Cà chua, dưa leo, cà rốt, khoai tây, bí đỏ...",
         options: [
           "Cà chua",
@@ -396,8 +397,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "herbs_aromatic",
         subName: "Rau nêm & rau thơm gia vị",
         icon: "",
-        color: "#059669",
-        bgLight: "#ECFDF5",
+        color: "#262626",
+        bgLight: "#F3F3F3",
         hint: "Hành lá, ngò rí, húng quế, thì là, tía tô...",
         options: [
           "Hành lá",
@@ -413,8 +414,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "mushrooms_fresh",
         subName: "Nấm tươi các loại",
         icon: "",
-        color: "#047857",
-        bgLight: "#D1FAE5",
+        color: "#292929",
+        bgLight: "#DADADA",
         hint: "Nấm rơm, nấm kim châm, nấm đùi gà, nấm hương...",
         options: [
           "Nấm rơm",
@@ -435,8 +436,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "fruits_fresh",
         subName: "Hoa quả & Trái cây tươi",
         icon: "",
-        color: "#EA580C",
-        bgLight: "#FFF7ED",
+        color: BrandColors.textDark,
+        bgLight: "#F6F6F6",
         hint: "Quả bơ, chanh, chuối, táo, dứa...",
         options: [
           "Quả bơ",
@@ -462,8 +463,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "eggs_all",
         subName: "Trứng gia cầm",
         icon: "",
-        color: "#D97706",
-        bgLight: "#FFFBEB",
+        color: BrandColors.textBody,
+        bgLight: "#EEEEEE",
         hint: "Trứng gà, trứng vịt, trứng cút...",
         options: ["Trứng gà", "Trứng vịt", "Trứng cút", "Trứng vịt lộn"],
       },
@@ -471,8 +472,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "tofu_all",
         subName: "Đậu hũ & Sản phẩm từ đậu",
         icon: "",
-        color: "#CA8A04",
-        bgLight: "#FEFCE8",
+        color: "#363636",
+        bgLight: "#EEEEEE",
         hint: "Đậu hũ trắng, đậu hũ non, tàu hũ ky...",
         options: [
           "Đậu hũ trắng",
@@ -493,8 +494,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "dairy_items",
         subName: "Sữa, Phô mai & Bơ",
         icon: "",
-        color: "#EAB308",
-        bgLight: "#FEF9C3",
+        color: "#363636",
+        bgLight: "#DADADA",
         hint: "Sữa tươi, bơ, phô mai lát, sữa đặc...",
         options: [
           "Sữa tươi",
@@ -517,8 +518,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "staples_noodles",
         subName: "Gạo, Bún & Mỳ các loại",
         icon: "",
-        color: "#D97706",
-        bgLight: "#FFFBEB",
+        color: BrandColors.textBody,
+        bgLight: "#EEEEEE",
         hint: "Cơm, mỳ Ý, bún tươi, phở, miến, bánh mì...",
         options: [
           "Gạo / Cơm",
@@ -542,8 +543,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "flour_grains",
         subName: "Bột nấu nướng & Hạt ngũ cốc",
         icon: "",
-        color: "#854D0E",
-        bgLight: "#FEF9C3",
+        color: "#292929",
+        bgLight: "#DADADA",
         hint: "Bột mì, bột chiên giòn, bột bắp, mè, hạt điều...",
         options: [
           "Bột mì",
@@ -568,8 +569,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "spice_seasoning",
         subName: "Gia vị nêm nấu cơ bản",
         icon: "",
-        color: "#E11D48",
-        bgLight: "#FFF1F2",
+        color: "#292929",
+        bgLight: "#F7F7F7",
         hint: "Nước mắm, nước tương, muối, đường, hạt nêm...",
         options: [
           "Nước mắm",
@@ -594,8 +595,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "aromatic_fresh",
         subName: "Gia vị tươi & vị cay",
         icon: "",
-        color: "#DC2626",
-        bgLight: "#FEF2F2",
+        color: "#212121",
+        bgLight: "#F4F4F4",
         hint: "Tỏi, ớt, gừng, sả, hành tím, riềng, nghệ...",
         options: [
           "Tỏi",
@@ -619,8 +620,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "sauces_cooking",
         subName: "Dầu ăn & Sốt nấu",
         icon: "",
-        color: "#EA580C",
-        bgLight: "#FFF7ED",
+        color: BrandColors.textDark,
+        bgLight: "#F6F6F6",
         hint: "Dầu ăn, dầu olive, dầu mè, tương ớt, sốt mayo...",
         options: [
           "Dầu ăn",
@@ -644,8 +645,8 @@ export const INGREDIENT_CATEGORIES: MainCategory[] = [
         id: "dry_canned",
         subName: "Thực phẩm khô & Đóng lon",
         icon: "",
-        color: "#7C3AED",
-        bgLight: "#F5F3FF",
+        color: "#292929",
+        bgLight: "#F7F7F7",
         hint: "Tôm khô, mực khô, cá hộp, rong biển, ngô ngọt...",
         options: [
           "Tôm khô",
@@ -670,20 +671,19 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
   const router = useRouter();
   const { width } = useWindowDimensions();
 
-  // Selected ingredients state (defaults to common kitchen items)
-  const [selectedIngredients, setSelectedIngredients] = useState<string[]>([
-    "Thịt gà",
-    "Nước tương",
-    "Mật ong",
-    "Tỏi",
-    "Gạo / Cơm",
-    "Hành lá",
-  ]);
-
-  // Backend fridge items & state
   const [fridgeItems, setFridgeItems] = useState<FridgeItem[]>([]);
-  const [isLoadingFridge, setIsLoadingFridge] = useState<boolean>(false);
-  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const selectedIngredients = useMemo(
+    () => [...new Set(fridgeItems.map((item) => item.name))],
+    [fridgeItems]
+  );
+  const [isLoadingFridge, setIsLoadingFridge] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [fridgeError, setFridgeError] = useState("");
+  const busy = useRef(false);
+  const fridgeLoaded = useRef(false);
+  const uncertainAdds = useRef(new Set<string>());
+  const matchRequest = useRef(0);
   const [backendMatchedRecipes, setBackendMatchedRecipes] = useState<MatchedRecipeItem[]>([]);
 
   // Active Category Tab
@@ -702,48 +702,32 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
     INGREDIENT_CATEGORIES.find((c) => c.id === activeMainCat) ??
     INGREDIENT_CATEGORIES[0];
 
-  // Load fridge and matched recipes from backend
+  const refreshMatches = useCallback(() => {
+    const request = ++matchRequest.current;
+    void FridgeService.getFridgeMatchedRecipes(15).then((recipes) => {
+      if (request === matchRequest.current) setBackendMatchedRecipes(recipes);
+    });
+  }, []);
+
   const loadFridgeData = useCallback(async (isPullRefresh = false) => {
-    if (isPullRefresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoadingFridge(true);
-    }
-
+    if (busy.current) return;
+    busy.current = true;
+    setFridgeError("");
+    if (isPullRefresh) setIsRefreshing(true);
+    else setIsLoadingFridge(true);
     try {
-      const [fridgeRes, matchedRes] = await Promise.all([
-        FridgeService.getMyFridge(),
-        FridgeService.getFridgeMatchedRecipes(15),
-      ]);
-
-      if (fridgeRes?.items && fridgeRes.items.length > 0) {
-        setFridgeItems(fridgeRes.items);
-        setSelectedIngredients(fridgeRes.items.map((i) => i.name));
-      } else {
-        // Đồng bộ các nguyên liệu ban đầu lên backend nếu tủ lạnh backend đang trống
-        if (selectedIngredients.length > 0) {
-          Promise.all(
-            selectedIngredients.map((name) =>
-              FridgeService.addItem({ name }).catch(() => null)
-            )
-          ).then(() => {
-            FridgeService.getMyFridge().then((res) => {
-              if (res?.items && res.items.length > 0) setFridgeItems(res.items);
-            });
-          });
-        }
-      }
-
-      if (matchedRes && matchedRes.length > 0) {
-        setBackendMatchedRecipes(matchedRes);
-      }
-    } catch (e) {
-      console.warn("Lỗi khi tải dữ liệu tủ lạnh:", e);
+      const fridge = await FridgeService.getMyFridge();
+      setFridgeItems(fridge.items);
+      fridgeLoaded.current = true;
+      refreshMatches();
+    } catch {
+      setFridgeError("Không tải được tủ lạnh. Hãy kiểm tra kết nối và thử lại.");
     } finally {
+      busy.current = false;
       setIsLoadingFridge(false);
       setIsRefreshing(false);
     }
-  }, []);
+  }, [refreshMatches]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -763,113 +747,99 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
     }));
   };
 
-  // Toggle ingredient selection with real Backend synchronization
-  const toggleIngredient = async (name: string) => {
-    const isCurrentlySelected = selectedIngredients.includes(name);
-
-    if (isCurrentlySelected) {
-      // Optimistic remove
-      setSelectedIngredients((prev) => prev.filter((item) => item !== name));
-      const existingItem = fridgeItems.find(
-        (it) => it.name.toLowerCase() === name.toLowerCase()
-      );
-      if (existingItem?._id) {
-        setFridgeItems((prev) => prev.filter((it) => it._id !== existingItem._id));
-        try {
-          await FridgeService.removeItem(existingItem._id);
-          FridgeService.getFridgeMatchedRecipes(15).then((res) => {
-            if (res && res.length > 0) setBackendMatchedRecipes(res);
-          });
-        } catch (e) {
-          console.error("Lỗi khi xóa khỏi tủ lạnh:", e);
-        }
-      }
-      return;
-    }
-
-    // Optimistic add
-    setSelectedIngredients((prev) => [...prev, name]);
+  const runFridgeMutation = async (action: () => Promise<void>, errorMessage: string) => {
+    if (busy.current) return;
+    busy.current = true;
+    setIsSaving(true);
+    setFridgeError("");
     try {
-      const catCodeMap: Record<string, string> = {
-        meat: "meat",
-        seafood: "seafood",
-        veggie: "greens",
-        tuber: "veggies",
-        aromatic_herb: "herbs",
-        fruit: "fruits",
-        egg_tofu: "egg_tofu",
-        dairy: "dairy",
-        carb: "carbs",
-        grain: "grain",
-        spice: "seasoning",
-        aromatic: "spice",
-        oil_sauce: "sauces",
-        dry: "dry",
-      };
-      const backendCategory = catCodeMap[activeMainCat] || undefined;
-
-      const addedItem = await FridgeService.addItem({
-        name,
-        category: backendCategory,
-      });
-      if (addedItem) {
-        setFridgeItems((prev) => [addedItem, ...prev]);
-      }
-      FridgeService.getFridgeMatchedRecipes(15).then((res) => {
-        if (res && res.length > 0) setBackendMatchedRecipes(res);
-      });
-    } catch (e) {
-      console.error("Lỗi khi thêm vào tủ lạnh:", e);
+      await action();
+      refreshMatches();
+    } catch (error) {
+      setFridgeError(isFridgeConnectionError(error)
+        ? "Kết nối gián đoạn. Hãy kiểm tra tủ lạnh rồi thử lại."
+        : errorMessage);
+    } finally {
+      busy.current = false;
+      setIsSaving(false);
     }
   };
 
-  // Add custom ingredient from input
-  const handleAddCustom = async () => {
-    const trimmed = customInput.trim();
-    if (!trimmed) {
-      Alert.alert("Lưu ý", "Vui lòng nhập tên nguyên liệu");
+  const saveIngredient = async (name: string, category?: string) => {
+    const key = name.trim().toLowerCase();
+    const contains = (items: FridgeItem[]) =>
+      items.some((item) => item.name.trim().toLowerCase() === key);
+
+    if (!fridgeLoaded.current || uncertainAdds.current.has(key)) {
+      const fridge = await FridgeService.getMyFridge();
+      fridgeLoaded.current = true;
+      setFridgeItems(fridge.items);
+      if (contains(fridge.items)) {
+        uncertainAdds.current.delete(key);
+        return;
+      }
+    } else if (contains(fridgeItems)) {
       return;
     }
-    if (!selectedIngredients.includes(trimmed)) {
-      setSelectedIngredients([trimmed, ...selectedIngredients]);
-      try {
-        const added = await FridgeService.addItem({ name: trimmed });
-        if (added) {
-          setFridgeItems((prev) => [added, ...prev]);
-        }
-        FridgeService.getFridgeMatchedRecipes(15).then((res) => {
-          if (res && res.length > 0) setBackendMatchedRecipes(res);
-        });
-      } catch (e) {
-        console.error("Lỗi thêm nguyên liệu tùy chỉnh:", e);
-      }
+
+    try {
+      if (!await FridgeService.addItem({ name, category })) throw new Error("Missing added item");
+      setFridgeItems(FridgeService.getItems());
+      uncertainAdds.current.delete(key);
+    } catch (error) {
+      if (!isFridgeConnectionError(error)) throw error;
+      uncertainAdds.current.add(key);
+      const fridge = await FridgeService.getMyFridge();
+      setFridgeItems(fridge.items);
+      if (!contains(fridge.items)) throw error;
+      uncertainAdds.current.delete(key);
     }
-    setCustomInput("");
   };
 
-  // Clear all selections
+  const addError = "Không thêm được nguyên liệu. Vui lòng thử lại.";
+
+  const toggleIngredient = (name: string) => {
+    const existingItem = fridgeItems.find((item) => item.name === name);
+    if (existingItem) {
+      return runFridgeMutation(async () => {
+        if (!await FridgeService.removeItem(existingItem._id)) throw new Error("Remove failed");
+        setFridgeItems(FridgeService.getItems());
+      }, "Không xóa được nguyên liệu. Vui lòng thử lại.");
+    }
+
+    const categoryByTab: Record<string, string> = {
+      meat: "meat", seafood: "seafood", veggie: "greens", tuber: "veggies",
+      aromatic_herb: "herbs", fruit: "fruits", egg_tofu: "egg_tofu",
+      dairy: "dairy", carb: "carbs", grain: "grain", spice: "seasoning",
+      aromatic: "spice", oil_sauce: "sauces", dry: "dry",
+    };
+    return runFridgeMutation(() => saveIngredient(name, categoryByTab[activeMainCat]), addError);
+  };
+
+  const handleAddCustom = () => {
+    const name = customInput.trim();
+    if (!name) return;
+    return runFridgeMutation(async () => {
+      await saveIngredient(name);
+      setCustomInput((current) => current.trim() === name ? "" : current);
+    }, addError);
+  };
+
   const handleClearAll = () => {
-    Alert.alert(
-      "Dọn sạch tủ lạnh",
-      "Bạn có chắc muốn xóa toàn bộ nguyên liệu khỏi tủ lạnh không?",
-      [
-        { text: "Hủy", style: "cancel" },
-        {
-          text: "Xóa tất cả",
-          style: "destructive",
-          onPress: async () => {
-            setSelectedIngredients([]);
+    Alert.alert("Dọn sạch tủ lạnh", "Bạn có chắc muốn xóa toàn bộ nguyên liệu khỏi tủ lạnh không?", [
+      { text: "Hủy", style: "cancel" },
+      {
+        text: "Xóa tất cả",
+        style: "destructive",
+        onPress: () => {
+          void runFridgeMutation(async () => {
+            if (!await FridgeService.clearFridge()) throw new Error("Clear failed");
             setFridgeItems([]);
             setBackendMatchedRecipes([]);
-            try {
-              await FridgeService.clearFridge();
-            } catch (e) {
-              console.error("Lỗi khi làm sạch tủ lạnh:", e);
-            }
-          },
+          }, "Không dọn được tủ lạnh. Vui lòng thử lại.");
         },
-      ]
-    );
+      },
+    ]);
   };
 
   // Switch Main Category (groups stay closed by default)
@@ -982,7 +952,7 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                 activeOpacity={0.7}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Ionicons name="arrow-back" size={20} color="#0F172A" />
+                <Ionicons name="arrow-back" size={20} color={BrandColors.textDark} />
               </TouchableOpacity>
             )}
             <Text style={styles.headerTitle}>Nguyên Liệu Của Tôi</Text>
@@ -993,7 +963,7 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
             activeOpacity={0.75}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="time-outline" size={14} color="#EA580C" />
+            <Ionicons name="time-outline" size={14} color={BrandColors.textDark} />
             <Text style={styles.historyBtnText}>Lịch sử</Text>
           </TouchableOpacity>
         </View>
@@ -1008,45 +978,62 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={() => loadFridgeData(true)}
-            colors={["#EA580C"]}
-            tintColor="#EA580C"
+            colors={["#171717"]}
+            tintColor="#171717"
           />
         }
       >
         {/* 2. Custom Text Input Row (User tìm kiếm hoặc thêm nguyên liệu) */}
         <View style={styles.customInputRow}>
         <View style={styles.inputWrapper}>
-          <Ionicons name="search-outline" size={17} color="#94A3B8" />
+          <Ionicons name="search-outline" size={17} color={BrandColors.textPlaceholder} />
           <TextInput
             style={styles.textInput}
             placeholder="Tìm hoặc thêm nguyên liệu..."
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={BrandColors.textPlaceholder}
             value={customInput}
             onChangeText={setCustomInput}
             onSubmitEditing={handleAddCustom}
-            returnKeyType="search"
+            returnKeyType="done"
           />
           {customInput.length > 0 && (
             <TouchableOpacity onPress={() => setCustomInput("")}>
-              <Ionicons name="close-circle" size={16} color="#CBD5E1" />
+              <Ionicons name="close-circle" size={16} color="#C7C7C7" />
             </TouchableOpacity>
           )}
         </View>
 
         <TouchableOpacity
-          style={styles.searchBtn}
+          style={[styles.searchBtn, (!customInput.trim() || isLoadingFridge || isRefreshing || isSaving) && { opacity: 0.5 }]}
           activeOpacity={0.8}
+          disabled={!customInput.trim() || isLoadingFridge || isRefreshing || isSaving}
+          accessibilityRole="button"
+          accessibilityLabel="Thêm nguyên liệu"
           onPress={handleAddCustom}
         >
           <LinearGradient
-            colors={["#FF5722", "#FF7043"]}
+            colors={["#171717", "#292929"]}
             style={styles.searchBtnGradient}
           >
-            <Ionicons name="search" size={14} color="#FFFFFF" />
-            <Text style={styles.searchBtnText}>Tìm kiếm</Text>
+            {isSaving
+              ? <ActivityIndicator size="small" color="#FFFFFF" />
+              : <Ionicons name="add" size={16} color="#FFFFFF" />}
+            <Text style={styles.searchBtnText}>{isSaving ? "Đang lưu" : "Thêm"}</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
+      {fridgeError ? (
+        <View style={styles.fridgeFeedback}>
+          <Text accessibilityRole="alert" style={styles.fridgeFeedbackText}>{fridgeError}</Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            disabled={isSaving || isLoadingFridge || isRefreshing}
+            onPress={() => void loadFridgeData(true)}
+          >
+            <Text style={styles.fridgeRetryText}>Tải lại</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       {/* 3. Selected Ingredients Tray (Khay nguyên liệu đã chọn) */}
       <View style={styles.selectedTrayCard}>
@@ -1063,7 +1050,7 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
           </View>
 
           {selectedIngredients.length > 0 && (
-            <TouchableOpacity onPress={handleClearAll} activeOpacity={0.7}>
+            <TouchableOpacity onPress={handleClearAll} activeOpacity={0.7} disabled={isSaving || isLoadingFridge || isRefreshing}>
               <Text style={styles.clearAllText}>Xóa tất cả</Text>
             </TouchableOpacity>
           )}
@@ -1071,8 +1058,9 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
 
         {selectedIngredients.length === 0 ? (
           <Text style={styles.emptySelectedText}>
-            Chưa có nguyên liệu nào được chọn. Nhấn chọn bên dưới hoặc gõ để
-            thêm!
+            {isLoadingFridge
+              ? "Đang tải tủ lạnh…"
+              : "Chưa có nguyên liệu nào được chọn. Nhấn chọn bên dưới hoặc gõ để thêm."}
           </Text>
         ) : (
           <ScrollView
@@ -1087,10 +1075,11 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                 key={idx}
                 style={styles.selectedChip}
                 onPress={() => toggleIngredient(item)}
+                disabled={isSaving || isLoadingFridge || isRefreshing}
                 activeOpacity={0.7}
               >
                 <Text style={styles.selectedChipText}>{item}</Text>
-                <Ionicons name="close" size={14} color="#EA580C" />
+                <Ionicons name="close" size={14} color={BrandColors.textDark} />
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -1203,7 +1192,7 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                   <Ionicons
                     name={isExpanded ? "chevron-up" : "chevron-down"}
                     size={18}
-                    color={isExpanded ? "#EA580C" : "#64748B"}
+                    color={isExpanded ? "#171717" : "#5E5E5E"}
                   />
                 </View>
               </TouchableOpacity>
@@ -1223,13 +1212,14 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                             isSelected && styles.optionChipSelected,
                           ]}
                           onPress={() => toggleIngredient(option)}
+                          disabled={isSaving || isLoadingFridge || isRefreshing}
                           activeOpacity={0.75}
                         >
                           {isSelected && (
                             <Ionicons
                               name="checkmark"
                               size={12}
-                              color="#EA580C"
+                              color={BrandColors.textDark}
                               style={{ marginRight: 4 }}
                             />
                           )}
@@ -1259,7 +1249,7 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
             >
-              <Ionicons name="restaurant" size={18} color="#EA580C" />
+              <Ionicons name="restaurant" size={18} color={BrandColors.textDark} />
               <Text style={styles.recommendMainHeading}>
                 Gợi Ý Món Ăn Phù Hợp ({rankedRecipes.length})
               </Text>
@@ -1273,7 +1263,7 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
         {/* Zero results notice */}
         {rankedRecipes.length === 0 && (
           <View style={styles.noResultBox}>
-            <MaterialCommunityIcons name="chef-hat" size={40} color="#CBD5E1" />
+            <MaterialCommunityIcons name="chef-hat" size={40} color="#C7C7C7" />
             <Text style={styles.noResultTitle}>Chưa tìm thấy món phù hợp</Text>
             <Text style={styles.noResultSub}>
               Hãy chọn thêm một số nguyên liệu cơ bản như thịt gà, thịt bò,
@@ -1331,10 +1321,10 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                       </Text>
 
                       <View style={styles.recipeMetaRow}>
-                        <Ionicons name="time-outline" size={12} color="#94A3B8" />
+                        <Ionicons name="time-outline" size={12} color={BrandColors.textPlaceholder} />
                         <Text style={styles.recipeFullMeta}>{recipe.minutes} phút</Text>
                         <Text style={styles.metaDivider}>•</Text>
-                        <Ionicons name="flame-outline" size={12} color="#94A3B8" />
+                        <Ionicons name="flame-outline" size={12} color={BrandColors.textPlaceholder} />
                         <Text style={styles.recipeFullMeta}>{recipe.calories} kcal</Text>
                       </View>
 
@@ -1344,7 +1334,7 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
 
                       <View style={styles.viewDetailsBtn}>
                         <LinearGradient
-                          colors={["#FF5722", "#FF7043"]}
+                          colors={["#171717", "#292929"]}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           style={styles.viewDetailsGradient}
@@ -1415,10 +1405,10 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                       </Text>
 
                       <View style={styles.recipeMetaRow}>
-                        <Ionicons name="time-outline" size={12} color="#94A3B8" />
+                        <Ionicons name="time-outline" size={12} color={BrandColors.textPlaceholder} />
                         <Text style={styles.recipeFullMeta}>{recipe.minutes} phút</Text>
                         <Text style={styles.metaDivider}>•</Text>
-                        <Ionicons name="flame-outline" size={12} color="#94A3B8" />
+                        <Ionicons name="flame-outline" size={12} color={BrandColors.textPlaceholder} />
                         <Text style={styles.recipeFullMeta}>{recipe.calories} kcal</Text>
                       </View>
 
@@ -1433,7 +1423,7 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
 
                       <View style={styles.viewDetailsBtn}>
                         <LinearGradient
-                          colors={["#FF5722", "#FF7043"]}
+                          colors={["#171717", "#292929"]}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           style={styles.viewDetailsGradient}
@@ -1495,10 +1485,10 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
                       </Text>
 
                       <View style={styles.recipeMetaRow}>
-                        <Ionicons name="time-outline" size={12} color="#94A3B8" />
+                        <Ionicons name="time-outline" size={12} color={BrandColors.textPlaceholder} />
                         <Text style={styles.recipeFullMeta}>{recipe.minutes} phút</Text>
                         <Text style={styles.metaDivider}>•</Text>
-                        <Ionicons name="flame-outline" size={12} color="#94A3B8" />
+                        <Ionicons name="flame-outline" size={12} color={BrandColors.textPlaceholder} />
                         <Text style={styles.recipeFullMeta}>{recipe.calories} kcal</Text>
                       </View>
 
@@ -1510,7 +1500,7 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
 
                       <View style={styles.viewDetailsBtn}>
                         <LinearGradient
-                          colors={["#FF5722", "#FF7043"]}
+                          colors={["#171717", "#292929"]}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
                           style={styles.viewDetailsGradient}
@@ -1539,9 +1529,24 @@ export default function FridgeView({ insetsTop, onBack }: FridgeViewProps) {
 }
 
 const styles = StyleSheet.create({
+  fridgeFeedback: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: BrandColors.borderLight,
+    borderRadius: 12,
+    backgroundColor: BrandColors.surfaceMuted,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  fridgeFeedbackText: { flex: 1, color: BrandColors.textBody, fontSize: 13 },
+  fridgeRetryText: { color: BrandColors.textDark, fontSize: 13, fontWeight: "700", paddingVertical: 6 },
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
   },
   header: {
     paddingHorizontal: 20,
@@ -1563,11 +1568,11 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -1577,14 +1582,14 @@ const styles = StyleSheet.create({
   historyBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 14,
     gap: 4,
-    shadowColor: "#EA580C",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -1593,13 +1598,13 @@ const styles = StyleSheet.create({
   historyBtnText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   badgeTop: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#FFF3E0",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
@@ -1609,18 +1614,18 @@ const styles = StyleSheet.create({
   badgeTopText: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#E65100",
+    color: BrandColors.textDark,
     letterSpacing: 0.5,
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginBottom: 4,
   },
   headerDesc: {
     fontSize: 12.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     lineHeight: 18,
   },
 
@@ -1635,13 +1640,13 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 16,
     paddingHorizontal: 12,
     height: 40,
     gap: 6,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
@@ -1651,12 +1656,12 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 12.5,
-    color: "#1E293B",
+    color: BrandColors.textDark,
   },
   searchBtn: {
     borderRadius: 16,
     overflow: "hidden",
-    shadowColor: "#FF5722",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -1678,13 +1683,13 @@ const styles = StyleSheet.create({
   /* Selected Tray */
   selectedTrayCard: {
     marginHorizontal: 20,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 18,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
     marginBottom: 16,
-    shadowColor: "#FF6B35",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -1700,7 +1705,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -1712,16 +1717,16 @@ const styles = StyleSheet.create({
   selectedTrayTitle: {
     fontSize: 13.5,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   clearAllText: {
     fontSize: 11.5,
     fontWeight: "700",
-    color: "#EF4444",
+    color: "#242424",
   },
   emptySelectedText: {
     fontSize: 12,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     fontStyle: "italic",
     paddingVertical: 4,
   },
@@ -1733,17 +1738,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#FDBA74",
+    borderColor: "#C2C2C2",
   },
   selectedChipText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
 
   /* Category tabs (1 hàng ngang, lướt tự do qua lại mượt mà) */
@@ -1760,18 +1765,18 @@ const styles = StyleSheet.create({
   mainCatTab: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     paddingHorizontal: 16,
     paddingVertical: 9.5,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     gap: 6,
   },
   mainCatTabActive: {
-    backgroundColor: "#FFF7ED",
-    borderColor: "#EA580C",
-    shadowColor: "#FF5722",
+    backgroundColor: BrandColors.surfaceMuted,
+    borderColor: "#171717",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 1.5 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
@@ -1780,28 +1785,28 @@ const styles = StyleSheet.create({
   mainCatTabText: {
     fontSize: 12.5,
     fontWeight: "600",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   mainCatTabTextActive: {
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontWeight: "800",
   },
   catBadgeCircle: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 10,
   },
   catBadgeCircleActive: {
-    backgroundColor: "#FFEDD5",
+    backgroundColor: "#EAEAEA",
   },
   catBadgeText: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   catBadgeTextActive: {
-    color: "#C2410C",
+    color: "#282828",
   },
 
   /* Accordions Section - Nhỏ gọn, không có icon */
@@ -1811,10 +1816,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   accordionCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     overflow: "hidden",
   },
   accordionHeader: {
@@ -1825,7 +1830,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   accordionHeaderExpanded: {
-    backgroundColor: "#FFFDF9",
+    backgroundColor: BrandColors.background,
   },
   accordionHeaderLeft: {
     flex: 1,
@@ -1839,24 +1844,24 @@ const styles = StyleSheet.create({
   accordionTitleText: {
     fontSize: 13.5,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   groupSelectedPill: {
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 6,
     paddingVertical: 1.5,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
   },
   groupSelectedPillText: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   accordionHintText: {
     fontSize: 11,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 2,
   },
   accordionHeaderRight: {
@@ -1867,11 +1872,11 @@ const styles = StyleSheet.create({
   accordionBody: {
     paddingHorizontal: 12,
     paddingBottom: 12,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
   },
   accordionDivider: {
     height: 1,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     marginBottom: 10,
   },
   optionsWrap: {
@@ -1882,24 +1887,24 @@ const styles = StyleSheet.create({
   optionChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     paddingHorizontal: 10,
     paddingVertical: 5.5,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   optionChipSelected: {
-    backgroundColor: "#FFF7ED",
-    borderColor: "#EA580C",
+    backgroundColor: BrandColors.surfaceMuted,
+    borderColor: "#171717",
   },
   optionChipText: {
     fontSize: 12,
     fontWeight: "500",
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   optionChipTextSelected: {
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontWeight: "700",
   },
 
@@ -1914,31 +1919,31 @@ const styles = StyleSheet.create({
   recommendMainHeading: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   recommendSubHeading: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 2,
   },
   noResultBox: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 18,
     padding: 24,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
     gap: 6,
   },
   noResultTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#475569",
+    color: BrandColors.textBody,
     marginTop: 4,
   },
   noResultSub: {
     fontSize: 12,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     textAlign: "center",
     lineHeight: 18,
   },
@@ -1957,28 +1962,28 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#16A34A",
+    backgroundColor: "#262626",
   },
   tierDotAmber: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#D97706",
+    backgroundColor: "#353535",
   },
   tierDotSlate: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#64748B",
+    backgroundColor: "#5E5E5E",
   },
   tierSectionTitle: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   tierSectionSub: {
     fontSize: 11,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 2,
     marginLeft: 12,
   },
@@ -1987,11 +1992,11 @@ const styles = StyleSheet.create({
   },
   recipeCardFull: {
     flexDirection: "row",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 16,
     padding: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
@@ -2009,9 +2014,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   recipeMatchBadgeGreen: {
-    backgroundColor: "#F0FDF4",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#DCFCE7",
+    borderColor: "#EEEEEE",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -2020,12 +2025,12 @@ const styles = StyleSheet.create({
   recipeMatchTextGreen: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#16A34A",
+    color: "#262626",
   },
   recipeMatchBadgeOrange: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -2034,12 +2039,12 @@ const styles = StyleSheet.create({
   recipeMatchTextOrange: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   recipeFullTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginTop: 2,
   },
   recipeMetaRow: {
@@ -2049,28 +2054,28 @@ const styles = StyleSheet.create({
   },
   recipeFullMeta: {
     fontSize: 11,
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   metaDivider: {
     fontSize: 10,
-    color: "#CBD5E1",
+    color: "#C7C7C7",
     marginHorizontal: 2,
   },
   matchedPreviewText: {
     fontSize: 11,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "500",
   },
   missingWarningText: {
     fontSize: 11,
-    color: "#9A3412",
+    color: "#292929",
     fontWeight: "500",
   },
   viewDetailsBtn: {
     borderRadius: 10,
     overflow: "hidden",
     marginTop: 4,
-    shadowColor: "#FF5722",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.18,
     shadowRadius: 3,

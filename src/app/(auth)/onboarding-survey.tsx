@@ -228,7 +228,7 @@ export default function OnboardingSurveyScreen() {
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
           <Text style={styles.skipButtonText}>Bỏ qua</Text>
-          <Ionicons name="chevron-forward" size={13} color="#64748B" />
+          <Ionicons name="chevron-forward" size={13} color={BrandColors.textMuted} />
         </TouchableOpacity>
       </View>
 
@@ -282,7 +282,7 @@ export default function OnboardingSurveyScreen() {
                   <Ionicons
                     name={isExpanded ? "chevron-down" : "chevron-forward"}
                     size={16}
-                    color={isExpanded ? "#EA580C" : "#CBD5E1"}
+                    color={isExpanded ? "#171717" : "#C7C7C7"}
                     style={styles.chevron}
                   />
                 </TouchableOpacity>
@@ -549,7 +549,7 @@ export default function OnboardingSurveyScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.background,
   },
   topBar: {
     flexDirection: "row",
@@ -565,13 +565,13 @@ const styles = StyleSheet.create({
   mainTitle: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     lineHeight: 25,
     letterSpacing: -0.3,
   },
   subTitle: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     lineHeight: 17,
     paddingHorizontal: 20,
     marginTop: 4,
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
   },
   skipButtonText: {
     fontSize: 12.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "600",
   },
   scrollView: {
@@ -600,16 +600,16 @@ const styles = StyleSheet.create({
     gap: 7,
   },
   questionCard: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
     overflow: "hidden",
   },
   questionCardExpanded: {
-    borderColor: "#FED7AA",
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#EA580C",
+    borderColor: BrandColors.borderLight,
+    backgroundColor: BrandColors.surfaceCard,
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 5,
@@ -633,24 +633,24 @@ const styles = StyleSheet.create({
   itemNumber: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginRight: 5,
   },
   itemTitle: {
     flex: 1,
     fontSize: 13,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     lineHeight: 18,
   },
   itemSubtitle: {
     fontSize: 11.5,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     paddingLeft: 16,
     fontWeight: "500",
   },
   itemSubtitleActive: {
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontWeight: "600",
   },
   chevron: {
@@ -663,7 +663,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     paddingTop: 2,
     borderTopWidth: 1,
-    borderTopColor: "#FFF1E6",
+    borderTopColor: "#EEEEEE",
   },
   chipsWrap: {
     flexDirection: "row",
@@ -674,32 +674,32 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 8,
     paddingVertical: 5,
     paddingHorizontal: 9,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   chipSelected: {
-    backgroundColor: "#FFF7ED",
-    borderColor: "#FF5722",
+    backgroundColor: BrandColors.surfaceMuted,
+    borderColor: "#171717",
   },
   chipAlertSelected: {
-    backgroundColor: "#FEF2F2",
-    borderColor: "#EF4444",
+    backgroundColor: "#F4F4F4",
+    borderColor: "#242424",
   },
   chipText: {
     fontSize: 11.5,
     fontWeight: "600",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   chipTextSelected: {
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontWeight: "700",
   },
   chipTextAlertSelected: {
-    color: "#DC2626",
+    color: "#212121",
     fontWeight: "700",
   },
 
@@ -714,20 +714,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 8,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   portionPillSelected: {
-    backgroundColor: "#FF5722",
-    borderColor: "#FF5722",
+    backgroundColor: "#171717",
+    borderColor: "#171717",
   },
   portionPillText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   portionPillTextSelected: {
     color: "#FFFFFF",
@@ -740,11 +740,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     paddingTop: 8,
     paddingHorizontal: 20,
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: BrandColors.borderLight,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.04,
@@ -754,7 +754,7 @@ const styles = StyleSheet.create({
   submitButton: {
     borderRadius: 12,
     overflow: "hidden",
-    shadowColor: "#FF5722",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.22,
     shadowRadius: 4,
@@ -777,7 +777,7 @@ const styles = StyleSheet.create({
   },
   secondarySkipText: {
     fontSize: 11.5,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     fontWeight: "500",
   },
 });

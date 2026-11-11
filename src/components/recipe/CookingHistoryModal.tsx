@@ -1,3 +1,4 @@
+import { BrandColors } from "@/constants/brandColors";
 import {
   CookingHistoryItem,
   CookingHistoryService,
@@ -152,7 +153,7 @@ export default function CookingHistoryModal({
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     style={styles.closeBtn}
                   >
-                    <Ionicons name="close" size={20} color="#64748B" />
+                    <Ionicons name="close" size={20} color={BrandColors.textMuted} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -221,7 +222,7 @@ export default function CookingHistoryModal({
                     <Ionicons
                       name="restaurant-outline"
                       size={44}
-                      color="#CBD5E1"
+                      color="#C7C7C7"
                     />
                     <Text style={styles.emptyTitle}>Chưa có món nào đã nấu</Text>
                     <Text style={styles.emptyDesc}>
@@ -289,7 +290,7 @@ export default function CookingHistoryModal({
                             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                             activeOpacity={0.7}
                           >
-                            <Ionicons name="trash-outline" size={16} color="#94A3B8" />
+                            <Ionicons name="trash-outline" size={16} color={BrandColors.textPlaceholder} />
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -308,11 +309,11 @@ export default function CookingHistoryModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.45)",
+    backgroundColor: "rgba(27, 27, 27, 0.45)",
     justifyContent: "flex-end",
   },
   modalContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,
     paddingHorizontal: 18,
@@ -322,7 +323,7 @@ const styles = StyleSheet.create({
   sheetHandle: {
     width: 36,
     height: 4,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
     borderRadius: 2,
     alignSelf: "center",
     marginBottom: 10,
@@ -336,25 +337,25 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     letterSpacing: -0.2,
   },
   countBadge: {
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#FFEDD5",
+    borderColor: BrandColors.borderLight,
   },
   countBadgeText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   headerSub: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 2,
   },
   clearBtn: {
@@ -363,7 +364,7 @@ const styles = StyleSheet.create({
   },
   clearBtnText: {
     fontSize: 12.5,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     fontWeight: "500",
   },
   closeBtn: {
@@ -375,21 +376,21 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   filterPill: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   filterPillActive: {
-    backgroundColor: "#EA580C",
-    borderColor: "#EA580C",
+    backgroundColor: "#171717",
+    borderColor: "#171717",
   },
   filterText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   filterTextActive: {
     color: "#FFFFFF",
@@ -405,17 +406,17 @@ const styles = StyleSheet.create({
   historyCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
   },
   dishImg: {
     width: 54,
     height: 54,
     borderRadius: 10,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
   },
   dishInfo: {
     flex: 1,
@@ -425,7 +426,7 @@ const styles = StyleSheet.create({
   dishName: {
     fontSize: 13.5,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginBottom: 2,
   },
   metaRow: {
@@ -436,20 +437,20 @@ const styles = StyleSheet.create({
   },
   metaTime: {
     fontSize: 11,
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontWeight: "600",
   },
   metaDot: {
     fontSize: 10,
-    color: "#CBD5E1",
+    color: "#C7C7C7",
   },
   metaDuration: {
     fontSize: 11,
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   metaServings: {
     fontSize: 11,
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   ingWrap: {
     flexDirection: "row",
@@ -459,30 +460,30 @@ const styles = StyleSheet.create({
   },
   ingPrefix: {
     fontSize: 10.5,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
   },
   ingChip: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     paddingHorizontal: 5,
     paddingVertical: 1.5,
     borderRadius: 4,
     borderWidth: 0.8,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   ingChipText: {
     fontSize: 10,
-    color: "#475569",
+    color: BrandColors.textBody,
     fontWeight: "500",
   },
   ingMoreText: {
     fontSize: 10,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     fontWeight: "600",
   },
   cookAgainBtn: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1.2,
-    borderColor: "#EA580C",
+    borderColor: "#171717",
     borderRadius: 8,
     paddingVertical: 6,
     paddingHorizontal: 10,
@@ -490,7 +491,7 @@ const styles = StyleSheet.create({
   cookAgainText: {
     fontSize: 11.5,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   emptyState: {
     alignItems: "center",
@@ -501,13 +502,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 14.5,
     fontWeight: "700",
-    color: "#475569",
+    color: BrandColors.textBody,
     marginTop: 10,
     marginBottom: 4,
   },
   emptyDesc: {
     fontSize: 12,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     textAlign: "center",
     lineHeight: 18,
   },

@@ -1,36 +1,32 @@
-/**
- * SmartCook Brand Design System
- * Primary Brand: Vibrant Gourmet Orange with Sunset & Fresh Culinary Accents
- */
+const ink = "#252B26";
+const paper = "#FFFEFA";
+const sage = "#4C624E";
+
 export const BrandColors = {
-  // Primary Orange Shades
-  primary: '#FF6B35', // Vibrant Sunset Orange
-  primaryDark: '#E65100', // Deep Culinary Tangerine
-  primaryLight: '#FF8A65', // Coral Amber
-  primarySoft: '#FFF3E0', // Warm Cream tint
+  primary: sage,
+  primaryDark: "#354439",
+  primaryLight: "#596E5A",
+  primarySoft: "#E3EBDD",
+  onPrimary: "#FFFFFF",
+  secondaryGold: "#404040",
+  accentMint: "#303030",
+  accentRose: "#222222",
 
-  // Harmonious Accent Palette
-  secondaryGold: '#FFA726', // Saffron Gold
-  accentMint: '#10B981', // Fresh Basil Green
-  accentRose: '#FF4D6D', // Sweet Chili Coral
+  headerGradient: ["#252B26", "#2C372E", "#354439", "#405044"] as const,
+  buttonGradient: [sage, sage] as const,
+  footerGradient: ["#405044", "#354439", "#252B26"] as const,
 
-  // Sunset Header Gradient Stops
-  headerGradient: ['#E64A19', '#FF5722', '#FF7043', '#FFA726'] as const,
-  buttonGradient: ['#FF5722', '#FF7043'] as const,
-  footerGradient: ['#FFA726', '#FF7043', '#E64A19'] as const,
+  background: "#F7F8F3",
+  surfaceCard: paper,
+  surfaceMuted: "#E9EDE4",
+  inputBg: "#ECEFE7",
+  inputBgFocus: paper,
+  borderLight: "#E0E5DA",
+  borderFocus: sage,
 
-  // Neutrals & Surfaces
-  background: '#FFFFFF',
-  surfaceCard: '#FFFFFF',
-  inputBg: '#F8FAFC',
-  inputBgFocus: '#FFFFFF',
-  borderLight: '#E2E8F0',
-  borderFocus: '#FF6B35',
-
-  // Typography
-  textDark: '#0F172A',
-  textBody: '#334155',
-  textMuted: '#64748B',
-  textPlaceholder: '#94A3B8',
-  textLink: '#E65100',
-};
+  textDark: ink,
+  textBody: "#384139",
+  textMuted: "#596459",
+  textPlaceholder: "#647064",
+  textLink: sage,
+} as const;

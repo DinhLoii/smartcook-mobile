@@ -15,9 +15,11 @@ import { apiClient } from "../services/apiClient";
 import { prepareCookingSpeech } from "../utils/cookingSpeech";
 import { getCookingScopeReply } from "../utils/cookingScope";
 import { applyCookingVoiceAction } from "../utils/cookingVoiceActions";
+import { parseRecipeVideoCommand, type CookingVoiceTarget, type RecipeVideoCommand } from "../utils/recipeVideoCommands";
 
 export interface UseCookingVoiceProps {
   recipeTitle: string;
+  recipeId?: string;
   currentStep: CookingCopilotStepDTO;
   stepTimer: CookingCopilotTimerDTO;
   recipeContext?: CookingVoiceCopilotRequestDTO["recipeContext"];
@@ -29,10 +31,12 @@ export interface UseCookingVoiceProps {
   onPrevStep?: () => void;
   onGoToStep?: (stepNumber: number) => void;
   onRepeatStep?: () => void;
+  onVideoCommand?: (command: RecipeVideoCommand) => string | Promise<string>;
 }
 
 export function useCookingVoice({
   recipeTitle,
+  recipeId,
   currentStep,
   stepTimer,
   recipeContext,
@@ -43,14 +47,17 @@ export function useCookingVoice({
   onNextStep,
   onPrevStep,
   onGoToStep,
+  onVideoCommand,
 }: UseCookingVoiceProps) {
   const [isListening, setIsListening] = useState<boolean>(false);
   const [isThinking, setIsThinking] = useState<boolean>(false);
+  const [inputTarget, setInputTarget] = useState<CookingVoiceTarget>("cooking");
   const DEFAULT_QUICK_REPLIES = [
     "Thịt chưa chín",
     "Đã xong rồi",
     "Thêm 2 phút",
     "Món bị mặn",
+    ...(onVideoCommand ? ["Mở video hướng dẫn"] : []),
   ];
 
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
@@ -63,8 +70,10 @@ export function useCookingVoice({
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recordingRef = useRef(false);
   const busyRef = useRef(false);
+  const targetRef = useRef<CookingVoiceTarget>("cooking");
   const mountedRef = useRef(true);
   const sessionRef = useRef(0);
+  const transcriptionController = useRef<AbortController | null>(null);
   const conversationRef = useRef<{
     recipeTitle: string; stepNumber: number;
     turns: NonNullable<CookingVoiceCopilotRequestDTO["conversationHistory"]>;
@@ -120,9 +129,9 @@ export function useCookingVoice({
    * Process recognized speech with Backend Cooking Copilot
    */
   const processVoiceInput = useCallback(
-    async (queryText: string) => {
+    async (queryText: string, target: CookingVoiceTarget = "cooking") => {
       const cleanQuery = queryText.trim();
-      if (busyRef.current) return;
+      if (busyRef.current || recordingRef.current) return;
       if (!cleanQuery) {
         setIsListening(false);
         return;
@@ -130,12 +139,30 @@ export function useCookingVoice({
 
       setIsListening(false);
       busyRef.current = true;
+      targetRef.current = target;
+      setInputTarget(target);
       const session = sessionRef.current;
       setIsThinking(true);
       setTranscript(cleanQuery);
+      setAiReply("");
+      setLastAction(null);
       setErrorMessage(null);
 
       try {
+        if (cleanQuery.length > 600) {
+          setErrorMessage("Hãy nói hoặc nhập lệnh ngắn gọn, tối đa 600 ký tự.");
+          return;
+        }
+        const videoCommand = (target === "video" || onVideoCommand) && parseRecipeVideoCommand(cleanQuery, target);
+        if (target === "video" || videoCommand) {
+          targetRef.current = "video";
+          setInputTarget("video");
+          const message = videoCommand && onVideoCommand
+            ? await onVideoCommand(videoCommand)
+            : "Trình điều khiển video chưa sẵn sàng.";
+          if (mountedRef.current && session === sessionRef.current) setAiReply(message);
+          return;
+        }
         if (conversationRef.current.recipeTitle !== recipeTitle
           || conversationRef.current.stepNumber !== currentStep.stepNumber) {
           conversationRef.current = { recipeTitle, stepNumber: currentStep.stepNumber, turns: [] };
@@ -181,7 +208,7 @@ export function useCookingVoice({
         if (mountedRef.current) setIsThinking(false);
       }
     },
-    [recipeTitle, currentStep, stepTimer, recipeContext, speakAiResponse, onExtendTimer, onReduceTimer, onNextStep, onPrevStep, onGoToStep]
+    [recipeTitle, currentStep, stepTimer, recipeContext, speakAiResponse, onExtendTimer, onReduceTimer, onNextStep, onPrevStep, onGoToStep, onVideoCommand]
   );
 
   const processInputRef = useRef(processVoiceInput);
@@ -195,6 +222,9 @@ export function useCookingVoice({
     setIsListening(false);
     setIsThinking(true);
     const session = sessionRef.current;
+    const target = targetRef.current;
+    const controller = new AbortController();
+    transcriptionController.current = controller;
     let file: File | undefined;
     try {
       await recorder.stop();
@@ -215,26 +245,34 @@ export function useCookingVoice({
         file = new File(recorder.uri);
         audioBase64 = await file.base64();
       }
-      const response = await apiClient.post<{ data: { text: string } }>(
-        "/ai/cooking-transcription", { audioBase64, mimeType }, { timeout: 30000 }
+      const response = await apiClient.post<{ success: boolean; data?: { text?: string } }>(
+        "/ai/cooking-transcription", { audioBase64, mimeType }, { timeout: 30000, signal: controller.signal }
       );
       if (!mountedRef.current || session !== sessionRef.current) return;
+      const text = response.data?.data?.text;
+      if (response.data?.success !== true || typeof text !== "string" || !text.trim()) {
+        setErrorMessage("Chưa nhận được lời nói rõ ràng. Hãy nói lại hoặc nhập lệnh.");
+        return;
+      }
       busyRef.current = false;
-      await processInputRef.current(response.data.data.text);
+      await processInputRef.current(text, target);
     } catch (error: any) {
       if (mountedRef.current && session === sessionRef.current) {
         setErrorMessage(error?.response?.data?.message || "Không nhận diện được giọng nói. Vui lòng thử lại.");
       }
     } finally {
       try { if (file?.exists) file.delete(); } catch {}
+      if (transcriptionController.current === controller) transcriptionController.current = null;
       busyRef.current = false;
       if (mountedRef.current) setIsThinking(false);
     }
   }, [recorder]);
 
-  const startListening = useCallback(async () => {
+  const startListening = useCallback(async (target: CookingVoiceTarget = "cooking") => {
     if (busyRef.current || recordingRef.current) return;
     busyRef.current = true;
+    targetRef.current = target;
+    setInputTarget(target);
     const session = sessionRef.current;
     try {
       await Speech.stop();
@@ -243,8 +281,9 @@ export function useCookingVoice({
       setAiReply("");
       setErrorMessage(null);
       const permission = await AudioModule.requestRecordingPermissionsAsync();
+      if (!mountedRef.current || session !== sessionRef.current) return;
       if (!permission.granted) {
-        setErrorMessage("Chưa cấp quyền micro. Hãy cho phép Expo Go dùng micro trong Cài đặt iPhone.");
+        setErrorMessage("Hãy cấp quyền micro cho ứng dụng trong Cài đặt hoặc nhập lệnh.");
         return;
       }
       if (!mountedRef.current || session !== sessionRef.current) return;
@@ -270,16 +309,20 @@ export function useCookingVoice({
 
   const cancelListening = useCallback((preserveSpeech = false) => {
     sessionRef.current += 1;
+    transcriptionController.current?.abort();
+    transcriptionController.current = null;
+    setIsThinking(false);
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     if (recordingRef.current) {
       recordingRef.current = false;
+      busyRef.current = true;
       void recorder.stop().then(() => {
         if (Platform.OS !== "web" && recorder.uri) {
           const file = new File(recorder.uri);
           if (file.exists) file.delete();
         }
         return setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
-      }).catch(() => {});
+      }).catch(() => {}).finally(() => { busyRef.current = false; });
     }
     if (!preserveSpeech) {
       void Speech.stop();
@@ -291,11 +334,12 @@ export function useCookingVoice({
   // A reply for the previous step must never adjust the newly selected step's timer.
   useEffect(() => {
     return () => {
+      if (targetRef.current === "video") return;
       const preserve = navigationReplyRef.current;
       navigationReplyRef.current = false;
       cancelListening(preserve);
     };
-  }, [recipeTitle, currentStep.stepNumber, cancelListening]);
+  }, [currentStep.stepNumber, cancelListening]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -303,7 +347,7 @@ export function useCookingVoice({
       mountedRef.current = false;
       cancelListening();
     };
-  }, [cancelListening]);
+  }, [recipeId, recipeTitle, cancelListening]);
 
   /**
    * Proactive check-in trigger when step timer is overdue
@@ -326,6 +370,7 @@ export function useCookingVoice({
   return {
     isListening,
     isThinking,
+    inputTarget,
     isSpeaking,
     transcript,
     aiReply,
