@@ -1,6 +1,6 @@
 :root {
   --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
+    Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
     Segoe UI Symbol, Noto Color Emoji;
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
@@ -15,7 +15,7 @@
     -webkit-user-select: none;
     user-select: none;
     overscroll-behavior: none;
-    background-color: #208AEF;
+    background-color: #F7F8F3;
   }
 
   input,
@@ -31,19 +31,22 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover, 
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-text-fill-color: #0F172A !important;
-  -webkit-box-shadow: 0 0 0 1000px #F8FAFC inset !important;
-  box-shadow: 0 0 0 1000px #F8FAFC inset !important;
+  -webkit-text-fill-color: #252B26 !important;
+  -webkit-box-shadow: 0 0 0 1000px #ECEFE7 inset !important;
+  box-shadow: 0 0 0 1000px #ECEFE7 inset !important;
   transition: background-color 5000000s ease-in-out 0s !important;
 }
 
 input:focus:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset !important;
-  box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+  -webkit-box-shadow: 0 0 0 1000px #FFFEFA inset !important;
+  box-shadow: 0 0 0 1000px #FFFEFA inset !important;
 }
 
-input:focus,
-textarea:focus,
-select:focus {
-  outline: none !important;
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible {
+  outline: 2px solid #4C624E;
+  outline-offset: 2px;
 }
