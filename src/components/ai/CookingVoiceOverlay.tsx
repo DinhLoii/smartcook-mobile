@@ -1,3 +1,4 @@
+import { BrandColors } from "@/constants/brandColors";
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -129,25 +130,25 @@ export const CookingVoiceOverlay: React.FC<CookingVoiceOverlayProps> = ({
   const getActionBadge = () => {
     if (!lastAction) return null;
     if (lastAction === "GO_TO_STEP") {
-      return { text: "👉 Đã chuyển tới bước bạn chọn", color: "#3b82f6" };
+      return { text: "👉 Đã chuyển tới bước bạn chọn", color: "#363636" };
     }
     if (lastAction === "REDUCE_TIMER") {
-      return { text: "⏱️ Đã giảm thời gian", color: "#10b981" };
+      return { text: "⏱️ Đã giảm thời gian", color: BrandColors.textBody };
     }
     if (lastAction === "EXTEND_TIMER") {
-      return { text: "⏱️ Đã gia hạn thêm thời gian", color: "#10b981" };
+      return { text: "⏱️ Đã gia hạn thêm thời gian", color: BrandColors.textBody };
     }
     if (lastAction === "NEXT_STEP") {
-      return { text: "👉 Đã chuyển bước tiếp theo", color: "#3b82f6" };
+      return { text: "👉 Đã chuyển bước tiếp theo", color: "#363636" };
     }
     if (lastAction === "PREV_STEP") {
-      return { text: "👈 Đã quay lại bước trước", color: "#6366f1" };
+      return { text: "👈 Đã quay lại bước trước", color: "#292929" };
     }
     if (lastAction === "REPEAT_STEP") {
-      return { text: "🔁 Đã đọc lại bước", color: "#f59e0b" };
+      return { text: "🔁 Đã đọc lại bước", color: "#404040" };
     }
     if (lastAction === "TROUBLESHOOT") {
-      return { text: "💡 Hướng dẫn xử lý sự cố", color: "#ec4899" };
+      return { text: "💡 Hướng dẫn xử lý sự cố", color: "#292929" };
     }
     return null;
   };
@@ -163,7 +164,7 @@ export const CookingVoiceOverlay: React.FC<CookingVoiceOverlayProps> = ({
           <Text style={styles.headerTitle}>Trợ Lý Giọng Nói Nấu Ăn</Text>
         </View>
         <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-          <Ionicons name="close" size={20} color="#6b7280" />
+          <Ionicons name="close" size={20} color="#292929" />
         </TouchableOpacity>
       </View>
 
@@ -217,7 +218,7 @@ export const CookingVoiceOverlay: React.FC<CookingVoiceOverlayProps> = ({
 
       <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
         <TextInput
-          style={{ flex: 1, borderWidth: 1, borderColor: "#e5e7eb", borderRadius: 12, padding: 10 }}
+          style={{ flex: 1, borderWidth: 1, borderColor: "#EEEEEE", borderRadius: 12, padding: 10 }}
           placeholder="Hoặc nhập câu hỏi cho AI..."
           value={draft}
           onChangeText={setDraft}
@@ -279,7 +280,7 @@ const styles = StyleSheet.create({
     bottom: 24,
     left: 16,
     right: 16,
-    backgroundColor: "#ffffff",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 24,
     padding: 18,
     shadowColor: "#000",
@@ -288,7 +289,7 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     elevation: 10,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: "#EEEEEE",
     zIndex: 9999,
   },
   header: {
@@ -306,15 +307,15 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#9ca3af",
+    backgroundColor: "#DADADA",
   },
   statusDotActive: {
-    backgroundColor: "#ef4444",
+    backgroundColor: "#242424",
   },
   headerTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#1f2937",
+    color: "#1B1B1B",
   },
   closeBtn: {
     padding: 4,
@@ -331,7 +332,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   conversationCard: {
-    backgroundColor: "#f9fafb",
+    backgroundColor: BrandColors.background,
     borderRadius: 16,
     padding: 12,
     marginBottom: 12,
@@ -340,37 +341,37 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderBottomColor: "#F7F7F7",
   },
   bubbleLabel: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#9ca3af",
+    color: "#DADADA",
     textTransform: "uppercase",
     marginBottom: 2,
   },
   userText: {
     fontSize: 14,
-    color: "#374151",
+    color: "#292929",
     fontWeight: "500",
     fontStyle: "italic",
   },
   aiBubble: {},
   aiText: {
     fontSize: 14,
-    color: "#059669",
+    color: "#262626",
     fontWeight: "600",
     lineHeight: 20,
   },
   hintText: {
     fontSize: 13,
-    color: "#6b7280",
+    color: "#292929",
     textAlign: "center",
     paddingVertical: 6,
   },
   errorText: {
     fontSize: 12,
-    color: "#dc2626",
+    color: "#212121",
     marginTop: 4,
   },
   chipsRow: {
@@ -380,9 +381,9 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   chip: {
-    backgroundColor: "#f0fdf4",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#bbf7d0",
+    borderColor: "#DADADA",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -390,7 +391,7 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#16a34a",
+    color: "#262626",
   },
   micControlRow: {
     alignItems: "center",
@@ -405,27 +406,27 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: "#10b981",
+    backgroundColor: "#353535",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#10b981",
+    shadowColor: "#353535",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 8,
     elevation: 6,
   },
   micButtonListening: {
-    backgroundColor: "#ef4444",
-    shadowColor: "#ef4444",
+    backgroundColor: "#242424",
+    shadowColor: "#242424",
   },
   micButtonSpeaking: {
-    backgroundColor: "#f59e0b",
-    shadowColor: "#f59e0b",
+    backgroundColor: "#404040",
+    shadowColor: "#404040",
   },
   micStatusLabel: {
     fontSize: 12,
     fontWeight: "500",
-    color: "#6b7280",
+    color: "#292929",
   },
 });
 

@@ -5,10 +5,9 @@ import { aiService } from "@/services/aiService";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -19,13 +18,12 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const AI_CHEF_AVATAR = require("@/assets/images/ai-chef-avatar.jpg");
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface AIMessage {
   id: string;
@@ -52,24 +50,39 @@ const QUICK_PROMPTS = [
   "Gợi ý bữa tối cho 2 người",
 ];
 
-export default function DraggableAIAssistant() {
+export default function DraggableAIAssistant({
+  maxWidth,
+  showBubble,
+  visible: modalVisible,
+  onVisibilityChange: setModalVisible,
+}: {
+  maxWidth: number;
+  showBubble: boolean;
+  visible: boolean;
+  onVisibilityChange: (visible: boolean) => void;
+}) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [modalVisible, setModalVisible] = useState(false);
+  const { width, height } = useWindowDimensions();
   const [messages, setMessages] = useState<AIMessage[]>(INITIAL_AI_MESSAGES);
   const [quickPrompts, setQuickPrompts] = useState<string[]>(QUICK_PROMPTS);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
-  // Position animated value for dragging
-  // Default position: bottom right above tab bar (safe coordinates)
-  const defaultX = SCREEN_WIDTH - 68;
-  const defaultY = Math.max(300, SCREEN_HEIGHT - 220);
-
+  const rightEdge = Math.max(12, Math.min(width, maxWidth) - 64);
+  const topEdge = insets.top + 50;
+  const bottomEdge = Math.max(topEdge, height - insets.bottom - 120);
+  const defaultY = Math.max(topEdge, Math.min(bottomEdge, height - 220));
+  const bounds = useRef({ rightEdge, topEdge, bottomEdge });
   const [pan] = useState(
-    () => new Animated.ValueXY({ x: defaultX, y: defaultY })
+    () => new Animated.ValueXY({ x: rightEdge, y: defaultY })
   );
+
+  useEffect(() => {
+    bounds.current = { rightEdge, topEdge, bottomEdge };
+    pan.setValue({ x: rightEdge, y: defaultY });
+  }, [pan, rightEdge, topEdge, bottomEdge, defaultY]);
 
   const [panResponder] = useState(() =>
     PanResponder.create({
@@ -107,12 +120,9 @@ export default function DraggableAIAssistant() {
         }
 
         // Snap to left or right margin nicely
-        const snapPadding = 12;
-        const targetX =
-          currentX < SCREEN_WIDTH / 2 ? snapPadding : SCREEN_WIDTH - 50 - snapPadding;
-        const minY = insets.top + 50;
-        const maxY = SCREEN_HEIGHT - (insets.bottom + 120);
-        const clampedY = Math.max(minY, Math.min(maxY, currentY));
+        const { rightEdge, topEdge, bottomEdge } = bounds.current;
+        const targetX = currentX < rightEdge / 2 ? 12 : rightEdge;
+        const clampedY = Math.max(topEdge, Math.min(bottomEdge, currentY));
 
         Animated.spring(pan, {
           toValue: { x: targetX, y: clampedY },
@@ -239,31 +249,22 @@ export default function DraggableAIAssistant() {
 
   return (
     <>
-      {/* Draggable Floating AI Assistant Icon */}
-      <Animated.View
-        style={[
-          styles.bubbleWrapper,
-          {
-            transform: pan.getTranslateTransform(),
-          },
-        ]}
-        {...panResponder.panHandlers}
-      >
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={handleOpenAssistant}
-          style={styles.bubbleTouchable}
+      {showBubble && (
+        <Animated.View
+          style={[styles.bubbleWrapper, { transform: pan.getTranslateTransform() }]}
+          {...panResponder.panHandlers}
         >
-          {/* Outer glowing border */}
-          <View style={styles.glowRing}>
-            <Image
-              source={AI_CHEF_AVATAR}
-              style={styles.bubbleAvatarImage}
-              resizeMode="cover"
-            />
-          </View>
-        </TouchableOpacity>
-      </Animated.View>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handleOpenAssistant}
+            style={styles.bubbleTouchable}
+            accessibilityRole="button"
+            accessibilityLabel="Mở trợ lý SmartCook"
+          >
+            <Ionicons name="sparkles-outline" size={22} color={BrandColors.onPrimary} />
+          </TouchableOpacity>
+        </Animated.View>
+      )}
 
       {/* Interactive AI Chat Assistant Modal */}
       <Modal
@@ -280,7 +281,7 @@ export default function DraggableAIAssistant() {
           <View style={styles.chatContainer}>
             {/* Header */}
             <LinearGradient
-              colors={["#FF5722", "#FF7043"]}
+              colors={["#171717", "#292929"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={[styles.chatHeader, { paddingTop: Math.max(insets.top, 14) }]}
@@ -297,7 +298,7 @@ export default function DraggableAIAssistant() {
                 <View>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
                     <Text style={styles.chatHeaderTitle}>Đầu Bếp Trợ Lý AI</Text>
-                    <Ionicons name="sparkles" size={13} color="#FEF08A" />
+                    <Ionicons name="sparkles" size={13} color="#E6E6E6" />
                   </View>
                   <Text style={styles.chatHeaderSubtitle}>SmartCook • Tư vấn thực đơn &amp; nấu nướng</Text>
                 </View>
@@ -307,6 +308,8 @@ export default function DraggableAIAssistant() {
                 style={styles.closeBtn}
                 onPress={() => setModalVisible(false)}
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Đóng trợ lý SmartCook"
               >
                 <Ionicons name="close" size={22} color="#FFFFFF" />
               </TouchableOpacity>
@@ -429,7 +432,7 @@ export default function DraggableAIAssistant() {
               <TextInput
                 style={styles.input}
                 placeholder="Hỏi trợ lý về món ăn, bí quyết nấu..."
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={BrandColors.textPlaceholder}
                 value={inputText}
                 onChangeText={setInputText}
                 onSubmitEditing={() => handleSendMessage()}
@@ -447,7 +450,7 @@ export default function DraggableAIAssistant() {
                 <Ionicons
                   name="paper-plane"
                   size={18}
-                  color={inputText.trim() ? "#FFFFFF" : "#94A3B8"}
+                  color={inputText.trim() ? "#FFFFFF" : "#686868"}
                 />
               </TouchableOpacity>
             </View>
@@ -471,30 +474,14 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: "transparent",
+    backgroundColor: BrandColors.primaryDark,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#0F172A",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.12,
     shadowRadius: 6,
     elevation: 6,
-  },
-  glowRing: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "transparent",
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
-  },
-  bubbleAvatarImage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 26,
   },
   headerAvatarImage: {
     width: 40,
@@ -510,7 +497,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -2,
     right: -2,
-    backgroundColor: "#EF4444",
+    backgroundColor: "#242424",
     width: 17,
     height: 17,
     borderRadius: 8.5,
@@ -539,12 +526,12 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.45)",
+    backgroundColor: "rgba(27, 27, 27, 0.45)",
     justifyContent: "flex-end",
   },
   chatContainer: {
     height: "82%",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     overflow: "hidden",
@@ -565,7 +552,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
@@ -577,7 +564,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#10B981",
+    backgroundColor: "#353535",
     borderWidth: 2,
     borderColor: "#FFFFFF",
   },
@@ -588,7 +575,7 @@ const styles = StyleSheet.create({
   },
   chatHeaderSubtitle: {
     fontSize: 11,
-    color: "#FED7AA",
+    color: "#DEDEDE",
     fontWeight: "500",
   },
   closeBtn: {
@@ -629,11 +616,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   messageBubbleAI: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderBottomLeftRadius: 4,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
-    shadowColor: "#0F172A",
+    borderColor: BrandColors.borderLight,
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
@@ -648,7 +635,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   messageTextAI: {
-    color: "#1E293B",
+    color: BrandColors.textDark,
   },
   messageTextUser: {
     color: "#FFFFFF",
@@ -656,7 +643,7 @@ const styles = StyleSheet.create({
   },
   messageTime: {
     fontSize: 10,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     marginTop: 4,
     marginHorizontal: 4,
   },
@@ -670,12 +657,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#FFF3E0",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#FFE0B2",
+    borderColor: "#DADADA",
   },
   suggestedPillText: {
     fontSize: 11.5,
@@ -683,9 +670,9 @@ const styles = StyleSheet.create({
     color: BrandColors.primaryDark,
   },
   quickPromptsSection: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: BrandColors.borderLight,
     paddingVertical: 8,
   },
   quickPromptsScroll: {
@@ -693,44 +680,44 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   quickPromptChip: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   quickPromptChipText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   inputBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     paddingHorizontal: 14,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: BrandColors.borderLight,
     gap: 10,
   },
   input: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 9,
     fontSize: 13.5,
-    color: "#0F172A",
+    color: BrandColors.textDark,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   sendButton: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     alignItems: "center",
     justifyContent: "center",
   },
