@@ -1,3 +1,4 @@
+import { BrandColors } from "@/constants/brandColors";
 import {
   ScanHistoryItem,
   ScanHistoryService,
@@ -165,7 +166,7 @@ export default function ScanHistoryModal({
                       gap: 8,
                     }}
                   >
-                    <Ionicons name="time" size={20} color="#FF5722" />
+                    <Ionicons name="time" size={20} color={BrandColors.textDark} />
                     <Text style={styles.headerTitle}>Lịch Sử Phân Tích Ảnh</Text>
                     <View style={styles.countBadge}>
                       <Text style={styles.countBadgeText}>
@@ -195,18 +196,18 @@ export default function ScanHistoryModal({
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     style={styles.closeBtn}
                   >
-                    <Ionicons name="close" size={22} color="#64748B" />
+                    <Ionicons name="close" size={22} color={BrandColors.textMuted} />
                   </TouchableOpacity>
                 </View>
               </View>
 
               {/* Search input */}
               <View style={styles.searchBarContainer}>
-                <Ionicons name="search-outline" size={17} color="#94A3B8" />
+                <Ionicons name="search-outline" size={17} color={BrandColors.textPlaceholder} />
                 <TextInput
                   style={styles.searchInput}
                   placeholder="Tìm theo nguyên liệu (ức gà, cá hồi...) hoặc món ăn..."
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={BrandColors.textPlaceholder}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   returnKeyType="search"
@@ -216,7 +217,7 @@ export default function ScanHistoryModal({
                     onPress={() => setSearchQuery("")}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <Ionicons name="close-circle" size={17} color="#94A3B8" />
+                    <Ionicons name="close-circle" size={17} color={BrandColors.textPlaceholder} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -283,7 +284,7 @@ export default function ScanHistoryModal({
               >
                 {filteredHistory.length === 0 ? (
                   <View style={styles.emptyState}>
-                    <Ionicons name="scan-outline" size={48} color="#CBD5E1" />
+                    <Ionicons name="scan-outline" size={48} color="#C7C7C7" />
                     <Text style={styles.emptyTitle}>
                       {searchQuery
                         ? "Không tìm thấy kết quả phù hợp"
@@ -309,7 +310,7 @@ export default function ScanHistoryModal({
                               <Ionicons
                                 name="time-outline"
                                 size={12}
-                                color="#EA580C"
+                                color={BrandColors.textDark}
                               />
                               <Text style={styles.timeTagText}>
                                 {item.scannedAt}
@@ -328,7 +329,7 @@ export default function ScanHistoryModal({
                               <Ionicons
                                 name="sparkles"
                                 size={11}
-                                color="#059669"
+                                color="#262626"
                               />
                               <Text style={styles.accuracyText}>
                                 {item.accuracy}% chính xác
@@ -345,7 +346,7 @@ export default function ScanHistoryModal({
                               <Ionicons
                                 name="trash-outline"
                                 size={17}
-                                color="#94A3B8"
+                                color={BrandColors.textPlaceholder}
                               />
                             </TouchableOpacity>
                           </View>
@@ -380,7 +381,7 @@ export default function ScanHistoryModal({
                                   <MaterialCommunityIcons
                                     name={ing.icon as any}
                                     size={13}
-                                    color="#E65100"
+                                    color={BrandColors.textDark}
                                   />
                                   <Text
                                     style={styles.ingChipName}
@@ -404,7 +405,7 @@ export default function ScanHistoryModal({
                               <Ionicons
                                 name="hardware-chip-outline"
                                 size={12}
-                                color="#059669"
+                                color="#262626"
                               />
                               <Text style={styles.sugBadgeText}>
                                 Công thức AI gợi ý
@@ -434,7 +435,7 @@ export default function ScanHistoryModal({
                                 <Ionicons
                                   name="refresh-outline"
                                   size={15}
-                                  color="#FF5722"
+                                  color={BrandColors.textDark}
                                 />
                                 <Text style={styles.restoreBtnText}>
                                   Nạp lại quét này
@@ -450,7 +451,7 @@ export default function ScanHistoryModal({
                               }
                             >
                               <LinearGradient
-                                colors={["#FF5722", "#FF7043"]}
+                                colors={["#171717", "#292929"]}
                                 style={styles.viewRecipeGradient}
                               >
                                 <Text style={styles.viewRecipeText}>
@@ -476,11 +477,11 @@ export default function ScanHistoryModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.5)",
+    backgroundColor: "rgba(27, 27, 27, 0.5)",
     justifyContent: "flex-end",
   },
   modalContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 18,
@@ -490,7 +491,7 @@ const styles = StyleSheet.create({
   sheetHandle: {
     width: 38,
     height: 4,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
     borderRadius: 2,
     alignSelf: "center",
     marginBottom: 10,
@@ -504,25 +505,25 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     letterSpacing: -0.2,
   },
   countBadge: {
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#FFEDD5",
+    borderColor: BrandColors.borderLight,
   },
   countBadgeText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   headerSub: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 2,
   },
   clearBtn: {
@@ -531,7 +532,7 @@ const styles = StyleSheet.create({
   },
   clearBtnText: {
     fontSize: 12.5,
-    color: "#EF4444",
+    color: "#242424",
     fontWeight: "600",
   },
   closeBtn: {
@@ -540,9 +541,9 @@ const styles = StyleSheet.create({
   searchBarContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 40,
@@ -552,7 +553,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 12.5,
-    color: "#1E293B",
+    color: BrandColors.textDark,
     paddingVertical: 0,
   },
   filterRow: {
@@ -561,21 +562,21 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   filterPill: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   filterPillActive: {
-    backgroundColor: "#FF5722",
-    borderColor: "#FF5722",
+    backgroundColor: "#171717",
+    borderColor: "#171717",
   },
   filterText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   filterTextActive: {
     color: "#FFFFFF",
@@ -589,11 +590,11 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   scanCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 18,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -609,7 +610,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 14.5,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginBottom: 3,
   },
   timeTagRow: {
@@ -619,24 +620,24 @@ const styles = StyleSheet.create({
   },
   timeTagText: {
     fontSize: 11,
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontWeight: "600",
   },
   accuracyBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
-    backgroundColor: "#ECFDF5",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 6,
     borderWidth: 0.8,
-    borderColor: "#A7F3D0",
+    borderColor: BrandColors.borderLight,
   },
   accuracyText: {
     fontSize: 10.5,
     fontWeight: "700",
-    color: "#059669",
+    color: "#262626",
   },
   deleteIconBtn: {
     padding: 2,
@@ -652,7 +653,7 @@ const styles = StyleSheet.create({
     height: 84,
     borderRadius: 12,
     overflow: "hidden",
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
   },
   scanThumbnail: {
     width: "100%",
@@ -662,7 +663,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 4,
     right: 4,
-    backgroundColor: "rgba(15, 23, 42, 0.75)",
+    backgroundColor: "rgba(27, 27, 27, 0.75)",
     paddingHorizontal: 5,
     paddingVertical: 1.5,
     borderRadius: 4,
@@ -678,7 +679,7 @@ const styles = StyleSheet.create({
   ingredientsLabel: {
     fontSize: 11.5,
     fontWeight: "700",
-    color: "#475569",
+    color: BrandColors.textBody,
     marginBottom: 6,
   },
   ingChipsWrap: {
@@ -690,29 +691,29 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     paddingHorizontal: 7,
     paddingVertical: 3.5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   ingChipName: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#1E293B",
+    color: BrandColors.textDark,
   },
   ingChipConf: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#059669",
+    color: "#262626",
   },
   suggestedRecipeBox: {
-    backgroundColor: "#FFFBF7",
+    backgroundColor: BrandColors.background,
     borderRadius: 14,
     padding: 12,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
   },
   sugHeader: {
     flexDirection: "row",
@@ -724,7 +725,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#ECFDF5",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -732,22 +733,22 @@ const styles = StyleSheet.create({
   sugBadgeText: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#059669",
+    color: "#262626",
   },
   sugCalo: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   sugTitle: {
     fontSize: 13.5,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginBottom: 2,
   },
   sugDesc: {
     fontSize: 11.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     lineHeight: 16,
     marginBottom: 10,
   },
@@ -762,16 +763,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 5,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1.2,
-    borderColor: "#FF5722",
+    borderColor: "#171717",
     borderRadius: 10,
     paddingVertical: 8,
   },
   restoreBtnText: {
     fontSize: 11.5,
     fontWeight: "700",
-    color: "#FF5722",
+    color: BrandColors.textDark,
   },
   viewRecipeBtn: {
     flex: 1,
@@ -796,13 +797,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 14.5,
     fontWeight: "700",
-    color: "#475569",
+    color: BrandColors.textBody,
     marginTop: 10,
     marginBottom: 4,
   },
   emptyDesc: {
     fontSize: 12,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     textAlign: "center",
     lineHeight: 18,
   },

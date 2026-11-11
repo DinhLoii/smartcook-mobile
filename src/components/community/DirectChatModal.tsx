@@ -26,14 +26,22 @@ interface DirectChatModalProps {
   visible: boolean;
   targetUser: CommunityAuthor | null;
   messages: ChatMessage[];
+  loading: boolean;
+  loadError: boolean;
+  canSend: boolean;
+  onRetry: () => void;
   onClose: () => void;
-  onSendMessage: (text: string, imageUri?: string) => void;
+  onSendMessage: (text: string, imageUri?: string) => Promise<void>;
 }
 
 export default function DirectChatModal({
   visible,
   targetUser,
   messages,
+  loading,
+  loadError,
+  canSend,
+  onRetry,
   onClose,
   onSendMessage,
 }: DirectChatModalProps) {
@@ -41,23 +49,37 @@ export default function DirectChatModal({
   const flatListRef = useRef<FlatList>(null);
   const [inputText, setInputText] = useState("");
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState(false);
+  const sendPending = useRef(false);
 
   useEffect(() => {
     if (visible && messages.length > 0) {
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 150);
+      return () => clearTimeout(timeout);
     }
   }, [visible, messages.length]);
 
   if (!targetUser) return null;
 
-  const handleSend = () => {
-    if (!inputText.trim() && !attachedImage) return;
+  const handleSend = async () => {
+    if (!canSend || sendPending.current || (!inputText.trim() && !attachedImage)) return;
+    sendPending.current = true;
+    setSending(true);
+    setSendError(false);
     triggerHaptic("medium");
-    onSendMessage(inputText.trim(), attachedImage || undefined);
-    setInputText("");
-    setAttachedImage(null);
+    try {
+      await onSendMessage(inputText.trim(), attachedImage || undefined);
+      setInputText("");
+      setAttachedImage(null);
+    } catch {
+      setSendError(true);
+    } finally {
+      sendPending.current = false;
+      setSending(false);
+    }
   };
 
   const handlePickPhoto = async () => {
@@ -69,10 +91,16 @@ export default function DirectChatModal({
       }
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
-        quality: 0.8,
+        quality: 0.5,
+        base64: true,
       });
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setAttachedImage(result.assets[0].uri);
+        const base64 = result.assets[0].base64;
+        if (!base64 || base64.length > 500_000) {
+          Alert.alert("Gửi ảnh", "Hãy chọn ảnh nhỏ hơn để gửi trong tin nhắn.");
+          return;
+        }
+        setAttachedImage(`data:image/jpeg;base64,${base64}`);
       }
     } catch (e) {
       console.log("Error picking image:", e);
@@ -80,17 +108,7 @@ export default function DirectChatModal({
   };
 
   const renderMessageItem = ({ item }: { item: ChatMessage }) => {
-    // In a 1-1 direct conversation, there are only two parties:
-    // targetUser (the other party) and Current User (Me).
-    const targetId = targetUser.id || (targetUser as any)._id;
-    const senderId = item.sender?.id || (item.sender as any)?._id;
-
-    const isSenderTarget =
-      (targetId && senderId && String(targetId) === String(senderId)) ||
-      (targetUser.name && item.sender?.name && targetUser.name === item.sender?.name);
-
-    // If sender is NOT the target user, or item.isMe is true -> it's definitely ME!
-    const isMe = isSenderTarget ? false : (item.isMe !== undefined ? item.isMe : true);
+    const isMe = item.isMe;
 
     return (
       <View style={[styles.messageWrapper, isMe ? styles.wrapperMe : styles.wrapperOther]}>
@@ -144,7 +162,7 @@ export default function DirectChatModal({
               <Text style={styles.timeText}>{item.timestamp}</Text>
               {isMe && (
                 <Ionicons
-                  name="checkmark-done"
+                  name="checkmark"
                   size={14}
                   color={BrandColors.primary}
                   style={{ marginLeft: 3 }}
@@ -181,7 +199,7 @@ export default function DirectChatModal({
                 onPress={onClose}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Ionicons name="chevron-back" size={26} color="#0F172A" />
+                <Ionicons name="chevron-back" size={26} color={BrandColors.textDark} />
               </TouchableOpacity>
 
               <View style={styles.avatarWrap}>
@@ -193,7 +211,6 @@ export default function DirectChatModal({
                   }
                   style={styles.headerAvatar}
                 />
-                <View style={styles.onlineBadge} />
               </View>
 
               <View style={styles.userMeta}>
@@ -201,8 +218,7 @@ export default function DirectChatModal({
                   {targetUser.name}
                 </Text>
                 <View style={styles.statusRow}>
-                  <View style={styles.statusDot} />
-                  <Text style={styles.statusText}>Đang hoạt động</Text>
+                  <Text style={styles.statusText}>Tin nhắn riêng</Text>
                 </View>
               </View>
             </View>
@@ -216,7 +232,7 @@ export default function DirectChatModal({
                 <Ionicons name="videocam" size={22} color={BrandColors.primary} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionBtn} activeOpacity={0.7}>
-                <Ionicons name="ellipsis-vertical" size={18} color="#475569" />
+                <Ionicons name="ellipsis-vertical" size={18} color={BrandColors.textBody} />
               </TouchableOpacity>
             </View>
           </View>
@@ -230,33 +246,37 @@ export default function DirectChatModal({
             <FlatList
               ref={flatListRef}
               data={messages}
-              keyExtractor={(item, index) =>
-                item.id ? `${item.id}-${index}` : `msg-${index}`
-              }
+              keyExtractor={(item) => item.id}
               renderItem={renderMessageItem}
               contentContainerStyle={styles.messagesList}
               showsVerticalScrollIndicator={false}
-              ListHeaderComponent={
-                <View style={styles.dateBadgeContainer}>
-                  <View style={styles.dateBadge}>
-                    <Text style={styles.dateBadgeText}>Hôm nay</Text>
-                  </View>
-                </View>
-              }
+              onRefresh={onRetry}
+              refreshing={loading}
+              ListHeaderComponent={loadError && messages.length > 0 ? (
+                <TouchableOpacity accessibilityRole="button" onPress={onRetry} style={styles.emptyContainer}>
+                  <Text style={styles.emptySubText}>Chưa tải được tin nhắn mới. Chạm để thử lại.</Text>
+                </TouchableOpacity>
+              ) : null}
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
-                  <ActivityIndicator
+                  {loading && <ActivityIndicator
                     size="small"
                     color={BrandColors.primary}
                     style={{ marginBottom: 10 }}
-                  />
-                  <Text style={styles.emptyText}>Đang kết nối đoạn chat...</Text>
-                  <Text style={styles.emptySubText}>
-                    Gửi lời chào đến {targetUser.name} để bắt đầu cuộc trò chuyện!
-                  </Text>
+                  />}
+                  <Text style={styles.emptyText}>{loading ? "Đang tải tin nhắn…" : loadError ? "Không tải được tin nhắn" : "Chưa có tin nhắn"}</Text>
+                  {loadError ? <TouchableOpacity accessibilityRole="button" onPress={onRetry}>
+                    <Text style={styles.emptySubText}>Chạm để thử lại</Text>
+                  </TouchableOpacity> : !loading && <Text style={styles.emptySubText}>
+                    Gửi lời chào đến {targetUser.name} để bắt đầu cuộc trò chuyện.
+                  </Text>}
                 </View>
               }
             />
+
+            {sendError && <Text accessibilityRole="alert" style={{ color: "#1B1B1B", paddingHorizontal: 16, paddingBottom: 8 }}>
+              Chưa gửi được tin nhắn. Bạn có thể bấm gửi lại.
+            </Text>}
 
             {/* Image Attachment Preview */}
             {attachedImage && (
@@ -265,8 +285,9 @@ export default function DirectChatModal({
                 <TouchableOpacity
                   style={styles.removeAttachedBtn}
                   onPress={() => setAttachedImage(null)}
+                  disabled={sending}
                 >
-                  <Ionicons name="close-circle" size={22} color="#EF4444" />
+                  <Ionicons name="close-circle" size={22} color="#242424" />
                 </TouchableOpacity>
               </View>
             )}
@@ -283,6 +304,8 @@ export default function DirectChatModal({
                 style={styles.plusBtn}
                 activeOpacity={0.7}
                 onPress={handlePickPhoto}
+                disabled={!canSend || sending}
+                accessibilityLabel="Đính kèm ảnh"
               >
                 <Ionicons name="image-outline" size={22} color={BrandColors.primary} />
               </TouchableOpacity>
@@ -292,14 +315,15 @@ export default function DirectChatModal({
                 <TextInput
                   style={styles.textInput}
                   placeholder="Nhập tin nhắn..."
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={BrandColors.textPlaceholder}
                   value={inputText}
                   onChangeText={setInputText}
+                  editable={!sending}
                   multiline
                   maxLength={500}
                 />
                 <TouchableOpacity style={styles.emojiBtn} activeOpacity={0.7}>
-                  <Ionicons name="happy-outline" size={20} color="#64748B" />
+                  <Ionicons name="happy-outline" size={20} color={BrandColors.textMuted} />
                 </TouchableOpacity>
               </View>
 
@@ -307,20 +331,21 @@ export default function DirectChatModal({
               <TouchableOpacity
                 style={[
                   styles.sendBtn,
-                  inputText.trim() || attachedImage
+                  canSend && !sending && (inputText.trim() || attachedImage)
                     ? styles.sendBtnActive
                     : styles.sendBtnInactive,
                 ]}
-                disabled={!inputText.trim() && !attachedImage}
+                disabled={!canSend || sending || (!inputText.trim() && !attachedImage)}
+                accessibilityLabel="Gửi tin nhắn"
                 onPress={handleSend}
                 activeOpacity={0.8}
               >
-                <Ionicons
+                {sending ? <ActivityIndicator size="small" color="#FFFFFF" /> : <Ionicons
                   name="paper-plane"
                   size={17}
                   color="#FFFFFF"
                   style={{ marginLeft: 2 }}
-                />
+                />}
               </TouchableOpacity>
             </View>
           </KeyboardAvoidingView>
@@ -333,7 +358,7 @@ export default function DirectChatModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
   },
   topHeader: {
     flexDirection: "row",
@@ -341,10 +366,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 12,
     paddingBottom: 12,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
-    shadowColor: "#0F172A",
+    borderBottomColor: BrandColors.borderLight,
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
@@ -368,20 +393,9 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     borderWidth: 1.5,
-    borderColor: "#F1F5F9",
-  },
-  onlineBadge: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#22C55E",
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
+    borderColor: BrandColors.borderLight,
   },
   userMeta: {
     flex: 1,
@@ -389,23 +403,16 @@ const styles = StyleSheet.create({
   headerUserName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   statusRow: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 2,
   },
-  statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: "#22C55E",
-    marginRight: 5,
-  },
   statusText: {
     fontSize: 12,
-    color: "#16A34A",
+    color: "#262626",
     fontWeight: "500",
   },
   headerRight: {
@@ -419,7 +426,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
   },
   keyboardContainer: {
     flex: 1,
@@ -428,21 +435,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     flexGrow: 1,
-  },
-  dateBadgeContainer: {
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  dateBadge: {
-    backgroundColor: "#E2E8F0",
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  dateBadgeText: {
-    fontSize: 12,
-    color: "#475569",
-    fontWeight: "600",
   },
   messageWrapper: {
     marginBottom: 14,
@@ -469,9 +461,9 @@ const styles = StyleSheet.create({
     height: 34,
     borderRadius: 17,
     marginRight: 8,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     marginBottom: 20, // Align with bubble bottom
   },
   bubbleCol: {
@@ -486,14 +478,14 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   bubbleOther: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     borderBottomRightRadius: 20,
     borderBottomLeftRadius: 4,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    borderColor: BrandColors.borderLight,
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
@@ -516,7 +508,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   textOther: {
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   textMe: {
     color: "#FFFFFF",
@@ -542,7 +534,7 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 11,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     fontWeight: "400",
   },
   attachedPreviewRow: {
@@ -551,21 +543,21 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: BrandColors.borderLight,
   },
   attachedThumb: {
     width: 56,
     height: 56,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   removeAttachedBtn: {
     marginLeft: -12,
     marginTop: -32,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 12,
   },
   bottomBar: {
@@ -573,15 +565,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 12,
     paddingTop: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: BrandColors.borderLight,
   },
   plusBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#FFF1EC",
+    backgroundColor: "#EEEEEE",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 8,
@@ -590,17 +582,17 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     borderRadius: 22,
     paddingHorizontal: 14,
     minHeight: 42,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   textInput: {
     flex: 1,
     fontSize: 14.5,
-    color: "#0F172A",
+    color: BrandColors.textDark,
     paddingVertical: Platform.OS === "android" ? 6 : 8,
     maxHeight: 100,
   },
@@ -625,7 +617,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   sendBtnInactive: {
-    backgroundColor: "#CBD5E1",
+    backgroundColor: "#C7C7C7",
   },
   emptyContainer: {
     paddingVertical: 48,
@@ -636,12 +628,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14.5,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginBottom: 6,
   },
   emptySubText: {
     fontSize: 12.5,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     textAlign: "center",
     lineHeight: 18,
   },

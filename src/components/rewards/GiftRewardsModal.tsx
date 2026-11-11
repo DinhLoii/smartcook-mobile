@@ -184,7 +184,7 @@ export const GiftRewardsModal: React.FC<GiftRewardsModalProps> = ({
           </View>
 
           <TouchableOpacity style={styles.closeBtn} activeOpacity={0.7} onPress={onClose}>
-            <Ionicons name="close" size={22} color="#475569" />
+            <Ionicons name="close" size={22} color={BrandColors.textBody} />
           </TouchableOpacity>
         </View>
 
@@ -203,14 +203,14 @@ export const GiftRewardsModal: React.FC<GiftRewardsModalProps> = ({
               <View style={styles.xpCardLeft}>
                 <Text style={styles.xpCardLevel}>{statusData?.level || "Tập sự"}</Text>
                 <View style={styles.xpNumberRow}>
-                  <Ionicons name="sparkles" size={20} color="#FBBF24" />
+                  <Ionicons name="sparkles" size={20} color="#454545" />
                   <Text style={styles.xpNumberText}>{statusData?.chefExp ?? 0}</Text>
                   <Text style={styles.xpUnitText}>XP Khả dụng</Text>
                 </View>
               </View>
 
               <View style={styles.streakBadgeBox}>
-                <Ionicons name="flame" size={20} color="#EA580C" />
+                <Ionicons name="flame" size={20} color={BrandColors.textDark} />
                 <Text style={styles.streakBadgeNum}>{statusData?.streakDays ?? 0}</Text>
                 <Text style={styles.streakBadgeText}>ngày liên tiếp</Text>
               </View>
@@ -253,14 +253,14 @@ export const GiftRewardsModal: React.FC<GiftRewardsModalProps> = ({
                         </Text>
                         <View style={styles.dayIconBox}>
                           {isPassed ? (
-                            <Ionicons name="checkmark-circle" size={22} color="#10B981" />
+                            <Ionicons name="checkmark-circle" size={22} color={BrandColors.textBody} />
                           ) : dayNum === 7 ? (
-                            <Ionicons name="gift" size={20} color="#D97706" />
+                            <Ionicons name="gift" size={20} color={BrandColors.textBody} />
                           ) : (
                             <Ionicons
                               name="sparkles"
                               size={16}
-                              color={isToday ? "#EA580C" : "#94A3B8"}
+                              color={isToday ? "#171717" : "#686868"}
                             />
                           )}
                         </View>
@@ -319,7 +319,7 @@ export const GiftRewardsModal: React.FC<GiftRewardsModalProps> = ({
                 <Ionicons
                   name="pricetags-outline"
                   size={16}
-                  color={activeTab === "redeem" ? "#EA580C" : "#64748B"}
+                  color={activeTab === "redeem" ? "#171717" : "#5E5E5E"}
                 />
                 <Text
                   style={[
@@ -338,7 +338,7 @@ export const GiftRewardsModal: React.FC<GiftRewardsModalProps> = ({
                 <Ionicons
                   name="wallet-outline"
                   size={16}
-                  color={activeTab === "my_rewards" ? "#EA580C" : "#64748B"}
+                  color={activeTab === "my_rewards" ? "#171717" : "#5E5E5E"}
                 />
                 <Text
                   style={[
@@ -439,7 +439,7 @@ export const GiftRewardsModal: React.FC<GiftRewardsModalProps> = ({
               <View style={styles.claimedList}>
                 {!statusData?.claimedRewards || statusData.claimedRewards.length === 0 ? (
                   <View style={styles.emptyRewardsBox}>
-                    <Ionicons name="receipt-outline" size={42} color="#CBD5E1" />
+                    <Ionicons name="receipt-outline" size={42} color="#C7C7C7" />
                     <Text style={styles.emptyRewardsTitle}>Bạn chưa có phần quà nào</Text>
                     <Text style={styles.emptyRewardsDesc}>
                       Dùng điểm Chef XP bạn đã tích lũy từ nấu ăn và điểm danh để đổi
@@ -451,7 +451,7 @@ export const GiftRewardsModal: React.FC<GiftRewardsModalProps> = ({
                     <View key={reward.id} style={styles.claimedCard}>
                       <View style={styles.claimedHeader}>
                         <View style={styles.couponTag}>
-                          <Ionicons name="pricetag" size={13} color="#EA580C" />
+                          <Ionicons name="pricetag" size={13} color={BrandColors.textDark} />
                           <Text style={styles.couponTagText}>{reward.discountValue}</Text>
                         </View>
                         <Text style={styles.claimedDate}>
@@ -472,7 +472,7 @@ export const GiftRewardsModal: React.FC<GiftRewardsModalProps> = ({
                           activeOpacity={0.8}
                           onPress={() => handleCopyCode(reward.code)}
                         >
-                          <Ionicons name="copy-outline" size={15} color="#EA580C" />
+                          <Ionicons name="copy-outline" size={15} color={BrandColors.textDark} />
                           <Text style={styles.copyBtnText}>Sao chép</Text>
                         </TouchableOpacity>
                       </View>
@@ -493,7 +493,7 @@ export default GiftRewardsModal;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
   },
   header: {
     flexDirection: "row",
@@ -502,8 +502,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
-    backgroundColor: "#FFFFFF",
+    borderBottomColor: BrandColors.borderLight,
+    backgroundColor: BrandColors.surfaceCard,
   },
   headerTitleRow: {
     flexDirection: "row",
@@ -516,18 +516,18 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   headerSub: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 1,
   },
   closeBtn: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 14,
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   scrollContent: {
     padding: 16,
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#1E293B",
+    backgroundColor: "#232323",
     borderRadius: 16,
     padding: 18,
   },
@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
   },
   xpCardLevel: {
     fontSize: 13,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     fontWeight: "600",
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -573,16 +573,16 @@ const styles = StyleSheet.create({
   xpNumberText: {
     fontSize: 26,
     fontWeight: "800",
-    color: "#F8FAFC",
+    color: "#F7F7F7",
   },
   xpUnitText: {
     fontSize: 14,
-    color: "#FBBF24",
+    color: "#454545",
     fontWeight: "600",
   },
   streakBadgeBox: {
     alignItems: "center",
-    backgroundColor: "#334155",
+    backgroundColor: "#353535",
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 12,
@@ -595,14 +595,14 @@ const styles = StyleSheet.create({
   },
   streakBadgeText: {
     fontSize: 10,
-    color: "#CBD5E1",
+    color: "#C7C7C7",
   },
   streakCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     gap: 14,
   },
   sectionHeaderRow: {
@@ -613,12 +613,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#1E293B",
+    color: BrandColors.textDark,
   },
   sectionSubtitle: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#10B981",
+    color: BrandColors.textBody,
   },
   daysRow: {
     flexDirection: "row",
@@ -628,29 +628,29 @@ const styles = StyleSheet.create({
   dayBox: {
     flex: 1,
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     borderRadius: 10,
     paddingVertical: 10,
     gap: 4,
   },
   dayBoxToday: {
-    borderColor: "#EA580C",
-    backgroundColor: "#FFF7ED",
+    borderColor: "#171717",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 2,
   },
   dayBoxPassed: {
-    backgroundColor: "#F0FDF4",
-    borderColor: "#BBF7D0",
+    backgroundColor: BrandColors.surfaceMuted,
+    borderColor: "#DADADA",
   },
   dayLabel: {
     fontSize: 10,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "600",
   },
   dayLabelToday: {
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontWeight: "700",
   },
   dayIconBox: {
@@ -661,22 +661,22 @@ const styles = StyleSheet.create({
   dayXpText: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   dayXpTextToday: {
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   checkInBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
     borderRadius: 12,
     paddingVertical: 14,
     gap: 8,
   },
   checkInBtnDisabled: {
-    backgroundColor: "#94A3B8",
+    backgroundColor: "#686868",
   },
   checkInBtnText: {
     color: "#FFFFFF",
@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: "row",
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
     borderRadius: 12,
     padding: 4,
   },
@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tabBtnActive: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -709,10 +709,10 @@ const styles = StyleSheet.create({
   tabBtnText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   tabBtnTextActive: {
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontWeight: "700",
   },
   catalogList: {
@@ -721,11 +721,11 @@ const styles = StyleSheet.create({
   rewardCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     gap: 12,
   },
   rewardIconCircle: {
@@ -734,9 +734,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     padding: 3,
   },
   brandLogoImg: {
@@ -755,7 +755,7 @@ const styles = StyleSheet.create({
   brandText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#64748B",
+    color: BrandColors.textMuted,
     textTransform: "uppercase",
   },
   discountBadge: {
@@ -769,25 +769,25 @@ const styles = StyleSheet.create({
   rewardTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginBottom: 2,
   },
   rewardDesc: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     lineHeight: 16,
   },
   redeemBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
     gap: 4,
   },
   redeemBtnDisabled: {
-    backgroundColor: "#CBD5E1",
+    backgroundColor: "#C7C7C7",
   },
   redeemBtnText: {
     color: "#FFFFFF",
@@ -801,30 +801,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 30,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   emptyRewardsTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1E293B",
+    color: BrandColors.textDark,
     marginTop: 10,
     marginBottom: 4,
   },
   emptyRewardsDesc: {
     fontSize: 13,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     textAlign: "center",
     lineHeight: 18,
   },
   claimedCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     gap: 8,
   },
   claimedHeader: {
@@ -836,7 +836,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -844,29 +844,29 @@ const styles = StyleSheet.create({
   couponTagText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   claimedDate: {
     fontSize: 11,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
   },
   claimedTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   claimedDesc: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     lineHeight: 16,
   },
   codeRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -878,14 +878,14 @@ const styles = StyleSheet.create({
   codeText: {
     fontSize: 15,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     letterSpacing: 1.5,
   },
   copyBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
@@ -893,6 +893,6 @@ const styles = StyleSheet.create({
   copyBtnText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
 });

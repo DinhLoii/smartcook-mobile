@@ -147,32 +147,32 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     switch (type) {
       case "community":
         return (
-          <View style={[styles.iconBox, { backgroundColor: "#FEE2E2" }]}>
-            <Ionicons name="heart" size={20} color="#EF4444" />
+          <View style={[styles.iconBox, { backgroundColor: "#EEEEEE" }]}>
+            <Ionicons name="heart" size={20} color="#242424" />
           </View>
         );
       case "fridge_expiry":
         return (
-          <View style={[styles.iconBox, { backgroundColor: "#FEF3C7" }]}>
-            <MaterialCommunityIcons name="fridge-alert" size={20} color="#D97706" />
+          <View style={[styles.iconBox, { backgroundColor: "#DADADA" }]}>
+            <MaterialCommunityIcons name="fridge-alert" size={20} color={BrandColors.textBody} />
           </View>
         );
       case "reward":
         return (
-          <View style={[styles.iconBox, { backgroundColor: "#FEF9C3" }]}>
-            <Ionicons name="gift" size={20} color="#CA8A04" />
+          <View style={[styles.iconBox, { backgroundColor: "#DADADA" }]}>
+            <Ionicons name="gift" size={20} color="#363636" />
           </View>
         );
       case "planner":
         return (
-          <View style={[styles.iconBox, { backgroundColor: "#E0F2FE" }]}>
-            <Ionicons name="calendar" size={20} color="#0284C7" />
+          <View style={[styles.iconBox, { backgroundColor: "#EEEEEE" }]}>
+            <Ionicons name="calendar" size={20} color="#262626" />
           </View>
         );
       default:
         return (
-          <View style={[styles.iconBox, { backgroundColor: "#F1F5F9" }]}>
-            <Ionicons name="notifications" size={20} color="#64748B" />
+          <View style={[styles.iconBox, { backgroundColor: BrandColors.inputBg }]}>
+            <Ionicons name="notifications" size={20} color={BrandColors.textMuted} />
           </View>
         );
     }
@@ -209,7 +209,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                 activeOpacity={0.7}
                 onPress={handleMarkAllRead}
               >
-                <Ionicons name="checkmark-done-outline" size={17} color="#EA580C" />
+                <Ionicons name="checkmark-done-outline" size={17} color={BrandColors.textDark} />
                 <Text style={styles.markAllText}>Đọc tất cả</Text>
               </TouchableOpacity>
             )}
@@ -219,7 +219,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
               activeOpacity={0.7}
               onPress={onClose}
             >
-              <Ionicons name="close" size={22} color="#475569" />
+              <Ionicons name="close" size={22} color={BrandColors.textBody} />
             </TouchableOpacity>
           </View>
         </View>
@@ -283,7 +283,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                   <Ionicons
                     name="notifications-off-outline"
                     size={38}
-                    color="#94A3B8"
+                    color={BrandColors.textPlaceholder}
                   />
                 </View>
                 <Text style={styles.emptyTitle}>Chưa có thông báo nào</Text>
@@ -331,7 +331,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     onPress={() => handleDelete(item.id)}
                   >
-                    <Ionicons name="trash-outline" size={15} color="#94A3B8" />
+                    <Ionicons name="trash-outline" size={15} color={BrandColors.textPlaceholder} />
                   </TouchableOpacity>
 
                   {!item.isRead && <View style={styles.unreadDot} />}
@@ -350,7 +350,7 @@ export default NotificationModal;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
   },
   header: {
     flexDirection: "row",
@@ -359,8 +359,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
-    backgroundColor: "#FFFFFF",
+    borderBottomColor: BrandColors.borderLight,
+    backgroundColor: BrandColors.surfaceCard,
   },
   headerLeft: {
     flexDirection: "row",
@@ -370,10 +370,10 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   badge: {
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
     borderRadius: 12,
     paddingHorizontal: 7,
     paddingVertical: 2,
@@ -395,18 +395,18 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 8,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
   },
   markAllText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   closeBtn: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -414,24 +414,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     gap: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: BrandColors.borderLight,
   },
   tabItem: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
   },
   tabItemActive: {
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
   },
   tabItemText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   tabItemTextActive: {
     color: "#FFFFFF",
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 14,
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   emptyContainer: {
     alignItems: "center",
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
@@ -470,12 +470,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#1E293B",
+    color: BrandColors.textDark,
     marginBottom: 6,
   },
   emptyDesc: {
     fontSize: 13,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     textAlign: "center",
     lineHeight: 19,
   },
@@ -484,15 +484,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 14,
     borderRadius: 14,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     gap: 12,
     position: "relative",
   },
   notifCardUnread: {
-    backgroundColor: "#FFFBF7",
-    borderColor: "#FDBA74",
+    backgroundColor: BrandColors.background,
+    borderColor: "#C2C2C2",
   },
   iconBox: {
     width: 40,
@@ -514,21 +514,21 @@ const styles = StyleSheet.create({
   notifTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#334155",
+    color: BrandColors.textBody,
     flex: 1,
     marginRight: 6,
   },
   notifTitleUnread: {
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   notifTime: {
     fontSize: 11,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
   },
   notifDesc: {
     fontSize: 13,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     lineHeight: 18,
   },
   deleteBtn: {
@@ -541,6 +541,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
   },
 });

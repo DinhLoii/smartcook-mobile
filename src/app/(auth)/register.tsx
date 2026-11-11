@@ -169,7 +169,7 @@ export default function RegisterScreen() {
                 <Ionicons
                   name="alert-circle"
                   size={18}
-                  color="#DC2626"
+                  color="#212121"
                   style={{ marginRight: 8 }}
                 />
                 <Text style={styles.serverErrorBannerText}>{serverError}</Text>
@@ -317,7 +317,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: BrandColors.background,
   },
   keyboardAvoid: {
     flex: 1,
@@ -334,14 +334,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 4,
     paddingBottom: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: BrandColors.surfaceCard,
   },
   serverErrorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF2F2',
+    backgroundColor: '#F4F4F4',
     borderWidth: 1.5,
-    borderColor: '#FCA5A5',
+    borderColor: '#DADADA',
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     fontWeight: '600',
-    color: '#DC2626',
+    color: '#212121',
     lineHeight: 18,
   },
   nameRow: {
@@ -395,11 +395,11 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 5,
     borderWidth: 1.5,
-    borderColor: '#CBD5E1',
+    borderColor: '#C7C7C7',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: BrandColors.surfaceCard,
   },
   checkboxChecked: {
     backgroundColor: BrandColors.primary,
@@ -407,11 +407,11 @@ const styles = StyleSheet.create({
   },
   checkboxLabel: {
     fontSize: 12.5,
-    color: '#64748B',
+    color: BrandColors.textMuted,
     fontWeight: '500',
   },
   termsHighlight: {
-    color: '#E65100',
+    color: BrandColors.textDark,
     fontWeight: '700',
     textDecorationLine: 'underline',
   },

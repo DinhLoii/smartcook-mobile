@@ -1,8 +1,8 @@
 import '@/global.css';
 import React, { useEffect, useMemo } from 'react';
-import { DarkTheme, DefaultTheme, ThemeProvider, Stack } from 'expo-router';
+import { DefaultTheme, ThemeProvider, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme, LogBox, Platform } from 'react-native';
+import { LogBox, Platform } from 'react-native';
 import { SafeAreaProvider, type Metrics } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -16,6 +16,20 @@ SplashScreen.preventAutoHideAsync();
 
 import { AuthProvider } from '@/contexts/AuthContext';
 import Head from 'expo-router/head';
+import { BrandColors } from '@/constants/brandColors';
+
+const navigationTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: BrandColors.primary,
+    background: BrandColors.background,
+    card: BrandColors.surfaceCard,
+    text: BrandColors.textDark,
+    border: BrandColors.borderLight,
+    notification: BrandColors.primary,
+  },
+};
 
 function getWebSafeAreaMetrics(): Metrics | undefined {
   if (Platform.OS !== 'web' || typeof window === 'undefined' || typeof document === 'undefined') {
@@ -42,7 +56,6 @@ function getWebSafeAreaMetrics(): Metrics | undefined {
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const webMetrics = useMemo(getWebSafeAreaMetrics, []);
 
   useEffect(() => {
@@ -56,7 +69,7 @@ export default function RootLayout() {
       </Head>
       <SafeAreaProvider initialMetrics={webMetrics}>
         <AuthProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <ThemeProvider value={navigationTheme}>
             <Stack screenOptions={{ headerShown: false }} initialRouteName="index">
               <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />

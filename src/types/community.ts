@@ -41,6 +41,7 @@ export interface ChatMessage {
 
 export interface DirectConversation {
   id: string; // target user id
+  conversationId: string;
   user: CommunityAuthor;
   lastMessage: string;
   lastMessageTime: string;

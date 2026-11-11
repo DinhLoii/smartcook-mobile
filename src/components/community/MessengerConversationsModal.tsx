@@ -2,10 +2,10 @@ import { BrandColors } from "@/constants/brandColors";
 import DismissKeyboard from "@/components/common/DismissKeyboard";
 import { CommunityAuthor, DirectConversation } from "@/types";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
+  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -21,8 +21,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 interface MessengerConversationsModalProps {
   visible: boolean;
   conversations: DirectConversation[];
+  contacts: CommunityAuthor[];
+  loading: boolean;
+  loadError: boolean;
+  onRetry: () => void;
   onClose: () => void;
-  onSelectConversation: (user: CommunityAuthor) => void;
+  onSelectConversation: (user: CommunityAuthor, conversationId?: string) => void;
 }
 
 type FilterTab = "all" | "friends" | "groups" | "favorites";
@@ -30,6 +34,10 @@ type FilterTab = "all" | "friends" | "groups" | "favorites";
 export default function MessengerConversationsModal({
   visible,
   conversations,
+  contacts,
+  loading,
+  loadError,
+  onRetry,
   onClose,
   onSelectConversation,
 }: MessengerConversationsModalProps) {
@@ -37,6 +45,17 @@ export default function MessengerConversationsModal({
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const [composing, setComposing] = useState(false);
+
+  useEffect(() => {
+    if (visible) return;
+    setComposing(false);
+    setSearch("");
+    setShowSearch(false);
+  }, [visible]);
+
+  const filteredContacts = contacts.filter((author) =>
+    author.name.toLocaleLowerCase("vi").includes(search.trim().toLocaleLowerCase("vi")));
 
   // Filter conversations
   const filteredConversations = conversations.filter((c) => {
@@ -56,7 +75,7 @@ export default function MessengerConversationsModal({
     <TouchableOpacity
       style={styles.conversationRow}
       activeOpacity={0.65}
-      onPress={() => onSelectConversation(item.user)}
+      onPress={() => onSelectConversation(item.user, item.conversationId)}
     >
       {/* User Avatar with Green Online Indicator */}
       <View style={styles.avatarWrap}>
@@ -117,70 +136,66 @@ export default function MessengerConversationsModal({
             <TouchableOpacity
               style={styles.backBtn}
               activeOpacity={0.7}
-              onPress={onClose}
+              onPress={composing ? () => { setComposing(false); setSearch(""); } : onClose}
             >
-              <Ionicons name="chevron-back" size={24} color="#0F172A" />
+              <Ionicons name="chevron-back" size={24} color={BrandColors.textDark} />
             </TouchableOpacity>
             <View>
-              <Text style={styles.mainTitle}>Tin nhắn</Text>
-              <Text style={styles.subtitleText}>Kết nối với mọi người</Text>
+              <Text style={styles.mainTitle} accessibilityRole="header">
+                {composing ? "Tin nhắn mới" : "Tin nhắn"}
+              </Text>
+              {composing && <Text style={styles.subtitleText}>Chọn người đăng trong Cộng đồng</Text>}
             </View>
           </View>
 
-          <View style={styles.headerRight}>
+          {!composing && <View style={styles.headerRight}>
             {/* Search Icon */}
             <TouchableOpacity
               style={styles.actionCircleBtn}
               activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel={showSearch ? "Đóng tìm kiếm" : "Tìm tin nhắn"}
               onPress={() => setShowSearch(!showSearch)}
             >
-              <Ionicons name="search" size={20} color="#0F172A" />
+              <Ionicons name={showSearch ? "close-outline" : "search-outline"} size={22} color={BrandColors.textDark} />
             </TouchableOpacity>
 
-            {/* New Message Icon (Square with pen in brand orange) */}
             <TouchableOpacity
               style={styles.newMessageBtn}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Soạn tin nhắn mới"
               onPress={() => {
-                if (conversations.length > 0) {
-                  onSelectConversation(conversations[0].user);
-                }
+                setSearch("");
+                setComposing(true);
               }}
             >
-              <LinearGradient
-                colors={BrandColors.buttonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.newMessageGradient}
-              >
-                <Ionicons name="create-outline" size={18} color="#FFFFFF" />
-              </LinearGradient>
+              <Ionicons name="create-outline" size={21} color={BrandColors.surfaceCard} />
             </TouchableOpacity>
-          </View>
+          </View>}
         </View>
 
         {/* Collapsible Search Input */}
-        {showSearch && (
+        {(showSearch || composing) && (
           <View style={styles.searchBarWrapper}>
-            <Ionicons name="search" size={16} color="#94A3B8" />
+            <Ionicons name="search" size={16} color={BrandColors.textPlaceholder} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Tìm kiếm tin nhắn..."
-              placeholderTextColor="#94A3B8"
+              placeholder={composing ? "Tìm theo tên người đăng" : "Tìm kiếm tin nhắn..."}
+              placeholderTextColor={BrandColors.textPlaceholder}
               value={search}
               onChangeText={setSearch}
               autoFocus
             />
             {search.length > 0 && (
               <TouchableOpacity onPress={() => setSearch("")}>
-                <Ionicons name="close-circle" size={16} color="#94A3B8" />
+                <Ionicons name="close-circle" size={16} color={BrandColors.textPlaceholder} />
               </TouchableOpacity>
             )}
           </View>
         )}
 
-        {/* Filter Pills Row - Exact match to image 1 with brand primary color */}
-        <View style={styles.filterPillsRow}>
+        {!composing && <View style={styles.filterPillsRow}>
           <TouchableOpacity
             style={[
               styles.filterPill,
@@ -252,25 +267,53 @@ export default function MessengerConversationsModal({
               Yêu thích
             </Text>
           </TouchableOpacity>
-        </View>
+        </View>}
 
         {/* Conversations List - Clean & Compact like image 1 */}
-        <FlatList
+        {composing ? (
+          <FlatList
+            key="contacts"
+            data={filteredContacts}
+            keyExtractor={(item) => item.id}
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item }) => (
+              <TouchableOpacity style={styles.conversationRow} onPress={() => onSelectConversation(item)}>
+                <Image source={item.avatar} style={styles.avatar} />
+                <View style={styles.convContent}><Text style={styles.userName}>{item.name}</Text></View>
+                <Ionicons name="chevron-forward" size={17} color={BrandColors.textMuted} />
+              </TouchableOpacity>
+            )}
+            ListEmptyComponent={<View style={styles.emptyContainer}>
+              <Text style={styles.emptyTitle}>Chưa tìm thấy người phù hợp</Text>
+              <Text style={styles.emptySubtitle}>Bạn cũng có thể nhắn tin từ bài viết của người đó.</Text>
+            </View>}
+          />
+        ) : <FlatList
+          key="conversations"
           data={filteredConversations}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.conversationId}
           renderItem={renderConversationItem}
           contentContainerStyle={styles.conversationsList}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          onRefresh={onRetry}
+          refreshing={loading}
+          ListHeaderComponent={loadError ? (
+            <TouchableOpacity onPress={onRetry} style={styles.emptyContainer} accessibilityRole="button">
+              <Text style={styles.emptyTitle}>Không tải được hộp thư</Text>
+              <Text style={styles.emptySubtitle}>Chạm để thử lại</Text>
+            </TouchableOpacity>
+          ) : null}
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="chatbubbles-outline" size={44} color="#CBD5E1" />
+            loading ? <ActivityIndicator color={BrandColors.primary} /> : loadError ? null : <View style={styles.emptyContainer}>
+              <Ionicons name="chatbubbles-outline" size={44} color="#C7C7C7" />
               <Text style={styles.emptyTitle}>Không có tin nhắn nào</Text>
               <Text style={styles.emptySubtitle}>
                 Chưa có đoạn chat trong mục này.
               </Text>
             </View>
           }
-        />
+        />}
       </View>
       </KeyboardAvoidingView>
       </DismissKeyboard>
@@ -281,7 +324,7 @@ export default function MessengerConversationsModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
   },
   topHeader: {
     flexDirection: "row",
@@ -303,12 +346,12 @@ const styles = StyleSheet.create({
   mainTitle: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     letterSpacing: -0.3,
   },
   subtitleText: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 1,
   },
   headerRight: {
@@ -317,27 +360,23 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   actionCircleBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
   },
   newMessageBtn: {
-    borderRadius: 10,
-    overflow: "hidden",
-  },
-  newMessageGradient: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 10,
+    borderRadius: 11,
+    backgroundColor: BrandColors.primary,
   },
   searchBarWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     marginHorizontal: 16,
     marginBottom: 8,
     paddingHorizontal: 12,
@@ -348,11 +387,12 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 13,
-    color: "#0F172A",
+    color: BrandColors.textDark,
     paddingVertical: Platform.OS === "android" ? 4 : 0,
   },
   filterPillsRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 8,
@@ -361,7 +401,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 7,
     borderRadius: 16,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
   },
   filterPillActive: {
     backgroundColor: BrandColors.primary,
@@ -369,7 +409,7 @@ const styles = StyleSheet.create({
   filterPillText: {
     fontSize: 12.5,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   filterPillTextActive: {
     color: "#FFFFFF",
@@ -393,7 +433,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
   },
   onlineBadge: {
     position: "absolute",
@@ -402,7 +442,7 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: "#22C55E",
+    backgroundColor: "#363636",
     borderWidth: 2,
     borderColor: "#FFFFFF",
   },
@@ -419,13 +459,13 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 14.5,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     flex: 1,
     marginRight: 8,
   },
   timeText: {
     fontSize: 11.5,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
   },
   bottomRow: {
     flexDirection: "row",
@@ -434,12 +474,12 @@ const styles = StyleSheet.create({
   },
   lastMessageText: {
     fontSize: 13,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     flex: 1,
     marginRight: 8,
   },
   lastMessageUnread: {
-    color: "#0F172A",
+    color: BrandColors.textDark,
     fontWeight: "600",
   },
   unreadBadge: {
@@ -465,12 +505,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#334155",
+    color: BrandColors.textBody,
     marginTop: 10,
   },
   emptySubtitle: {
     fontSize: 12.5,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     textAlign: "center",
     marginTop: 4,
   },

@@ -6,6 +6,7 @@ import {
   ScanAIView,
 } from "@/components/features";
 import { BrandColors } from "@/constants/brandColors";
+import { Fonts } from "@/constants/theme";
 import { ShoppingNoteModal, ShoppingReminderBanner } from "@/components/planner";
 import { DraggableAIAssistant } from "@/components/ai";
 import { CreateRecipeModal } from "@/components/recipe";
@@ -14,7 +15,7 @@ import { InAppNotificationBanner } from "@/components/notifications/InAppNotific
 import { GiftRewardsModal } from "@/components/rewards/GiftRewardsModal";
 import { notificationService } from "@/services/notificationService";
 import { CartService } from "@/services/cartService";
-import { PreferenceService, UserPreferences, CUISINE_OPTIONS } from "@/services/preferenceService";
+import { PreferenceService, UserPreferences, CUISINE_OPTIONS, PORTION_OPTIONS } from "@/services/preferenceService";
 import { CategoryService } from "@/services/categoryService";
 import { RecipeService } from "@/services/recipeService";
 import { CategoryItem, Recipe } from "@/types";
@@ -41,6 +42,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "@/contexts/AuthContext";
 
+const HOME_MAX_WIDTH = 640;
+const HOME_TABS = [
+  { id: "home", label: "Khám phá", icon: "home-outline", selectedIcon: "home" },
+  { id: "fridge", label: "Bếp của tôi", icon: "restaurant-outline", selectedIcon: "restaurant" },
+  { id: "scan", label: "Quét AI", icon: "scan-outline", selectedIcon: "scan" },
+  { id: "community", label: "Cộng đồng", icon: "people-outline", selectedIcon: "people" },
+  { id: "profile", label: "Cá nhân", icon: "person-outline", selectedIcon: "person" },
+] as const;
+
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -54,7 +64,8 @@ export default function HomeScreen() {
   const [showShoppingNote, setShowShoppingNote] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showGiftModal, setShowGiftModal] = useState(false);
-  const [plannerSubTab, setPlannerSubTab] = useState<"calendar" | "shopping" | "rewards">("calendar");
+  const [showAssistant, setShowAssistant] = useState(false);
+  const [openInbox, setOpenInbox] = useState(false);
   const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
   const [cartCount, setCartCount] = useState(() =>
     CartService.getItems().filter((i) => !i.bought).length
@@ -218,17 +229,9 @@ export default function HomeScreen() {
   interface HeroSlideItem {
     id: string;
     recipeId: string;
-    titlePrefix: string;
-    highlight: string;
-    titleSuffix: string;
+    title: string;
     subtitle: string;
-    actionText: string;
-    tagBadge: "hot" | "popular";
     image: any;
-    gradientColors: readonly [string, string, string];
-    highlightColor: string;
-    btnGradient: readonly [string, string];
-    badgeColor: string;
   }
 
   // 5 Dishes data for Hero Carousel with corresponding info
@@ -236,77 +239,37 @@ export default function HomeScreen() {
     {
       id: "slide-1",
       recipeId: "dish-1",
-      titlePrefix: "Nấu ngay với ",
-      highlight: "100%",
-      titleSuffix: " nguyên liệu có sẵn",
+      title: "Cơm gà teriyaki áp chảo",
       subtitle: "Thịt gà • Cà chua • Bơ • Gạo",
-      actionText: "Xem chi tiết →",
-      tagBadge: "hot",
       image: require("@/assets/images/hero-teriyaki-bowl.jpg"),
-      gradientColors: ["#FFF0EB", "#FFE2D7", "#FED7AA"],
-      highlightColor: "#FF4D6D",
-      btnGradient: ["#FF4D6D", "#FF7043"],
-      badgeColor: "#E65100",
     },
     {
       id: "slide-2",
       recipeId: "dish-3",
-      titlePrefix: "Thực đơn ",
-      highlight: "Eat Clean",
-      titleSuffix: " chỉ 380 kcal",
+      title: "Salad cá hồi áp chảo chanh leo",
       subtitle: "Cá hồi • Quả bơ • Xà lách • Olive",
-      actionText: "Xem chi tiết →",
-      tagBadge: "popular",
       image: require("@/assets/images/salad-salmon.jpg"),
-      gradientColors: ["#F0FDF4", "#DCFCE7", "#BBF7D0"],
-      highlightColor: "#059669",
-      btnGradient: ["#059669", "#10B981"],
-      badgeColor: "#047857",
     },
     {
       id: "slide-3",
       recipeId: "dish-2",
-      titlePrefix: "Bò Bít Tết sốt tiêu ",
-      highlight: "giàu đạm",
-      titleSuffix: " cho cả nhà",
+      title: "Bò bít tết sốt tiêu măng tây",
       subtitle: "Thịt bò • Măng tây • Bơ tỏi • Tiêu",
-      actionText: "Xem chi tiết →",
-      tagBadge: "hot",
       image: require("@/assets/images/steak-asparagus.jpg"),
-      gradientColors: ["#FFF5EB", "#FFE5D6", "#FED7AA"],
-      highlightColor: "#EA580C",
-      btnGradient: ["#EA580C", "#F97316"],
-      badgeColor: "#C2410C",
     },
     {
       id: "slide-4",
       recipeId: "dish-5",
-      titlePrefix: "Mỳ Ý sốt Bolognese chuẩn Ý trong ",
-      highlight: "15 phút",
-      titleSuffix: "",
+      title: "Mì Ý sốt Bolognese",
       subtitle: "Mỳ Ý • Bò bằm • Cà chua bi • Phô mai",
-      actionText: "Xem chi tiết →",
-      tagBadge: "popular",
       image: require("@/assets/images/pasta-bolognese.jpg"),
-      gradientColors: ["#FFF0EB", "#FFE0D3", "#FED7AA"],
-      highlightColor: "#E11D48",
-      btnGradient: ["#E11D48", "#FB7185"],
-      badgeColor: "#BE123C",
     },
     {
       id: "slide-5",
       recipeId: "dish-7",
-      titlePrefix: "Gà rán sốt mật ong cay giòn ",
-      highlight: "98% mê",
-      titleSuffix: "",
+      title: "Gà rán sốt mật ong cay giòn",
       subtitle: "Ức gà • Mật ong • Hạt mè • Ớt cay",
-      actionText: "Xem chi tiết →",
-      tagBadge: "hot",
       image: require("@/assets/images/crispy-chicken.jpg"),
-      gradientColors: ["#FFF7ED", "#FFEDD5", "#FED7AA"],
-      highlightColor: "#D97706",
-      btnGradient: ["#D97706", "#F59E0B"],
-      badgeColor: "#B45309",
     },
   ];
 
@@ -316,29 +279,15 @@ export default function HomeScreen() {
     RecipeService.getTrendingRecipes(5)
       .then((items) => {
         if (items && items.length > 0) {
-          const mapped: HeroSlideItem[] = items.map((r, idx) => ({
+          const mapped: HeroSlideItem[] = items.map((r) => ({
             id: `trending-${r.id}`,
             recipeId: r.id,
-            titlePrefix: `${r.title.slice(0, 22)}${r.title.length > 22 ? "..." : ""} `,
-            highlight: `${r.minutes}p`,
-            titleSuffix: ` • ${r.difficulty}`,
+            title: r.title,
             subtitle:
               r.ingredients?.slice(0, 4).map((i) => i.name).join(" • ") ||
               r.sub ||
               "Công thức thịnh hành",
-            actionText: "Xem chi tiết →",
-            tagBadge: idx % 2 === 0 ? "hot" : "popular",
             image: typeof r.image === "string" ? { uri: r.image } : r.image,
-            gradientColors:
-              idx % 2 === 0
-                ? ["#FFF0EB", "#FFE2D7", "#FED7AA"]
-                : ["#F0FDF4", "#DCFCE7", "#BBF7D0"],
-            highlightColor: idx % 2 === 0 ? "#FF4D6D" : "#059669",
-            btnGradient:
-              idx % 2 === 0
-                ? ["#FF4D6D", "#FF7043"]
-                : ["#059669", "#10B981"],
-            badgeColor: idx % 2 === 0 ? "#E65100" : "#047857",
           }));
           setTrendingSlides(mapped);
         }
@@ -353,7 +302,7 @@ export default function HomeScreen() {
   const interactionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
-  const HERO_CARD_WIDTH = width - 40;
+  const HERO_CARD_WIDTH = Math.min(width, HOME_MAX_WIDTH) - 40;
 
   // Sync ref with state
   const updateSlideIndex = (index: number) => {
@@ -426,88 +375,28 @@ export default function HomeScreen() {
   const renderHeroItem = useCallback(
     ({ item }: { item: (typeof trendingSlides)[0] }) => (
       <TouchableOpacity
-        style={[
-          styles.heroCardContainer,
-          { width: HERO_CARD_WIDTH },
-        ]}
-        activeOpacity={0.92}
+        style={[styles.heroCardContainer, { width: HERO_CARD_WIDTH }]}
+        accessibilityRole="button"
+        accessibilityLabel={`Xem công thức ${item.title}`}
+        activeOpacity={0.86}
         onPress={() => handleOpenRecipe(item.recipeId)}
       >
+        <Image source={item.image} style={styles.heroDishImage} resizeMode="cover" />
         <LinearGradient
-          colors={item.gradientColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.heroCardGradient}
-        >
-          {/* Left Content Column */}
-          <View style={styles.heroCardLeft}>
-            <Text style={styles.heroCardTitle} numberOfLines={2}>
-              {item.titlePrefix}
-              <Text
-                style={[
-                  styles.heroCardHighlight,
-                  { color: item.highlightColor },
-                ]}
-              >
-                {item.highlight}
-              </Text>
-              {item.titleSuffix}
-            </Text>
-
-            <Text style={styles.heroCardSubtitle} numberOfLines={1}>
-              {item.subtitle}
-            </Text>
-
-            <View style={styles.heroBtnRow}>
-              {/* Action Pill Button with Sunset Coral Gradient */}
-              <TouchableOpacity
-                style={styles.heroActionButton}
-                activeOpacity={0.85}
-                onPress={() => handleOpenRecipe(item.recipeId)}
-              >
-                <LinearGradient
-                  colors={item.btnGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.heroActionGradient}
-                >
-                  <Text style={styles.heroActionText}>
-                    {item.actionText}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-
-              <View
-                style={[
-                  styles.heroTagBadgeBtn,
-                  item.tagBadge === "popular"
-                    ? styles.heroTagBadgePopular
-                    : styles.heroTagBadgeHot,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.heroTagBadgeBtnText,
-                    item.tagBadge === "popular"
-                      ? styles.heroTagTextPopular
-                      : styles.heroTagTextHot,
-                  ]}
-                >
-                  {item.tagBadge === "popular" ? "⭐ Popular" : "🔥 Hot"}
-                </Text>
-              </View>
-            </View>
+          colors={["transparent", "rgba(21, 26, 22, 0.08)", "rgba(21, 26, 22, 0.78)", "rgba(21, 26, 22, 0.96)"]}
+          locations={[0, 0.35, 0.73, 1]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+        <View style={styles.heroCardBody} pointerEvents="none">
+          <View style={styles.heroCardText}>
+            <Text style={styles.heroCardTitle} numberOfLines={2}>{item.title}</Text>
+            <Text style={styles.heroCardSubtitle} numberOfLines={1}>{item.subtitle}</Text>
           </View>
-
-          {/* Right Floating Appetizing Dish Image */}
-          <View style={styles.heroImageWrapper}>
-            <Image
-              source={item.image}
-              style={styles.heroDishImage}
-              resizeMode="cover"
-            />
+          <View style={styles.heroCardArrow}>
+            <Ionicons name="arrow-forward" size={19} color={BrandColors.onPrimary} />
           </View>
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
     ),
     [HERO_CARD_WIDTH]
@@ -519,55 +408,55 @@ export default function HomeScreen() {
       id: "all",
       label: "Tất cả",
       iconName: "grid-outline" as const,
-      color: "#FF5722",
+      color: BrandColors.textDark,
     },
     {
       id: "quick",
       label: "Nấu nhanh < 20p",
       iconName: "flash-outline" as const,
-      color: "#F59E0B",
+      color: "#404040",
     },
     {
       id: "family",
       label: "Gia đình",
       iconName: "people-outline" as const,
-      color: "#FF6B35",
+      color: BrandColors.textDark,
     },
     {
       id: "healthy",
       label: "Healthy",
       iconName: "leaf-outline" as const,
-      color: "#10B981",
+      color: BrandColors.textBody,
     },
     {
       id: "budget",
       label: "Tiết kiệm",
       iconName: "wallet-outline" as const,
-      color: "#3B82F6",
+      color: "#363636",
     },
     {
       id: "kids",
       label: "Trẻ em",
       iconName: "happy-outline" as const,
-      color: "#EC4899",
+      color: "#292929",
     },
     {
       id: "vegetarian",
       label: "Ăn chay",
       iconName: "nutrition-outline" as const,
-      color: "#059669",
+      color: "#262626",
     },
     {
       id: "vietnamese",
       label: "Món Việt",
       iconName: "restaurant-outline" as const,
-      color: "#D97706",
+      color: BrandColors.textBody,
     },
     {
       id: "dessert",
       label: "Tráng miệng",
       iconName: "ice-cream-outline" as const,
-      color: "#8B5CF6",
+      color: "#292929",
     },
   ]);
 
@@ -580,7 +469,7 @@ export default function HomeScreen() {
             id: c.code || c.id,
             label: c.name,
             iconName: (c.icon || "restaurant-outline") as any,
-            color: c.color || "#FF6B35",
+            color: c.color || "#171717",
           }))
         );
       }
@@ -627,7 +516,7 @@ export default function HomeScreen() {
         title: "Phở Bò Tái Lăn Hà Nội",
         badge: "Chuẩn vị • 35 phút",
         price: "~60.000đ",
-        image: require("@/assets/images/steak-asparagus.jpg"),
+        image: require("@/assets/images/pho-bo.jpg"),
         sub: "Nước dùng ngọt thanh",
         fridge: "80%",
       },
@@ -773,7 +662,7 @@ export default function HomeScreen() {
         title: "Phở Bò Tái Lăn Hà Nội",
         badge: "Chuẩn vị • 35 phút",
         price: "~60.000đ",
-        image: require("@/assets/images/steak-asparagus.jpg"),
+        image: require("@/assets/images/pho-bo.jpg"),
         sub: "Nước dùng ngọt thanh",
         fridge: "80%",
       },
@@ -957,7 +846,7 @@ export default function HomeScreen() {
         title: "Phở Bò Nước Dùng Nấu Sẵn",
         badge: "10 phút • Nóng hổi",
         price: "~60.000đ",
-        image: require("@/assets/images/steak-asparagus.jpg"),
+        image: require("@/assets/images/pho-bo.jpg"),
         sub: "Nhanh gọn tiện lợi",
         fridge: "80%",
       },
@@ -1199,7 +1088,7 @@ export default function HomeScreen() {
         title: "Phở Bò Tái Lăn Hà Nội",
         badge: "Món Việt • Tinh hoa",
         price: "~60.000đ",
-        image: require("@/assets/images/steak-asparagus.jpg"),
+        image: require("@/assets/images/pho-bo.jpg"),
         sub: "Nước dùng ngọt thanh",
         fridge: "80%",
       },
@@ -1514,64 +1403,42 @@ export default function HomeScreen() {
                 fetchRecipes(false);
                 CartService.fetchServerItems().catch(() => {});
               }}
-              colors={["#FF5722"]}
-              tintColor="#FF5722"
+              colors={["#171717"]}
+              tintColor="#171717"
             />
           }
         >
-          {/* Soft Sunset Pastel Gradient Top Backdrop */}
-          <LinearGradient
-            colors={["#FFE7DC", "#FFF3EB", "#FDFEFE", "#FFFFFF"]}
-            locations={[0, 0.45, 0.8, 1]}
-            style={styles.topBackdropGradient}
-            pointerEvents="none"
-          />
-
-          {/* 1. Top Profile Header */}
           <View style={styles.headerRow}>
-            {/* Left: User Avatar & Status */}
-            <TouchableOpacity
-              style={styles.userProfileLeft}
-              activeOpacity={0.8}
-              onPress={() => setActiveTab("profile")}
+            <Text
+              style={[styles.wordmark, width < 360 && styles.wordmarkCompact]}
+              accessibilityRole="header"
+              numberOfLines={1}
             >
-              <View style={styles.avatarBorder}>
-                <Image
-                  source={
-                    user?.avatar
-                      ? { uri: user.avatar }
-                      : require("@/assets/images/smartcook-auth-bg.jpg")
-                  }
-                  style={styles.avatarImage}
-                  resizeMode="cover"
-                />
-                <View style={styles.onlineBadge} />
-              </View>
-
-              <View style={styles.userInfoCol}>
-                <Text style={styles.userNameText}>
-                  {user?.fullName ||
-                    `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
-                    "Alex Cooker"}
-                </Text>
-                <View style={styles.premiumTag}>
-                  <Ionicons name="sparkles" size={10} color="#E65100" />
-                  <Text style={styles.premiumText}>
-                    {user?.level || "Tập sự"} • {user?.chefExp ?? 0} XP
-                  </Text>
-                </View>
-              </View>
-            </TouchableOpacity>
+              SmartCook
+            </Text>
 
             {/* Right: Floating Circular Action Buttons */}
             <View style={styles.headerRightActions}>
+              <TouchableOpacity
+                style={styles.circularIconBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Tin nhắn"
+                onPress={() => {
+                  setOpenInbox(true);
+                  setActiveTab("community");
+                }}
+              >
+                <Ionicons name="chatbubble-ellipses-outline" size={20} color={BrandColors.textBody} />
+              </TouchableOpacity>
               {/* Shopping Cart / Note Button with Live Badge */}
               <TouchableOpacity
                 style={styles.circularIconBtn}
                 activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityLabel="Giỏ đi chợ"
                 onPress={() => setShowShoppingNote(true)}
               >
-                <Ionicons name="cart-outline" size={20} color="#334155" />
+                <Ionicons name="cart-outline" size={20} color={BrandColors.textBody} />
                 {cartCount > 0 && (
                   <View style={styles.cartBadgeCircle}>
                     <Text style={styles.cartBadgeCircleText}>
@@ -1586,24 +1453,27 @@ export default function HomeScreen() {
               <TouchableOpacity
                 style={styles.circularIconBtn}
                 activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityLabel="Thực đơn và kế hoạch"
                 onPress={() => {
-                  setPlannerSubTab("rewards");
                   setActiveTab("planner");
                 }}
               >
-                <Ionicons name="calendar-outline" size={19} color="#0284C7" />
+                <Ionicons name="calendar-outline" size={19} color="#262626" />
               </TouchableOpacity>
 
               {/* Notification Bell with Realtime Badge */}
               <TouchableOpacity
                 style={styles.circularIconBtn}
                 activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityLabel={unreadNotifCount > 0 ? `Thông báo, ${unreadNotifCount} chưa đọc` : "Thông báo"}
                 onPress={() => setShowNotificationModal(true)}
               >
                 <Ionicons
-                  name={unreadNotifCount > 0 ? "notifications" : "notifications-outline"}
+                  name="notifications-outline"
                   size={20}
-                  color={unreadNotifCount > 0 ? "#FF5722" : "#334155"}
+                  color={unreadNotifCount > 0 ? "#171717" : "#353535"}
                 />
                 {unreadNotifCount > 0 ? (
                   <View style={styles.notifBadgeCircle}>
@@ -1624,11 +1494,12 @@ export default function HomeScreen() {
           {/* 2. Search & Filter Bar Row */}
           <View style={styles.searchRow}>
             <View style={styles.searchBar}>
-              <Ionicons name="search-outline" size={20} color="#94A3B8" />
+              <Ionicons name="search-outline" size={20} color={BrandColors.textPlaceholder} />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Tìm kiếm món ăn, nguyên liệu, calo..."
-                placeholderTextColor="#94A3B8"
+                accessibilityLabel="Tìm công thức"
+                placeholder="Tìm món ăn, nguyên liệu…"
+                placeholderTextColor={BrandColors.textPlaceholder}
                 value={searchQuery}
                 onChangeText={(text) => {
                   setSearchQuery(text);
@@ -1637,13 +1508,15 @@ export default function HomeScreen() {
               />
               {searchQuery.length > 0 && (
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel="Xóa tìm kiếm"
                   onPress={() => {
                     setSearchQuery("");
                     setCurrentPage(1);
                   }}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="close-circle" size={18} color="#94A3B8" />
+                  <Ionicons name="close-circle" size={18} color={BrandColors.textPlaceholder} />
                 </TouchableOpacity>
               )}
             </View>
@@ -1652,9 +1525,11 @@ export default function HomeScreen() {
             <TouchableOpacity
               style={styles.filterButton}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Bộ lọc công thức"
               onPress={() => setShowFilterModal(true)}
             >
-              <Ionicons name="options-outline" size={20} color="#334155" />
+              <Ionicons name="options-outline" size={20} color={BrandColors.textBody} />
             </TouchableOpacity>
           </View>
 
@@ -1670,25 +1545,20 @@ export default function HomeScreen() {
                 return (
                   <TouchableOpacity
                     key={cat.id}
-                    style={styles.categoryItem}
+                    style={[styles.categoryItem, isSelected && styles.categoryItemActive]}
                     activeOpacity={0.75}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
                     onPress={() => {
                       setSelectedCategory(cat.id);
                       setCurrentPage(1);
                     }}
                   >
-                    <View
-                      style={[
-                        styles.categoryCircle,
-                        isSelected && styles.categoryCircleActive,
-                      ]}
-                    >
-                      <Ionicons
-                        name={cat.iconName}
-                        size={22}
-                        color={isSelected ? BrandColors.primary : cat.color}
-                      />
-                    </View>
+                    <Ionicons
+                      name={cat.iconName}
+                      size={16}
+                      color={isSelected ? BrandColors.primary : BrandColors.textBody}
+                    />
                     <Text
                       style={[
                         styles.categoryLabel,
@@ -1698,7 +1568,6 @@ export default function HomeScreen() {
                     >
                       {cat.label}
                     </Text>
-                    {isSelected && <View style={styles.categoryActiveDot} />}
                   </TouchableOpacity>
                 );
               })}
@@ -1710,8 +1579,8 @@ export default function HomeScreen() {
             {/* Header Row with title and arrows */}
             <View style={styles.heroHeaderRow}>
               <View style={styles.heroHeaderTitleGroup}>
-                <Text style={styles.heroSectionHeader}>
-                  Hot hôm nay
+                <Text style={styles.heroSectionHeader} accessibilityRole="header">
+                  Nổi bật hôm nay
                 </Text>
               </View>
 
@@ -1720,18 +1589,22 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   style={styles.heroNavBtn}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel="Món nổi bật trước"
                   onPress={handlePrevSlide}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="chevron-back" size={15} color="#475569" />
+                  <Ionicons name="chevron-back" size={15} color={BrandColors.textBody} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.heroNavBtn}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel="Món nổi bật tiếp theo"
                   onPress={handleNextSlide}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="chevron-forward" size={15} color="#475569" />
+                  <Ionicons name="chevron-forward" size={15} color={BrandColors.textBody} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -1779,6 +1652,10 @@ export default function HomeScreen() {
                   <TouchableOpacity
                     key={slide.id}
                     activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Món nổi bật ${index + 1}`}
+                    accessibilityState={{ selected: isActive }}
+                    hitSlop={5}
                     onPress={() => handleSelectSlide(index)}
                     style={[
                       styles.paginationDot,
@@ -1793,18 +1670,10 @@ export default function HomeScreen() {
           {/* 4.5. PERSONALIZED RECOMMENDATION SECTION (DÀNH RIÊNG CHO KHẨU VỊ CỦA BẠN) */}
           <View style={styles.personalizedSection}>
             <View style={styles.personalizedHeaderRow}>
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <Text style={styles.personalizedSectionHeading}>
-                    Dành riêng cho khẩu vị của bạn
-                  </Text>
-                  <View style={styles.personalizedSparkBadge}>
-                    <Ionicons name="sparkles" size={10} color="#EA580C" />
-                    <Text style={styles.personalizedSparkText}>AI Match</Text>
-                  </View>
-                </View>
+              <View style={styles.personalizedHeadingGroup}>
+                <Text style={styles.personalizedSectionHeading} accessibilityRole="header">Hợp khẩu vị bạn</Text>
                 <Text style={styles.personalizedSectionSubheading}>
-                  Khẩu phần: {PreferenceService.getPortionDisplay(userPrefs.portion)} •{" "}
+                  {PORTION_OPTIONS.find((option) => option.id === userPrefs.portion)?.title} •{" "}
                   {userPrefs.cuisines
                     .slice(0, 2)
                     .map((id) => CUISINE_OPTIONS.find((c) => c.id === id)?.label || id)
@@ -1816,8 +1685,10 @@ export default function HomeScreen() {
                 style={styles.tweakPrefsBtn}
                 onPress={() => router.push("/onboarding-survey")}
                 activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityLabel="Tùy chỉnh khẩu vị"
               >
-                <Ionicons name="options-outline" size={12} color="#EA580C" />
+                <Ionicons name="options-outline" size={12} color={BrandColors.textDark} />
                 <Text style={styles.tweakPrefsText}>Tùy chỉnh</Text>
               </TouchableOpacity>
             </View>
@@ -1832,6 +1703,8 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   key={dish.id}
                   style={styles.personalizedDishCard}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Xem công thức ${dish.title}`}
                   onPress={() => handleOpenRecipe(dish.id)}
                   activeOpacity={0.88}
                 >
@@ -1841,37 +1714,16 @@ export default function HomeScreen() {
                       style={styles.personalizedDishImg}
                       resizeMode="cover"
                     />
-                    <View
-                      style={[
-                        styles.cardHotPopularBadge,
-                        dish.id.includes("1") || dish.id.includes("custom")
-                          ? styles.badgeHot
-                          : styles.badgePopular,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.cardHotPopularText,
-                          dish.id.includes("1") || dish.id.includes("custom")
-                            ? styles.badgeTextHot
-                            : styles.badgeTextPopular,
-                        ]}
-                      >
-                        {dish.id.includes("1") || dish.id.includes("custom")
-                          ? "🔥 Hot"
-                          : "⭐ Popular"}
-                      </Text>
-                    </View>
-                    <View style={styles.personalizedMatchPill}>
-                      <Ionicons name="checkmark-circle" size={11} color="#16A34A" />
-                      <Text style={styles.personalizedMatchPillText}>
-                        {dish.matchReason}
-                      </Text>
-                    </View>
                   </View>
 
                   <View style={styles.personalizedDishInfo}>
-                    <Text style={styles.personalizedDishTitle} numberOfLines={1}>
+                    <View style={styles.personalizedMatchRow}>
+                      <Ionicons name="checkmark-circle-outline" size={13} color={BrandColors.primary} />
+                      <Text style={styles.personalizedMatchText} numberOfLines={1}>
+                        {dish.matchReason}
+                      </Text>
+                    </View>
+                    <Text style={styles.personalizedDishTitle} numberOfLines={2}>
                       {dish.title}
                     </Text>
                     <Text style={styles.personalizedDishSub} numberOfLines={1}>
@@ -1879,9 +1731,7 @@ export default function HomeScreen() {
                     </Text>
                     <View style={styles.personalizedDishBottomRow}>
                       <Text style={styles.personalizedDishPrice}>{dish.price}</Text>
-                      <View style={styles.cookNowMiniPill}>
-                        <Text style={styles.cookNowMiniText}>Nấu ngay ›</Text>
-                      </View>
+                      <Ionicons name="arrow-forward" size={15} color={BrandColors.primary} />
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -1894,7 +1744,7 @@ export default function HomeScreen() {
             {/* Clean Modern Typography Header (No Box, No Icon) */}
             <View style={styles.cleanTextHeaderRow}>
               <View style={styles.cleanTextHeaderLeft}>
-                <Text style={styles.cleanSectionHeading}>Món ăn phổ biến</Text>
+                <Text style={styles.cleanSectionHeading} accessibilityRole="header">Món ăn phổ biến</Text>
                 <Text style={styles.cleanSectionSubheading}>
                   Gợi ý món ngon được yêu thích nhất
                 </Text>
@@ -1941,14 +1791,14 @@ export default function HomeScreen() {
             {/* Empty or Loading State */}
             {isLoadingDishes && displayDishes.length === 0 ? (
               <View style={{ paddingVertical: 40, alignItems: "center" }}>
-                <ActivityIndicator size="large" color="#FF5722" />
-                <Text style={{ marginTop: 12, color: "#64748B", fontSize: 13, fontWeight: "500" }}>
+                <ActivityIndicator size="large" color={BrandColors.textDark} />
+                <Text style={{ marginTop: 12, color: BrandColors.textMuted, fontSize: 13, fontWeight: "500" }}>
                   Đang tải danh sách công thức...
                 </Text>
               </View>
             ) : displayDishes.length === 0 ? (
               <View style={styles.emptyDishesState}>
-                <Ionicons name="restaurant-outline" size={38} color="#CBD5E1" />
+                <Ionicons name="restaurant-outline" size={38} color="#C7C7C7" />
                 <Text style={styles.emptyDishesTitle}>Không tìm thấy món ăn phù hợp</Text>
                 <Text style={styles.emptyDishesSub}>
                   Thử tìm kiếm với từ khóa khác hoặc xóa các bộ lọc
@@ -1974,80 +1824,49 @@ export default function HomeScreen() {
                 {displayDishes.map((dish) => {
                   const isFav = Boolean(favoriteIds[dish.id]);
                   return (
-                    <TouchableOpacity
+                    <View
                       key={dish.id}
-                      style={[styles.dishCard, { width: (width - 40 - 14) / 2 }]}
-                      activeOpacity={0.88}
-                      onPress={() => handleOpenRecipe(dish.id)}
+                      style={[styles.dishCard, { width: (HERO_CARD_WIDTH - 14) / 2 }]}
                     >
+                      <TouchableOpacity
+                        activeOpacity={0.88}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Xem công thức ${dish.title}`}
+                        onPress={() => handleOpenRecipe(dish.id)}
+                      >
+                        <View style={styles.dishImageContainer}>
+                          <Image
+                            source={typeof dish.image === "string" ? { uri: dish.image } : dish.image}
+                            style={styles.dishImage}
+                            resizeMode="cover"
+                          />
+                        </View>
+                        <View style={styles.dishDetails}>
+                          <Text style={styles.dishBadgeText} numberOfLines={1}>{dish.badge}</Text>
+                          <Text style={styles.dishTitle} numberOfLines={2}>{dish.title}</Text>
+                          <View style={styles.dishFooterRow}>
+                            <Text style={styles.dishSubText} numberOfLines={1}>{dish.sub}</Text>
+                            <Ionicons name="chevron-forward" size={14} color={BrandColors.primary} />
+                          </View>
+                        </View>
+                      </TouchableOpacity>
                       {/* Floating Heart Favorite Button */}
                       <TouchableOpacity
                         style={styles.favoriteButton}
                         activeOpacity={0.8}
+                        accessibilityRole="button"
+                        accessibilityLabel={isFav ? "Bỏ lưu công thức" : "Lưu công thức"}
+                        hitSlop={7}
                         onPress={() => toggleFavorite(dish.id)}
                       >
                         <Ionicons
                           name={isFav ? "heart" : "heart-outline"}
                           size={17}
-                          color={isFav ? "#FF4D6D" : "#94A3B8"}
+                          color={isFav ? BrandColors.primary : BrandColors.textBody}
                         />
                       </TouchableOpacity>
 
-                      {/* Centered Food Image */}
-                      <View style={styles.dishImageContainer}>
-                        <Image
-                          source={
-                            typeof dish.image === "string"
-                              ? { uri: dish.image }
-                              : dish.image
-                          }
-                          style={styles.dishImage}
-                          resizeMode="cover"
-                        />
-                        {/* Small Hot / Popular Badge Button */}
-                        <View
-                          style={[
-                            styles.cardHotPopularBadge,
-                            ((dish as any).hotTag === "popular" || dish.id.includes("3") || dish.id.includes("5"))
-                              ? styles.badgePopular
-                              : styles.badgeHot,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.cardHotPopularText,
-                              ((dish as any).hotTag === "popular" || dish.id.includes("3") || dish.id.includes("5"))
-                                ? styles.badgeTextPopular
-                                : styles.badgeTextHot,
-                            ]}
-                          >
-                            {((dish as any).hotTag === "popular" || dish.id.includes("3") || dish.id.includes("5"))
-                              ? "⭐ Popular"
-                              : "🔥 Hot"}
-                          </Text>
-                        </View>
-                      </View>
-
-                      {/* Dish Details */}
-                      <View style={styles.dishDetails}>
-                        <View style={styles.badgeRow}>
-                          <Text style={styles.dishBadgeText}>{dish.badge}</Text>
-                        </View>
-                        <Text style={styles.dishTitle} numberOfLines={1}>
-                          {dish.title}
-                        </Text>
-                        <View style={styles.dishFooterRow}>
-                          <Text style={styles.dishSubText} numberOfLines={1}>
-                            {dish.sub}
-                          </Text>
-                          <View style={styles.quickDetailChip}>
-                            <Text style={styles.quickDetailText}>
-                              Xem chi tiết →
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-                    </TouchableOpacity>
+                    </View>
                   );
                 })}
               </View>
@@ -2070,7 +1889,7 @@ export default function HomeScreen() {
                   <Ionicons
                     name="chevron-back"
                     size={14}
-                    color={safeCurrentPage <= 1 ? "#CBD5E1" : "#475569"}
+                    color={safeCurrentPage <= 1 ? "#C7C7C7" : "#4A4A4A"}
                   />
                 </TouchableOpacity>
 
@@ -2117,7 +1936,7 @@ export default function HomeScreen() {
                   <Ionicons
                     name="chevron-forward"
                     size={14}
-                    color={safeCurrentPage >= displayTotalPages ? "#CBD5E1" : "#475569"}
+                    color={safeCurrentPage >= displayTotalPages ? "#C7C7C7" : "#4A4A4A"}
                   />
                 </TouchableOpacity>
 
@@ -2151,15 +1970,15 @@ export default function HomeScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 8, gap: 10 }}>
             <TouchableOpacity
               onPress={() => setActiveTab("home")}
-              style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#F1F5F9", justifyContent: "center", alignItems: "center" }}
+              style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: BrandColors.inputBg, justifyContent: "center", alignItems: "center" }}
             >
-              <Ionicons name="arrow-back" size={20} color="#334155" />
+              <Ionicons name="arrow-back" size={20} color={BrandColors.textBody} />
             </TouchableOpacity>
-            <Text style={{ fontSize: 18, fontWeight: "800", color: "#0F172A" }}>Thực Đơn & Kế Hoạch Tuần</Text>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: BrandColors.textDark }}>Thực Đơn & Kế Hoạch Tuần</Text>
           </View>
           <PlannerView
             insetsTop={0}
-            initialSubTab={plannerSubTab}
+            initialSubTab="calendar"
             onXpUpdated={(newXp, newLevel) => updateChefXP(newXp, newLevel)}
           />
         </View>
@@ -2179,7 +1998,13 @@ export default function HomeScreen() {
       {/* 4. Community Tab Content */}
       {activeTab === "community" && (
         <View style={{ flex: 1 }}>
-          <CommunityView insetsTop={insets.top} insetsBottom={insets.bottom} />
+          <CommunityView
+            insetsTop={insets.top}
+            insetsBottom={insets.bottom}
+            openInboxOnMount={openInbox}
+            onInboxOpened={() => setOpenInbox(false)}
+            onOpenAssistant={() => setShowAssistant(true)}
+          />
         </View>
       )}
 
@@ -2190,114 +2015,37 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* 6. Docked Floating Bottom Navigation Bar */}
-      <View
-        style={[
-          styles.bottomBarWrapper,
-          { paddingBottom: Math.max(insets.bottom, 12) },
-        ]}
-      >
-        <View style={styles.bottomNavContainer}>
-          {/* Tab 1: Home */}
-          <TouchableOpacity
-            style={styles.tabItem}
-            activeOpacity={0.8}
-            onPress={() => setActiveTab("home")}
-          >
-            <Ionicons
-              name={activeTab === "home" ? "home" : "home-outline"}
-              size={23}
-              color={activeTab === "home" ? BrandColors.primary : "#94A3B8"}
-            />
-            <Text
-              style={[
-                styles.tabLabel,
-                activeTab === "home" && styles.tabLabelActive,
-              ]}
-            >
-              Khám Phá
-            </Text>
-          </TouchableOpacity>
-
-          {/* Tab 2: Fridge (Tủ Lạnh) */}
-          <TouchableOpacity
-            style={styles.tabItem}
-            activeOpacity={0.8}
-            onPress={() => setActiveTab("fridge")}
-          >
-            <Ionicons
-              name={activeTab === "fridge" ? "restaurant" : "restaurant-outline"}
-              size={23}
-              color={activeTab === "fridge" ? BrandColors.primary : "#94A3B8"}
-            />
-            <Text
-              style={[
-                styles.tabLabel,
-                activeTab === "fridge" && styles.tabLabelActive,
-              ]}
-            >
-              Bếp Của Tôi
-            </Text>
-          </TouchableOpacity>
-
-          {/* Tab 3: Scan AI (Center Elevated) */}
-          <TouchableOpacity
-            style={styles.tabItemCenter}
-            activeOpacity={0.85}
-            onPress={() => setActiveTab("scan")}
-          >
-            <LinearGradient
-              colors={["#FF5722", "#FF7043"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.scanCenterGradient}
-            >
-              <Ionicons name="scan-outline" size={24} color="#FFFFFF" />
-            </LinearGradient>
-            <Text style={[styles.tabLabel, { marginTop: 2 }]}>Scan AI</Text>
-          </TouchableOpacity>
-
-          {/* Tab 4: Community (Cộng Đồng) */}
-          <TouchableOpacity
-            style={styles.tabItem}
-            activeOpacity={0.8}
-            onPress={() => setActiveTab("community")}
-          >
-            <Ionicons
-              name={activeTab === "community" ? "people" : "people-outline"}
-              size={23}
-              color={activeTab === "community" ? BrandColors.primary : "#94A3B8"}
-            />
-            <Text
-              style={[
-                styles.tabLabel,
-                activeTab === "community" && styles.tabLabelActive,
-              ]}
-            >
-              Cộng Đồng
-            </Text>
-          </TouchableOpacity>
-
-          {/* Tab 5: Profile (Cá Nhân) */}
-          <TouchableOpacity
-            style={styles.tabItem}
-            activeOpacity={0.8}
-            onPress={() => setActiveTab("profile")}
-          >
-            <Ionicons
-              name={activeTab === "profile" ? "person" : "person-outline"}
-              size={23}
-              color={activeTab === "profile" ? BrandColors.primary : "#94A3B8"}
-            />
-            <Text
-              style={[
-                styles.tabLabel,
-                activeTab === "profile" && styles.tabLabelActive,
-              ]}
-            >
-              Cá nhân
-            </Text>
-          </TouchableOpacity>
+      <View style={[styles.bottomBarWrapper, { paddingBottom: Math.max(insets.bottom, 6) }]}>
+        <View style={styles.bottomNavContainer} accessibilityRole="tablist">
+          {HOME_TABS.map((tab) => {
+            const selected = activeTab === tab.id;
+            return (
+              <TouchableOpacity
+                key={tab.id}
+                style={styles.tabItem}
+                activeOpacity={0.7}
+                accessibilityRole="tab"
+                accessibilityState={{ selected }}
+                aria-selected={selected}
+                onPress={() => setActiveTab(tab.id)}
+              >
+                <View style={[
+                  styles.tabIcon,
+                  tab.id === "scan" && styles.scanTabIcon,
+                  selected && styles.tabIconActive,
+                ]}>
+                  <Ionicons
+                    name={selected ? tab.selectedIcon : tab.icon}
+                    size={22}
+                    color={selected ? BrandColors.primary : BrandColors.textMuted}
+                  />
+                </View>
+                <Text style={[styles.tabLabel, selected && styles.tabLabelActive]}>
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
 
@@ -2309,7 +2057,7 @@ export default function HomeScreen() {
               <View
                 style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
               >
-                <Ionicons name="filter" size={18} color="#FF5722" />
+                <Ionicons name="filter" size={18} color={BrandColors.textDark} />
                 <Text style={styles.filterModalTitle}>
                   Bộ lọc thông minh SmartCook
                 </Text>
@@ -2329,7 +2077,7 @@ export default function HomeScreen() {
                     }}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <Text style={{ fontSize: 13, color: "#EA580C", fontWeight: "700" }}>
+                    <Text style={{ fontSize: 13, color: BrandColors.textDark, fontWeight: "700" }}>
                       Đặt lại
                     </Text>
                   </TouchableOpacity>
@@ -2338,7 +2086,7 @@ export default function HomeScreen() {
                   onPress={() => setShowFilterModal(false)}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="close" size={22} color="#64748B" />
+                  <Ionicons name="close" size={22} color={BrandColors.textMuted} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -2369,7 +2117,7 @@ export default function HomeScreen() {
                       <Ionicons
                         name={cat.iconName}
                         size={13}
-                        color={isCatActive ? BrandColors.primary : cat.color}
+                        color={isCatActive ? BrandColors.primary : BrandColors.textMuted}
                         style={{ marginRight: 4 }}
                       />
                       <Text
@@ -2453,7 +2201,7 @@ export default function HomeScreen() {
                 <MaterialCommunityIcons
                   name="fridge"
                   size={22}
-                  color={filterFridgeOnly ? "#059669" : "#64748B"}
+                  color={filterFridgeOnly ? "#262626" : "#5E5E5E"}
                 />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.fridgeToggleTitle}>
@@ -2483,16 +2231,12 @@ export default function HomeScreen() {
             <TouchableOpacity
               style={styles.applyFilterBtn}
               activeOpacity={0.85}
+              accessibilityRole="button"
               onPress={() => setShowFilterModal(false)}
             >
-              <LinearGradient
-                colors={["#FF5722", "#FF7043"]}
-                style={styles.applyFilterGradient}
-              >
-                <Text style={styles.applyFilterText}>
-                  Áp dụng bộ lọc ({filteredDishes.length} món)
-                </Text>
-              </LinearGradient>
+              <Text style={styles.applyFilterText}>
+                Áp dụng bộ lọc ({filteredDishes.length} món)
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -2525,7 +2269,12 @@ export default function HomeScreen() {
       />
 
       {/* Floating Draggable AI Assistant Bubble */}
-      <DraggableAIAssistant />
+      <DraggableAIAssistant
+        maxWidth={HOME_MAX_WIDTH}
+        showBubble={activeTab !== "community"}
+        visible={showAssistant}
+        onVisibilityChange={setShowAssistant}
+      />
 
       {/* Floating In-App Realtime Notification Banner */}
       <InAppNotificationBanner
@@ -2538,7 +2287,10 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    width: "100%",
+    maxWidth: HOME_MAX_WIDTH,
+    alignSelf: "center",
+    backgroundColor: BrandColors.background,
   },
   scrollView: {
     flex: 1,
@@ -2546,136 +2298,61 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
   },
-  topBackdropGradient: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 380,
-  },
-
-  /* 1. Header Styles */
   headerRow: {
+    minHeight: 58,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 14,
+    marginHorizontal: -4,
   },
-  userProfileLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  avatarBorder: {
-    position: "relative",
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  avatarImage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 22,
-  },
-  onlineBadge: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#10B981",
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
-  },
-  userInfoCol: {
-    justifyContent: "center",
-  },
-  userNameText: {
-    fontSize: 16,
+  wordmark: {
+    flexShrink: 1,
+    fontSize: 26,
     fontWeight: "800",
-    color: "#0F172A",
-    letterSpacing: 0.2,
+    letterSpacing: -1.2,
+    color: BrandColors.textDark,
   },
-  premiumTag: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF3E0",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-    marginTop: 2,
-    gap: 3,
-  },
-  premiumText: {
-    fontSize: 10.5,
-    fontWeight: "700",
-    color: "#E65100",
+  wordmarkCompact: {
+    fontSize: 22,
   },
   headerRightActions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
   },
   circularIconBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "#FFFFFF",
+    width: 44,
+    height: 44,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  logoutBtn: {
-    backgroundColor: "#FFF3E0",
-  },
-  notificationDot: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: "#FF4D6D",
   },
   notifBadgeCircle: {
     position: "absolute",
-    top: -3,
-    right: -3,
-    backgroundColor: "#EF4444",
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
+    top: 2,
+    right: 2,
+    minWidth: 17,
+    height: 17,
+    borderRadius: 9,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 3,
+    backgroundColor: BrandColors.primary,
     borderWidth: 1.5,
-    borderColor: "#FFFFFF",
+    borderColor: BrandColors.surfaceCard,
   },
   cartBadgeCircle: {
     position: "absolute",
-    top: -2,
-    right: -2,
-    backgroundColor: "#FF5722",
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
+    top: 2,
+    right: 2,
+    minWidth: 17,
+    height: 17,
+    borderRadius: 9,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 3,
+    backgroundColor: BrandColors.primary,
     borderWidth: 1.5,
-    borderColor: "#FFFFFF",
+    borderColor: BrandColors.surfaceCard,
   },
   cartBadgeCircleText: {
     color: "#FFFFFF",
@@ -2683,291 +2360,143 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 
-  /* 2. Search & Filter */
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    marginBottom: 20,
+    gap: 8,
+    marginBottom: 14,
   },
   searchBar: {
     flex: 1,
+    minWidth: 0,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    height: 48,
+    backgroundColor: BrandColors.inputBg,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 46,
     gap: 8,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
   },
   searchInput: {
     flex: 1,
-    fontSize: 13.5,
-    color: "#1E293B",
+    minWidth: 0,
+    fontSize: 14,
+    color: BrandColors.textDark,
     height: "100%",
   },
   filterButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
+    width: 46,
+    height: 46,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BrandColors.borderLight,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
   },
-
-  /* 3. Categories Styles */
   categoriesSection: {
     marginBottom: 22,
     marginHorizontal: -20,
   },
   categoriesRow: {
     paddingHorizontal: 20,
-    gap: 14,
-    alignItems: "flex-start",
+    gap: 8,
   },
   categoryItem: {
+    flexDirection: "row",
     alignItems: "center",
-    width: 62,
+    minHeight: 44,
+    backgroundColor: BrandColors.surfaceCard,
+    paddingHorizontal: 11,
+    gap: 6,
+    borderRadius: 11,
+    borderWidth: 1,
+    borderColor: BrandColors.borderLight,
   },
-  categoryCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "#FFFFFF",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: "#F1F5F9",
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
-    elevation: 3,
-    marginBottom: 6,
-  },
-  categoryCircleActive: {
-    borderColor: BrandColors.primary,
-    backgroundColor: "#FFF7ED",
-    shadowColor: BrandColors.primary,
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 4,
+  categoryItemActive: {
+    borderColor: BrandColors.primarySoft,
+    backgroundColor: BrandColors.primarySoft,
   },
   categoryLabel: {
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: "600",
-    color: "#64748B",
-    textAlign: "center",
+    color: BrandColors.textBody,
   },
   categoryLabelActive: {
     color: BrandColors.primary,
-    fontWeight: "800",
   },
-  categoryActiveDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: BrandColors.primary,
-    marginTop: 2,
-  },
-
-  /* 4. Hero Highlight Card Carousel */
   heroSection: {
-    marginBottom: 24,
+    marginBottom: 22,
   },
   heroHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 6,
   },
   heroHeaderTitleGroup: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    flex: 1,
   },
   heroSectionHeader: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#0F172A",
-    letterSpacing: 0.2,
-  },
-  slideCounterBadge: {
-    backgroundColor: "#FFF3EB",
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#FED7AA",
-  },
-  slideCounterText: {
-    fontSize: 10.5,
-    fontWeight: "700",
-    color: BrandColors.primary,
+    fontSize: 23,
+    fontWeight: "800",
+    color: BrandColors.textDark,
+    letterSpacing: -0.55,
   },
   heroNavButtons: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
   },
   heroNavBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: "#F8FAFC",
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
+    width: 44,
+    height: 44,
     justifyContent: "center",
     alignItems: "center",
   },
   heroCardOuter: {
-    borderRadius: 24,
+    borderRadius: 22,
     overflow: "hidden",
-    shadowColor: "#FF6B35",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.16,
-    shadowRadius: 10,
-    elevation: 4,
   },
   heroCardContainer: {
-    borderRadius: 24,
+    aspectRatio: 1.15,
+    maxHeight: 380,
+    borderRadius: 22,
     overflow: "hidden",
+    backgroundColor: BrandColors.primaryDark,
   },
-  heroCardGradient: {
+  heroCardBody: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
     flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 18,
-    paddingHorizontal: 18,
-    minHeight: 156,
-    height: 156,
+    alignItems: "flex-end",
+    gap: 12,
+    padding: 16,
   },
-  heroCardLeft: {
+  heroCardText: {
     flex: 1,
-    paddingRight: 8,
-    justifyContent: "space-between",
+    gap: 4,
   },
   heroCardTitle: {
-    fontSize: 15.5,
-    fontWeight: "800",
-    color: "#0F172A",
-    lineHeight: 21,
-    marginBottom: 4,
-  },
-  heroCardHighlight: {
-    fontWeight: "900",
+    fontFamily: Fonts?.serif,
+    fontSize: 26,
+    lineHeight: 31,
+    fontWeight: "700",
+    letterSpacing: -0.4,
+    color: BrandColors.onPrimary,
   },
   heroCardSubtitle: {
     fontSize: 12,
-    color: "#64748B",
-    marginBottom: 14,
-    fontWeight: "500",
+    color: "#F1F4EC",
   },
-  heroBtnRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  heroActionButton: {
-    borderRadius: 20,
-    overflow: "hidden",
-    shadowColor: "#FF4D6D",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  heroActionGradient: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  heroActionText: {
-    color: "#FFFFFF",
-    fontSize: 12.5,
-    fontWeight: "700",
-  },
-  heroBestOfferBadge: {
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  heroTagBadgeBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  heroTagBadgeHot: {
-    backgroundColor: "#FFF7ED",
-    borderColor: "#FFEDD5",
-  },
-  heroTagBadgePopular: {
-    backgroundColor: "#FEF3C7",
-    borderColor: "#FDE68A",
-  },
-  heroTagBadgeBtnText: {
-    fontSize: 11,
-    fontWeight: "800",
-  },
-  heroTagTextHot: {
-    color: "#EA580C",
-  },
-  heroTagTextPopular: {
-    color: "#D97706",
-  },
-  cardHotPopularBadge: {
-    position: "absolute",
-    top: 6,
-    left: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    zIndex: 10,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    borderWidth: 0.8,
-  },
-  badgeHot: {
-    backgroundColor: "rgba(255, 247, 237, 0.95)",
-    borderColor: "#FDBA74",
-  },
-  badgePopular: {
-    backgroundColor: "rgba(254, 243, 199, 0.95)",
-    borderColor: "#FCD34D",
-  },
-  cardHotPopularText: {
-    fontSize: 9.5,
-    fontWeight: "800",
-  },
-  badgeTextHot: {
-    color: "#EA580C",
-  },
-  badgeTextPopular: {
-    color: "#D97706",
-  },
-  heroImageWrapper: {
-    width: 106,
-    height: 106,
+  heroCardArrow: {
+    width: 44,
+    height: 44,
     borderRadius: 22,
-    overflow: "hidden",
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.14,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: BrandColors.primary,
+    justifyContent: "center",
+    alignItems: "center",
   },
   heroDishImage: {
     width: "100%",
@@ -2984,7 +2513,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
   },
   paginationDotActive: {
     width: 22,
@@ -2993,145 +2522,107 @@ const styles = StyleSheet.create({
     backgroundColor: BrandColors.primary,
   },
 
-  /* 4.5. Personalized Section */
   personalizedSection: {
-    marginBottom: 20,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 5,
-    elevation: 2,
+    marginBottom: 28,
+    borderTopWidth: 1,
+    borderTopColor: BrandColors.borderLight,
+    paddingTop: 16,
   },
   personalizedHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 8,
     marginBottom: 12,
   },
+  personalizedHeadingGroup: {
+    flex: 1,
+    minWidth: 0,
+  },
   personalizedSectionHeading: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#0F172A",
-    letterSpacing: -0.2,
-  },
-  personalizedSparkBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF7ED",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#FFEDD5",
-    gap: 3,
-  },
-  personalizedSparkText: {
-    fontSize: 9.5,
-    fontWeight: "700",
-    color: "#EA580C",
+    fontSize: 22,
+    fontWeight: "800",
+    color: BrandColors.textDark,
+    letterSpacing: -0.45,
   },
   personalizedSectionSubheading: {
-    fontSize: 11,
-    color: "#64748B",
+    fontSize: 12,
+    color: BrandColors.textMuted,
     marginTop: 2,
   },
   tweakPrefsBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.inputBg,
     borderWidth: 1,
-    borderColor: "#FED7AA",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    borderColor: BrandColors.borderLight,
+    minHeight: 44,
+    paddingHorizontal: 10,
+    borderRadius: 10,
     gap: 4,
   },
   tweakPrefsText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   personalizedCardsScroll: {
-    gap: 10,
+    gap: 12,
     paddingRight: 4,
   },
   personalizedDishCard: {
-    width: 155,
-    backgroundColor: "#F8FAFC",
-    borderRadius: 14,
+    width: 174,
+    backgroundColor: BrandColors.surfaceCard,
+    borderRadius: 17,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   personalizedImageWrap: {
     width: "100%",
-    height: 96,
-    position: "relative",
+    aspectRatio: 1.12,
+    backgroundColor: BrandColors.surfaceMuted,
   },
   personalizedDishImg: {
     width: "100%",
     height: "100%",
   },
-  personalizedMatchPill: {
-    position: "absolute",
-    bottom: 5,
-    left: 5,
-    right: 5,
+  personalizedMatchRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.94)",
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 6,
-    gap: 3,
+    gap: 4,
   },
-  personalizedMatchPillText: {
-    fontSize: 9,
-    fontWeight: "700",
-    color: "#15803D",
+  personalizedMatchText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: BrandColors.primary,
     flex: 1,
   },
   personalizedDishInfo: {
-    padding: 8,
+    padding: 11,
+    gap: 5,
   },
   personalizedDishTitle: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#0F172A",
-    marginBottom: 2,
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: "800",
+    color: BrandColors.textDark,
   },
   personalizedDishSub: {
-    fontSize: 10,
-    color: "#64748B",
-    marginBottom: 6,
+    fontSize: 11,
+    color: BrandColors.textMuted,
   },
   personalizedDishBottomRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginTop: 3,
   },
   personalizedDishPrice: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
-  cookNowMiniPill: {
-    backgroundColor: "#FFF7ED",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  cookNowMiniText: {
-    fontSize: 9.5,
-    fontWeight: "700",
-    color: "#EA580C",
-  },
-
   /* 5. Popular Dishes Grid */
   popularSection: {
     marginBottom: 16,
@@ -3143,14 +2634,14 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   sectionHeading: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "800",
-    color: "#0F172A",
-    letterSpacing: 0.2,
+    color: BrandColors.textDark,
+    letterSpacing: -0.45,
   },
   seeAllLink: {
     fontSize: 12.5,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     fontWeight: "600",
   },
   popularGrid: {
@@ -3159,26 +2650,21 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   dishCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 10,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    backgroundColor: BrandColors.surfaceCard,
+    borderRadius: 17,
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
   },
   favoriteButton: {
     position: "absolute",
-    top: 16,
-    right: 16,
+    top: 10,
+    right: 10,
     zIndex: 10,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "#FFFFFF",
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: BrandColors.surfaceCard,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000000",
@@ -3188,34 +2674,28 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   dishImageContainer: {
-    position: "relative",
     width: "100%",
-    height: 110,
-    borderRadius: 16,
-    overflow: "hidden",
-    marginBottom: 10,
-    backgroundColor: "#F8FAFC",
+    aspectRatio: 1.12,
+    backgroundColor: BrandColors.surfaceMuted,
   },
   dishImage: {
     width: "100%",
     height: "100%",
   },
   dishDetails: {
-    paddingHorizontal: 4,
-  },
-  badgeRow: {
-    marginBottom: 4,
+    padding: 11,
+    gap: 5,
   },
   dishBadgeText: {
-    fontSize: 10.5,
-    fontWeight: "700",
-    color: BrandColors.primaryDark,
+    fontSize: 11,
+    fontWeight: "600",
+    color: BrandColors.primary,
   },
   dishTitle: {
-    fontSize: 13.5,
+    fontSize: 14,
+    lineHeight: 19,
     fontWeight: "800",
-    color: "#1E293B",
-    marginBottom: 4,
+    color: BrandColors.textDark,
   },
   dishFooterRow: {
     flexDirection: "row",
@@ -3225,8 +2705,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   dishSubText: {
-    fontSize: 10.5,
-    color: "#64748B",
+    fontSize: 11,
+    color: BrandColors.textMuted,
     fontWeight: "500",
     flex: 1,
     marginRight: 4,
@@ -3245,12 +2725,12 @@ const styles = StyleSheet.create({
   cleanSectionHeading: {
     fontSize: 18,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     letterSpacing: -0.2,
   },
   cleanSectionSubheading: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "500",
     marginTop: 3,
   },
@@ -3272,12 +2752,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#FFEDD5",
+    borderColor: BrandColors.borderLight,
   },
   cleanCreateRecipeBtnText: {
     fontSize: 12,
@@ -3299,34 +2779,34 @@ const styles = StyleSheet.create({
     paddingVertical: 28,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     borderStyle: "dashed",
     marginVertical: 4,
   },
   emptyDishesTitle: {
     fontSize: 14.5,
     fontWeight: "700",
-    color: "#334155",
+    color: BrandColors.textBody,
     marginTop: 10,
     marginBottom: 4,
   },
   emptyDishesSub: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     textAlign: "center",
     paddingHorizontal: 24,
     marginBottom: 12,
   },
   resetFilterBtn: {
-    backgroundColor: "#FFF3EB",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 16,
     paddingVertical: 7,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
   },
   resetFilterText: {
     fontSize: 12,
@@ -3348,13 +2828,13 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     justifyContent: "center",
     alignItems: "center",
   },
   compactPageArrowDisabled: {
     opacity: 0.35,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
   },
   compactPageList: {
     flexDirection: "row",
@@ -3365,7 +2845,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -3380,7 +2860,7 @@ const styles = StyleSheet.create({
   compactPageText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   compactPageTextActive: {
     color: "#FFFFFF",
@@ -3388,7 +2868,7 @@ const styles = StyleSheet.create({
   },
   compactCounterText: {
     fontSize: 11,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     fontWeight: "600",
     marginLeft: 4,
   },
@@ -3402,7 +2882,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 2,
-    backgroundColor: "#FFEDD5",
+    backgroundColor: "#EAEAEA",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -3410,7 +2890,7 @@ const styles = StyleSheet.create({
   quickTagText: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   quickRow: {
     gap: 12,
@@ -3419,7 +2899,7 @@ const styles = StyleSheet.create({
   },
   quickCard: {
     width: 170,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 18,
     overflow: "hidden",
     shadowColor: "#000000",
@@ -3428,7 +2908,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
   },
   quickCardImage: {
     width: "100%",
@@ -3440,13 +2920,13 @@ const styles = StyleSheet.create({
   quickCardBadge: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
     marginBottom: 3,
   },
   quickCardTitle: {
     fontSize: 13,
     fontWeight: "800",
-    color: "#1E293B",
+    color: BrandColors.textDark,
     marginBottom: 6,
   },
   quickCardBottom: {
@@ -3461,77 +2941,49 @@ const styles = StyleSheet.create({
   },
   quickTimeText: {
     fontSize: 11,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "600",
   },
-  quickDetailChip: {
-    backgroundColor: "#FFF7ED",
-    paddingHorizontal: 8,
-    paddingVertical: 3.5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#FED7AA",
-  },
-  quickDetailText: {
-    fontSize: 10.5,
-    fontWeight: "700",
-    color: "#EA580C",
-  },
 
-  /* 6. Docked Bottom Navigation Bar */
   bottomBarWrapper: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "transparent",
-    alignItems: "center",
+    backgroundColor: BrandColors.surfaceCard,
+    borderTopWidth: 1,
+    borderTopColor: BrandColors.borderLight,
   },
   bottomNavContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-around",
-    width: "92%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 28,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
+    paddingTop: 4,
+    paddingHorizontal: 6,
   },
   tabItem: {
     alignItems: "center",
     justifyContent: "center",
+    minHeight: 53,
     flex: 1,
   },
-  tabItemCenter: {
-    alignItems: "center",
+  tabIcon: {
+    width: 40,
+    height: 29,
+    borderRadius: 8,
     justifyContent: "center",
-    marginTop: -16,
-    flex: 1,
+    alignItems: "center",
   },
-  scanCenterGradient: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: BrandColors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 5,
+  scanTabIcon: {
+    backgroundColor: BrandColors.surfaceMuted,
+  },
+  tabIconActive: {
+    backgroundColor: BrandColors.primarySoft,
   },
   tabLabel: {
     fontSize: 10,
-    color: "#94A3B8",
+    color: BrandColors.textMuted,
     fontWeight: "600",
-    marginTop: 3,
+    marginTop: 1,
   },
   tabLabelActive: {
     color: BrandColors.primary,
@@ -3545,7 +2997,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   filterModalCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     padding: 24,
@@ -3560,12 +3012,12 @@ const styles = StyleSheet.create({
   filterModalTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   filterSectionLabel: {
     fontSize: 12.5,
     fontWeight: "700",
-    color: "#475569",
+    color: BrandColors.textBody,
     marginTop: 4,
   },
   filterChipsRow: {
@@ -3574,21 +3026,21 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   filterChip: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   filterChipActive: {
-    backgroundColor: "#FFF3E0",
+    backgroundColor: BrandColors.inputBg,
     borderColor: BrandColors.primary,
   },
   filterChipText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   filterChipTextActive: {
     color: BrandColors.primary,
@@ -3598,53 +3050,51 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     padding: 12,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     marginTop: 4,
   },
   fridgeToggleActive: {
-    backgroundColor: "#ECFDF5",
-    borderColor: "#A7F3D0",
+    backgroundColor: BrandColors.surfaceMuted,
+    borderColor: BrandColors.borderLight,
   },
   fridgeToggleTitle: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#1E293B",
+    color: BrandColors.textDark,
   },
   fridgeToggleSub: {
     fontSize: 11,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 1,
   },
   toggleSwitch: {
     width: 44,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#CBD5E1",
+    backgroundColor: "#C7C7C7",
     padding: 2,
     justifyContent: "center",
   },
   toggleSwitchActive: {
-    backgroundColor: "#10B981",
+    backgroundColor: "#353535",
   },
   toggleKnob: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
   },
   toggleKnobActive: {
     alignSelf: "flex-end",
   },
   applyFilterBtn: {
-    borderRadius: 18,
-    overflow: "hidden",
+    borderRadius: 12,
+    backgroundColor: BrandColors.primary,
     marginTop: 8,
-  },
-  applyFilterGradient: {
     paddingVertical: 13,
     alignItems: "center",
   },

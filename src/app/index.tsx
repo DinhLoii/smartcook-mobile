@@ -105,8 +105,8 @@ export default function WelcomeSplashScreen() {
             <Svg width={54} height={54} viewBox="0 0 48 48" fill="none">
               <Defs>
                 <RadialGradient id="sparkGlow" cx="50%" cy="50%" r="50%">
-                  <Stop offset="0%" stopColor="#FFF9C4" />
-                  <Stop offset="100%" stopColor="#FFA726" />
+                  <Stop offset="0%" stopColor="#DADADA" />
+                  <Stop offset="100%" stopColor="#363636" />
                 </RadialGradient>
               </Defs>
               {/* Chef Hat Outline & Pleats */}
@@ -120,14 +120,14 @@ export default function WelcomeSplashScreen() {
                 fill="#FFFFFF"
               />
               {/* Hat Band Lines */}
-              <Path d="M16 28 L32 28" stroke="#FF5722" strokeWidth="2" strokeLinecap="round" />
-              <Path d="M16 32 L32 32" stroke="#FFA726" strokeWidth="1.5" strokeLinecap="round" />
+              <Path d="M16 28 L32 28" stroke="#171717" strokeWidth="2" strokeLinecap="round" />
+              <Path d="M16 32 L32 32" stroke="#363636" strokeWidth="1.5" strokeLinecap="round" />
 
               {/* Sparkle Star */}
               <Circle cx="39" cy="8" r="3" fill="url(#sparkGlow)" />
               <Path
                 d="M39 3 L39.8 6.5 L43 7 L40 9 L40.5 12 L38.5 10 L35.5 11 L37 8.5 Z"
-                fill="#FFF9C4"
+                fill="#DADADA"
               />
             </Svg>
           </LinearGradient>
@@ -170,7 +170,7 @@ export default function WelcomeSplashScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: BrandColors.background,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 28,
@@ -180,14 +180,14 @@ const styles = StyleSheet.create({
     width: 340,
     height: 340,
     borderRadius: 170,
-    backgroundColor: 'rgba(255, 107, 53, 0.04)',
+    backgroundColor: 'rgba(54, 54, 54, 0.04)',
   },
   ambientCircleInner: {
     position: 'absolute',
     width: 230,
     height: 230,
     borderRadius: 115,
-    backgroundColor: 'rgba(255, 167, 38, 0.06)',
+    backgroundColor: 'rgba(54, 54, 54, 0.06)',
   },
   contentContainer: {
     alignItems: 'center',
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   heyCookerTitle: {
     fontSize: 30,
     fontWeight: '800',
-    color: '#0F172A',
+    color: BrandColors.textDark,
     letterSpacing: 0.4,
     textAlign: 'center',
     marginBottom: 6,
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   },
   descriptionText: {
     fontSize: 13.5,
-    color: '#64748B',
+    color: BrandColors.textMuted,
     textAlign: 'center',
     lineHeight: 20,
     maxWidth: 290,
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   },
   skipHintText: {
     fontSize: 12.5,
-    color: '#94A3B8',
+    color: BrandColors.textPlaceholder,
     fontWeight: '500',
   },
 });

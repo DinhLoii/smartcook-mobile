@@ -67,10 +67,10 @@ export const AuthInput: React.FC<AuthInputProps> = ({
               size={19}
               color={
                 Boolean(error)
-                  ? '#EF4444'
+                  ? '#242424'
                   : isFocused
                     ? BrandColors.primary
-                    : '#94A3B8'
+                    : '#686868'
               }
             />
           </View>
@@ -79,7 +79,7 @@ export const AuthInput: React.FC<AuthInputProps> = ({
         <TextInput
           ref={inputRef}
           style={[styles.input, style]}
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={BrandColors.textPlaceholder}
           secureTextEntry={isPassword && !showPassword}
           onFocus={handleFocus}
           onBlur={handleBlur}
@@ -97,7 +97,7 @@ export const AuthInput: React.FC<AuthInputProps> = ({
             <Ionicons
               name={showPassword ? 'eye-off-outline' : 'eye-outline'}
               size={19}
-              color={showPassword ? BrandColors.primary : '#94A3B8'}
+              color={showPassword ? BrandColors.primary : '#686868'}
             />
           </TouchableOpacity>
         )}
@@ -105,7 +105,7 @@ export const AuthInput: React.FC<AuthInputProps> = ({
 
       {error ? (
         <View style={styles.errorRow}>
-          <Ionicons name="alert-circle-outline" size={13} color="#EF4444" />
+          <Ionicons name="alert-circle-outline" size={13} color="#242424" />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       ) : null}
@@ -121,17 +121,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#334155',
+    color: BrandColors.textBody,
     marginBottom: 6,
     letterSpacing: 0.1,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: BrandColors.background,
     borderRadius: 14,
     borderWidth: 1.2,
-    borderColor: '#E2E8F0',
+    borderColor: BrandColors.borderLight,
     height: 48,
     paddingHorizontal: 14,
     ...(Platform.OS === 'web'
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   },
   inputWrapperFocused: {
     borderColor: BrandColors.primary,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: BrandColors.surfaceCard,
     shadowColor: BrandColors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
@@ -150,8 +150,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   inputWrapperError: {
-    borderColor: '#EF4444',
-    backgroundColor: '#FFFFFF',
+    borderColor: '#242424',
+    backgroundColor: BrandColors.surfaceCard,
   },
   leadingIcon: {
     marginRight: 10,
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: Platform.OS === 'web' ? 16 : 14.5,
-    color: '#0F172A',
+    color: BrandColors.textDark,
     height: '100%',
     paddingVertical: 0,
     backgroundColor: 'transparent',
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
-    color: '#EF4444',
+    color: '#242424',
     fontWeight: '500',
   },
 });

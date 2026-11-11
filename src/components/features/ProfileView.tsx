@@ -1,3 +1,4 @@
+import { BrandColors } from "@/constants/brandColors";
 import {
   CUISINE_OPTIONS,
   PORTION_OPTIONS,
@@ -169,8 +170,8 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
               <View style={styles.tierBadge}>
                 <Text style={styles.tierText}>{user?.level || "Tập sự"}</Text>
               </View>
-              <View style={[styles.tierBadge, { backgroundColor: "#FFF7ED", borderColor: "#FFEDD5" }]}>
-                <Text style={[styles.tierText, { color: "#EA580C" }]}>⚡ {user?.chefExp ?? 0} XP</Text>
+              <View style={[styles.tierBadge, { backgroundColor: BrandColors.surfaceMuted, borderColor: BrandColors.borderLight }]}>
+                <Text style={[styles.tierText, { color: BrandColors.textDark }]}>⚡ {user?.chefExp ?? 0} XP</Text>
               </View>
             </View>
           </View>
@@ -180,7 +181,7 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             activeOpacity={0.7}
           >
-            <Ionicons name="pencil" size={13} color="#EA580C" />
+            <Ionicons name="pencil" size={13} color={BrandColors.textDark} />
             <Text style={styles.editProfileBtnText}>Sửa</Text>
           </TouchableOpacity>
         </View>
@@ -206,23 +207,23 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
                 );
 
           return (
-            <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: "#F1F5F9" }}>
+            <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: BrandColors.borderLight }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <Text style={{ fontSize: 11, fontWeight: "600", color: "#64748B" }}>
+                <Text style={{ fontSize: 11, fontWeight: "600", color: BrandColors.textMuted }}>
                   Tiến trình thăng cấp
                 </Text>
-                <Text style={{ fontSize: 11, fontWeight: "700", color: "#EA580C" }}>
+                <Text style={{ fontSize: 11, fontWeight: "700", color: BrandColors.textDark }}>
                   {chefExp >= 801
                     ? "Đỉnh cao Bếp trưởng 👑"
                     : `${chefExp} / ${nextMilestone} XP`}
                 </Text>
               </View>
-              <View style={{ height: 6, backgroundColor: "#E2E8F0", borderRadius: 3, overflow: "hidden" }}>
+              <View style={{ height: 6, backgroundColor: "#E5E5E5", borderRadius: 3, overflow: "hidden" }}>
                 <View
                   style={{
                     height: "100%",
                     width: `${progressPercent}%`,
-                    backgroundColor: "#EA580C",
+                    backgroundColor: "#171717",
                     borderRadius: 3,
                   }}
                 />
@@ -284,7 +285,7 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
           activeOpacity={0.7}
         >
           <Text style={styles.settingText}>Bộ sưu tập công thức đã lưu</Text>
-          <Ionicons name="chevron-forward" size={15} color="#CBD5E1" />
+          <Ionicons name="chevron-forward" size={15} color="#C7C7C7" />
         </TouchableOpacity>
         <View style={styles.prefDivider} />
 
@@ -294,7 +295,7 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
           activeOpacity={0.7}
         >
           <Text style={styles.settingText}>Thông báo & Giờ nấu ăn</Text>
-          <Ionicons name="chevron-forward" size={15} color="#CBD5E1" />
+          <Ionicons name="chevron-forward" size={15} color="#C7C7C7" />
         </TouchableOpacity>
         <View style={styles.prefDivider} />
 
@@ -304,7 +305,7 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
           activeOpacity={0.7}
         >
           <Text style={styles.settingText}>Ngôn ngữ hiển thị (Tiếng Việt)</Text>
-          <Ionicons name="chevron-forward" size={15} color="#CBD5E1" />
+          <Ionicons name="chevron-forward" size={15} color="#C7C7C7" />
         </TouchableOpacity>
         <View style={styles.prefDivider} />
 
@@ -314,7 +315,7 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
           activeOpacity={0.7}
         >
           <Text style={styles.settingText}>Trung tâm trợ giúp & Phản hồi</Text>
-          <Ionicons name="chevron-forward" size={15} color="#CBD5E1" />
+          <Ionicons name="chevron-forward" size={15} color="#C7C7C7" />
         </TouchableOpacity>
       </View>
 
@@ -364,7 +365,7 @@ export default function ProfileView({ insetsTop }: ProfileViewProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
   },
   content: {
     paddingHorizontal: 16,
@@ -373,11 +374,11 @@ const styles = StyleSheet.create({
 
   /* Base Card */
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#EEF2F6",
+    borderColor: "#EFEFEF",
   },
 
   /* User Info */
@@ -397,16 +398,16 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginBottom: 2,
   },
   userEmail: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginBottom: 4,
   },
   tierBadge: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6,
@@ -415,7 +416,7 @@ const styles = StyleSheet.create({
   tierText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
 
   /* Card Header */
@@ -428,17 +429,17 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   editLink: {
     fontSize: 12.5,
     fontWeight: "600",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
 
   /* Preference rows */
   prefList: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -451,18 +452,18 @@ const styles = StyleSheet.create({
   },
   prefLabel: {
     fontSize: 12.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   prefValue: {
     fontSize: 12.5,
     fontWeight: "600",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     maxWidth: "60%",
     textAlign: "right",
   },
   prefDivider: {
     height: 1,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
   },
 
   /* Retake Survey Button */
@@ -473,13 +474,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     gap: 4,
   },
   retakeBtnText: {
     fontSize: 12.5,
     fontWeight: "600",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
 
   /* Settings rows */
@@ -491,15 +492,15 @@ const styles = StyleSheet.create({
   },
   settingText: {
     fontSize: 13,
-    color: "#334155",
+    color: BrandColors.textBody,
     fontWeight: "500",
   },
 
   /* Logout */
   logoutBtn: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1,
-    borderColor: "#FEE2E2",
+    borderColor: "#EEEEEE",
     borderRadius: 12,
     paddingVertical: 10,
     alignItems: "center",
@@ -509,14 +510,14 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#EF4444",
+    color: "#242424",
   },
 
   /* Version */
   versionText: {
     textAlign: "center",
     fontSize: 11,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     marginTop: 6,
   },
 
@@ -524,18 +525,18 @@ const styles = StyleSheet.create({
   editProfileBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 9,
     paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#FFEDD5",
+    borderColor: BrandColors.borderLight,
     gap: 4,
     alignSelf: "flex-start",
   },
   editProfileBtnText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
 });

@@ -438,7 +438,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
         <View style={styles.headerTopRow}>
           <View style={{ flex: 1 }}>
             <View style={styles.headerTag}>
-              <Ionicons name="sparkles" size={11} color="#EA580C" />
+              <Ionicons name="sparkles" size={11} color={BrandColors.textDark} />
               <Text style={styles.headerSubtitle}>SMART VISION AI</Text>
             </View>
             <Text style={styles.headerTitle}>Scan Nguyên Liệu</Text>
@@ -450,7 +450,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
             onPress={() => setShowHistoryModal(true)}
             activeOpacity={0.8}
           >
-            <Ionicons name="time" size={16} color="#EA580C" />
+            <Ionicons name="time" size={16} color={BrandColors.textDark} />
             <Text style={styles.historyHeaderBtnText}>Lịch sử</Text>
             {historyList.length > 0 && (
               <View style={styles.historyBadgeCircle}>
@@ -470,7 +470,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
       {/* Floating Toast Feedback */}
       {toastMessage && (
         <View style={styles.toastBanner}>
-          <Ionicons name="checkmark-circle" size={15} color="#059669" />
+          <Ionicons name="checkmark-circle" size={15} color="#262626" />
           <Text style={styles.toastText}>{toastMessage}</Text>
         </View>
       )}
@@ -499,7 +499,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
           // Permission Request / Standby Placeholder
           <View style={styles.cameraStandbyPlaceholder}>
             <View style={styles.standbyIconWrap}>
-              <Ionicons name="camera-outline" size={38} color="#FF7043" />
+              <Ionicons name="camera-outline" size={38} color="#292929" />
             </View>
             <Text style={styles.standbyTitle}>Camera sẵn sàng</Text>
             <Text style={styles.standbyDesc}>
@@ -584,24 +584,24 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
           return (
             <TouchableOpacity key={target.name} accessibilityRole="button" accessibilityLabel={`Xem món ${index + 1}: ${target.name}`} accessibilityState={{ selected: isSelected }}
               onPress={() => setSelectedTargetName(target.name)} activeOpacity={0.9}
-              style={[styles.photoMarker, { top: `${top}%`, left: `${left}%`, backgroundColor: isSelected ? "#F97316" : "#FFFFFF", borderColor: isSelected ? "#FFFFFF" : "#FDBA74", zIndex: isSelected ? 3 : 2 }]}>
-              <MaterialCommunityIcons name={((target.icon || pin?.icon || "silverware-fork-knife") as any)} size={15} color={isSelected ? "#FFFFFF" : "#EA580C"} />
-              <Text style={{ color: isSelected ? "#FFFFFF" : "#334155", fontWeight: "800", fontSize: 12 }}>{index + 1}</Text>
+              style={[styles.photoMarker, { top: `${top}%`, left: `${left}%`, backgroundColor: isSelected ? "#363636" : "#FFFFFF", borderColor: isSelected ? "#FFFFFF" : "#C2C2C2", zIndex: isSelected ? 3 : 2 }]}>
+              <MaterialCommunityIcons name={((target.icon || pin?.icon || "silverware-fork-knife") as any)} size={15} color={isSelected ? "#FFFFFF" : "#171717"} />
+              <Text style={{ color: isSelected ? "#FFFFFF" : "#353535", fontWeight: "800", fontSize: 12 }}>{index + 1}</Text>
             </TouchableOpacity>
           );
         })}
         {scanCompleted && !isScanning && selectedTarget && (
           <View pointerEvents="none" style={styles.photoCaption}>
             <Text style={styles.photoCaptionNumber}>{selectedTargetIndex + 1}</Text>
-            <MaterialCommunityIcons name={((selectedTarget.icon || "silverware-fork-knife") as any)} size={20} color="#FDBA74" />
-            <View style={{ flex: 1 }}><Text style={styles.pinText}>{selectedTarget.name}</Text><Text style={{ fontSize: 10, color: "#CBD5E1", marginTop: 3 }}>AI ước tính · {selectedTarget.confidence}</Text></View>
+            <MaterialCommunityIcons name={((selectedTarget.icon || "silverware-fork-knife") as any)} size={20} color="#C2C2C2" />
+            <View style={{ flex: 1 }}><Text style={styles.pinText}>{selectedTarget.name}</Text><Text style={{ fontSize: 10, color: "#C7C7C7", marginTop: 3 }}>AI ước tính · {selectedTarget.confidence}</Text></View>
           </View>
         )}
 
         {/* Scanning Laser Animation Bar */}
         {isScanning && (
           <View style={styles.scanningIndicator}>
-            <ActivityIndicator size="large" color="#FF7043" />
+            <ActivityIndicator size="large" color="#292929" />
             <Text style={styles.scanningText}>AI đang phân tích hình ảnh...</Text>
             <Text style={styles.scanningSubText}>
               Đang nhận diện các nguyên liệu nấu ăn
@@ -643,7 +643,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
             activeOpacity={0.85}
           >
             <LinearGradient
-              colors={["#FF5722", "#FF7043"]}
+              colors={["#171717", "#292929"]}
               style={styles.shutterGradient}
             >
               <Ionicons name="camera" size={25} color="#FFFFFF" />
@@ -666,7 +666,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
       <View style={styles.recentSection}>
         <View style={styles.recentHeaderRow}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <Ionicons name="time-outline" size={16} color="#0F172A" />
+            <Ionicons name="time-outline" size={16} color={BrandColors.textDark} />
             <Text style={styles.recentHeading}>Lịch sử phân tích gần đây</Text>
           </View>
           {historyList.length > 0 && (
@@ -734,7 +734,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
           </ScrollView>
         ) : (
           <View style={styles.emptyHistoryBanner}>
-            <Ionicons name="sparkles-outline" size={18} color="#94A3B8" />
+            <Ionicons name="sparkles-outline" size={18} color={BrandColors.textPlaceholder} />
             <Text style={styles.emptyHistoryText}>
               Chưa có lượt quét nào gần đây • Hãy chụp ảnh nguyên liệu để lưu lịch sử
             </Text>
@@ -753,7 +753,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
                   : "alert-circle"
               }
               size={24}
-              color="#EA580C"
+              color={BrandColors.textDark}
             />
           </View>
           <View style={{ flex: 1 }}>
@@ -766,7 +766,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
             <View style={styles.errorActionRow}>
               {!isAuthenticated || scanError.includes("đăng nhập") ? (
                 <TouchableOpacity
-                  style={[styles.errorRetryBtn, { backgroundColor: "#FF6B35" }]}
+                  style={[styles.errorRetryBtn, { backgroundColor: "#171717" }]}
                   onPress={() => router.push("/(auth)/login")}
                   activeOpacity={0.85}
                 >
@@ -807,7 +807,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
                 flex: 1,
               }}
             >
-              <Ionicons name="sparkles" size={16} color="#E65100" />
+              <Ionicons name="sparkles" size={16} color={BrandColors.textDark} />
               <Text style={styles.resultsHeading} numberOfLines={1}>
                 Kết quả phân tích ({activeAccuracy}%)
               </Text>
@@ -837,10 +837,10 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
               const isSelected = selectedTarget?.name === target.name;
               return (
                 <TouchableOpacity key={target.name} accessibilityRole="button" accessibilityState={{ selected: isSelected }} onPress={() => setSelectedTargetName(target.name)}
-                  style={[styles.dishLegendCard, { backgroundColor: isSelected ? "#FFF7ED" : "#FFFFFF", borderColor: isSelected ? "#FB923C" : "#E2E8F0" }]} activeOpacity={0.85}>
-                  <Text style={[styles.dishLegendNumber, { backgroundColor: isSelected ? "#F97316" : "#F1F5F9", color: isSelected ? "#FFFFFF" : "#64748B" }]}>{index + 1}</Text>
-                  <MaterialCommunityIcons name={((target.icon || "silverware-fork-knife") as any)} size={20} color="#EA580C" />
-                  <View style={{ flex: 1 }}><Text style={styles.detectedChipText}>{target.name}</Text><Text style={{ fontSize: 10, color: "#64748B", marginTop: 4 }}>AI ước tính · {target.confidence}</Text></View>
+                  style={[styles.dishLegendCard, { backgroundColor: isSelected ? "#F6F6F6" : "#FFFFFF", borderColor: isSelected ? "#363636" : "#E5E5E5" }]} activeOpacity={0.85}>
+                  <Text style={[styles.dishLegendNumber, { backgroundColor: isSelected ? "#363636" : "#F2F2F2", color: isSelected ? "#FFFFFF" : "#5E5E5E" }]}>{index + 1}</Text>
+                  <MaterialCommunityIcons name={((target.icon || "silverware-fork-knife") as any)} size={20} color={BrandColors.textDark} />
+                  <View style={{ flex: 1 }}><Text style={styles.detectedChipText}>{target.name}</Text><Text style={{ fontSize: 10, color: BrandColors.textMuted, marginTop: 4 }}>AI ước tính · {target.confidence}</Text></View>
                 </TouchableOpacity>
               );
             })}
@@ -856,9 +856,9 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
                 <MaterialCommunityIcons
                   name={(item.icon as any) || "food-apple"}
                   size={15}
-                  color="#E65100"
+                  color={BrandColors.textDark}
                 />
-                <View style={{ flex: 1 }}><Text style={styles.detectedChipText}>{item.name}</Text><Text style={{ fontSize: 10, color: "#64748B", marginTop: 3 }}>{item.evidence || "Quan sát trong ảnh"}</Text></View>
+                <View style={{ flex: 1 }}><Text style={styles.detectedChipText}>{item.name}</Text><Text style={{ fontSize: 10, color: BrandColors.textMuted, marginTop: 3 }}>{item.evidence || "Quan sát trong ảnh"}</Text></View>
                 <Text style={styles.detectedChipConf}>{item.confidence}</Text>
               </View>
             ))}
@@ -872,7 +872,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
                   <Ionicons
                     name="hardware-chip-outline"
                     size={12}
-                    color="#059669"
+                    color="#262626"
                   />
                   <Text style={styles.aiBadgeText}>Gợi ý công thức từ AI</Text>
                 </View>
@@ -895,7 +895,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
                 }
               >
                 <LinearGradient
-                  colors={["#FF5722", "#FF7043"]}
+                  colors={["#171717", "#292929"]}
                   style={styles.cookAiGradient}
                 >
                   <Text style={styles.cookAiBtnText}>Xem chi tiết công thức →</Text>
@@ -910,7 +910,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
             onPress={handleResetToLiveCamera}
             activeOpacity={0.85}
           >
-            <Ionicons name="refresh-outline" size={16} color="#64748B" />
+            <Ionicons name="refresh-outline" size={16} color={BrandColors.textMuted} />
             <Text style={styles.scanAnotherBtnText}>Quét hình ảnh khác</Text>
           </TouchableOpacity>
         </View>
@@ -953,7 +953,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
 
             {/* Title Badge */}
             <View style={styles.fullScreenTitleBadge}>
-              <Ionicons name="sparkles" size={13} color="#FF7043" />
+              <Ionicons name="sparkles" size={13} color="#292929" />
               <Text style={styles.fullScreenTitleText}>SMART VISION AI</Text>
             </View>
 
@@ -977,7 +977,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
                       : "flash-off"
                   }
                   size={20}
-                  color={flashMode !== "off" ? "#FFB74D" : "#FFFFFF"}
+                  color={flashMode !== "off" ? "#363636" : "#FFFFFF"}
                 />
               </TouchableOpacity>
 
@@ -1032,7 +1032,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
             >
               <View style={styles.fullScreenShutterOuterRing}>
                 <LinearGradient
-                  colors={["#FF5722", "#FF7043"]}
+                  colors={["#171717", "#292929"]}
                   style={styles.fullScreenShutterInner}
                 >
                   {isCapturing ? (
@@ -1073,7 +1073,7 @@ export default function ScanAIView({ insetsTop }: { insetsTop: number }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
   },
   header: {
     paddingHorizontal: 20,
@@ -1093,18 +1093,18 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 10.5,
     fontWeight: "800",
-    color: "#E65100",
+    color: BrandColors.textDark,
     letterSpacing: 0.8,
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginTop: 2,
   },
   headerDescription: {
     fontSize: 12.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     lineHeight: 18,
     marginTop: 4,
   },
@@ -1112,20 +1112,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 11,
     paddingVertical: 7,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
   },
   historyHeaderBtnText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   historyBadgeCircle: {
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
     minWidth: 18,
     height: 18,
     borderRadius: 9,
@@ -1143,14 +1143,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "center",
     gap: 6,
-    backgroundColor: "#ECFDF5",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#A7F3D0",
+    borderColor: BrandColors.borderLight,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     marginBottom: 10,
-    shadowColor: "#059669",
+    shadowColor: "#262626",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -1159,7 +1159,7 @@ const styles = StyleSheet.create({
   toastText: {
     fontSize: 11.5,
     fontWeight: "700",
-    color: "#059669",
+    color: "#262626",
   },
   cameraViewfinder: {
     alignSelf: "center",
@@ -1167,10 +1167,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: "hidden",
     position: "relative",
-    backgroundColor: "#0F172A",
+    backgroundColor: "#171717",
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
@@ -1187,25 +1187,25 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(15, 23, 42, 0.25)",
+    backgroundColor: "rgba(27, 27, 27, 0.25)",
   },
   cameraStandbyPlaceholder: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,
-    backgroundColor: "#0F172A",
+    backgroundColor: "#171717",
   },
   standbyIconWrap: {
     width: 68,
     height: 68,
     borderRadius: 34,
-    backgroundColor: "rgba(255, 112, 67, 0.15)",
+    backgroundColor: "rgba(54, 54, 54, 0.15)",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "rgba(255, 112, 67, 0.3)",
+    borderColor: "rgba(54, 54, 54, 0.3)",
   },
   standbyTitle: {
     fontSize: 14,
@@ -1215,13 +1215,13 @@ const styles = StyleSheet.create({
   },
   standbyDesc: {
     fontSize: 11,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     textAlign: "center",
     lineHeight: 16,
     marginBottom: 12,
   },
   standbyGrantBtn: {
-    backgroundColor: "#FF5722",
+    backgroundColor: "#171717",
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 10,
@@ -1245,7 +1245,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "rgba(15, 23, 42, 0.75)",
+    backgroundColor: "rgba(27, 27, 27, 0.75)",
     paddingHorizontal: 10,
     paddingVertical: 4.5,
     borderRadius: 14,
@@ -1256,7 +1256,7 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: "#22C55E",
+    backgroundColor: "#363636",
   },
   liveIndicatorText: {
     color: "#FFFFFF",
@@ -1268,7 +1268,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "rgba(15, 23, 42, 0.75)",
+    backgroundColor: "rgba(27, 27, 27, 0.75)",
     paddingHorizontal: 10,
     paddingVertical: 4.5,
     borderRadius: 14,
@@ -1284,12 +1284,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "rgba(15, 23, 42, 0.85)",
+    backgroundColor: "rgba(27, 27, 27, 0.85)",
     paddingHorizontal: 10,
     paddingVertical: 4.5,
     borderRadius: 14,
     borderWidth: 0.8,
-    borderColor: "#FF7043",
+    borderColor: "#292929",
     maxWidth: "80%",
   },
   historyActivePillText: {
@@ -1302,12 +1302,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "rgba(15, 23, 42, 0.85)",
+    backgroundColor: "rgba(27, 27, 27, 0.85)",
     paddingHorizontal: 10,
     paddingVertical: 4.5,
     borderRadius: 14,
     borderWidth: 0.8,
-    borderColor: "#38BDF8",
+    borderColor: "#363636",
     maxWidth: "80%",
   },
   photoReadyPillText: {
@@ -1317,7 +1317,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   resetLiveBtn: {
-    backgroundColor: "#FF5722",
+    backgroundColor: "#171717",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -1332,7 +1332,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: 24,
     height: 24,
-    borderColor: "#FF7043",
+    borderColor: "#292929",
   },
   cornerTL: {
     top: 14,
@@ -1369,10 +1369,10 @@ const styles = StyleSheet.create({
   },
   photoCaption: {
     position: "absolute", left: 10, right: 10, bottom: 10, padding: 10, borderRadius: 14, zIndex: 4,
-    backgroundColor: "rgba(15,23,42,0.95)", flexDirection: "row", alignItems: "center", gap: 10,
+    backgroundColor: "rgba(27, 27, 27, 0.95)", flexDirection: "row", alignItems: "center", gap: 10,
   },
   photoCaptionNumber: {
-    width: 28, height: 28, borderRadius: 8, textAlign: "center", lineHeight: 28, backgroundColor: "#F97316", color: "white", fontWeight: "800",
+    width: 28, height: 28, borderRadius: 8, textAlign: "center", lineHeight: 28, backgroundColor: "#363636", color: "white", fontWeight: "800",
   },
   dishLegendCard: { borderWidth: 1, borderRadius: 14, padding: 12, flexDirection: "row", alignItems: "center", gap: 10 },
   dishLegendNumber: { width: 28, height: 28, borderRadius: 8, lineHeight: 28, textAlign: "center", fontWeight: "800", fontSize: 12 },
@@ -1387,7 +1387,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(15, 23, 42, 0.8)",
+    backgroundColor: "rgba(27, 27, 27, 0.8)",
     justifyContent: "center",
     alignItems: "center",
     gap: 6,
@@ -1400,7 +1400,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   scanningSubText: {
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     fontSize: 11.5,
   },
   centerTapArea: {
@@ -1416,7 +1416,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "rgba(15, 23, 42, 0.65)",
+    backgroundColor: "rgba(27, 27, 27, 0.65)",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -1454,7 +1454,7 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
     overflow: "hidden",
-    shadowColor: "#FF5722",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
@@ -1479,12 +1479,12 @@ const styles = StyleSheet.create({
   recentHeading: {
     fontSize: 13.5,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   seeAllRecentText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   recentScrollContent: {
     paddingHorizontal: 20,
@@ -1493,11 +1493,11 @@ const styles = StyleSheet.create({
   recentCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 14,
     padding: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -1506,14 +1506,14 @@ const styles = StyleSheet.create({
     width: 190,
   },
   recentCardActive: {
-    borderColor: "#FF5722",
-    backgroundColor: "#FFF7ED",
+    borderColor: "#171717",
+    backgroundColor: BrandColors.surfaceMuted,
   },
   recentCardThumb: {
     width: 44,
     height: 44,
     borderRadius: 8,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
   },
   recentCardBody: {
     flex: 1,
@@ -1522,7 +1522,7 @@ const styles = StyleSheet.create({
   recentCardTitle: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginBottom: 2,
   },
   recentMetaRow: {
@@ -1531,13 +1531,13 @@ const styles = StyleSheet.create({
   },
   recentTimeText: {
     fontSize: 10,
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontWeight: "600",
     maxWidth: 75,
   },
   recentCountText: {
     fontSize: 10,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginLeft: 2,
   },
   activeCheckBadge: {
@@ -1547,7 +1547,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: "#FF5722",
+    backgroundColor: "#171717",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -1556,46 +1556,46 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     marginHorizontal: 20,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   emptyHistoryText: {
     fontSize: 11.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     flex: 1,
   },
   errorContainer: {
     flexDirection: "row",
     marginHorizontal: 20,
     marginBottom: 16,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     borderRadius: 16,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
     gap: 12,
   },
   errorIconWrap: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#FFEDD5",
+    backgroundColor: "#EAEAEA",
     justifyContent: "center",
     alignItems: "center",
   },
   errorTitle: {
     fontSize: 13.5,
     fontWeight: "800",
-    color: "#9A3412",
+    color: "#292929",
     marginBottom: 4,
   },
   errorDesc: {
     fontSize: 12,
-    color: "#7C2D12",
+    color: "#1B1B1B",
     lineHeight: 17,
     marginBottom: 10,
   },
@@ -1607,7 +1607,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -1618,15 +1618,15 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   errorLiveBtn: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
   },
   errorLiveBtnText: {
-    color: "#9A3412",
+    color: "#292929",
     fontSize: 11.5,
     fontWeight: "700",
   },
@@ -1643,17 +1643,17 @@ const styles = StyleSheet.create({
   resultsHeading: {
     fontSize: 14,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   saveToFridgeBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#059669",
+    backgroundColor: "#262626",
     paddingHorizontal: 10,
     paddingVertical: 5.5,
     borderRadius: 8,
-    shadowColor: "#059669",
+    shadowColor: "#262626",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
     shadowRadius: 2,
@@ -1674,12 +1674,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -1689,20 +1689,20 @@ const styles = StyleSheet.create({
   detectedChipText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#1E293B",
+    color: BrandColors.textDark,
   },
   detectedChipConf: {
     fontSize: 10.5,
-    color: "#059669",
+    color: "#262626",
     fontWeight: "800",
   },
   aiGeneratedBox: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 20,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#FED7AA",
-    shadowColor: "#FF6B35",
+    borderColor: BrandColors.borderLight,
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
@@ -1719,7 +1719,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#ECFDF5",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
@@ -1727,22 +1727,22 @@ const styles = StyleSheet.create({
   aiBadgeText: {
     fontSize: 11,
     fontWeight: "800",
-    color: "#059669",
+    color: "#262626",
   },
   aiCaloText: {
     fontSize: 11.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "600",
   },
   aiDishTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginBottom: 4,
   },
   aiDishDesc: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     lineHeight: 18,
     marginBottom: 14,
   },
@@ -1765,15 +1765,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     paddingVertical: 10,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   scanAnotherBtnText: {
     fontSize: 12.5,
     fontWeight: "700",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
 
   fullScreenContainer: {
@@ -1802,8 +1802,8 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255, 255, 255, 0.2)",
   },
   fullScreenIconBtnActive: {
-    backgroundColor: "rgba(255, 112, 67, 0.5)",
-    borderColor: "#FF7043",
+    backgroundColor: "rgba(54, 54, 54, 0.5)",
+    borderColor: "#292929",
   },
   fullScreenTitleBadge: {
     flexDirection: "row",
@@ -1844,7 +1844,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: 32,
     height: 32,
-    borderColor: "#FF7043",
+    borderColor: "#292929",
   },
   targetCornerTL: {
     top: 0,
@@ -1877,7 +1877,7 @@ const styles = StyleSheet.create({
   targetScanLine: {
     width: "90%",
     height: 1.5,
-    backgroundColor: "rgba(255, 112, 67, 0.7)",
+    backgroundColor: "rgba(54, 54, 54, 0.7)",
     borderRadius: 1,
   },
   targetGuideText: {

@@ -94,13 +94,13 @@ export const InAppNotificationBanner: React.FC<InAppNotificationBannerProps> = (
   const getIconInfo = () => {
     switch (currentNotif.type) {
       case "community":
-        return { name: "chatbubble-ellipses" as const, color: BrandColors.primary, bg: "#FFF1EC" };
+        return { name: "chatbubble-ellipses" as const, color: BrandColors.primary, bg: "#EEEEEE" };
       case "reward":
-        return { name: "gift" as const, color: "#8B5CF6", bg: "#F3E8FF" };
+        return { name: "gift" as const, color: "#292929", bg: "#EEEEEE" };
       case "fridge_expiry":
-        return { name: "snow" as const, color: "#0284C7", bg: "#E0F2FE" };
+        return { name: "snow" as const, color: "#262626", bg: "#EEEEEE" };
       default:
-        return { name: "notifications" as const, color: "#10B981", bg: "#ECFDF5" };
+        return { name: "notifications" as const, color: BrandColors.textBody, bg: "#F3F3F3" };
     }
   };
 
@@ -146,7 +146,7 @@ export const InAppNotificationBanner: React.FC<InAppNotificationBannerProps> = (
           onPress={hideBanner}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="close" size={16} color="#94A3B8" />
+          <Ionicons name="close" size={16} color={BrandColors.textPlaceholder} />
         </TouchableOpacity>
       </TouchableOpacity>
     </Animated.View>
@@ -164,17 +164,17 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    shadowColor: "#0F172A",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 8,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
   },
   iconWrap: {
     width: 38,
@@ -197,18 +197,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     flex: 1,
     marginRight: 6,
   },
   timeText: {
     fontSize: 11,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     fontWeight: "500",
   },
   body: {
     fontSize: 13,
-    color: "#475569",
+    color: BrandColors.textBody,
     lineHeight: 18,
   },
   closeBtn: {

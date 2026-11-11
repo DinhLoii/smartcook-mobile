@@ -1,4 +1,5 @@
 import apiClient from "./apiClient";
+import { isAxiosError } from "axios";
 import RecipeService from "./recipeService";
 import {
   AddFridgeItemPayload,
@@ -10,6 +11,10 @@ import {
 } from "@/types";
 
 type Listener = (items: FridgeItem[]) => void;
+
+export function isFridgeConnectionError(error: unknown): boolean {
+  return isAxiosError(error) && !error.response && error.code !== "ERR_CANCELED";
+}
 
 class FridgeServiceClass {
   private currentItems: FridgeItem[] = [];
@@ -49,56 +54,32 @@ class FridgeServiceClass {
    * Lấy danh sách nguyên liệu trong tủ lạnh của người dùng hiện tại
    */
   async getMyFridge(): Promise<UserFridge> {
-    try {
-      const response = await apiClient.get<{
-        success: boolean;
-        data: UserFridge;
-        message: string;
-      }>("/fridge/my-fridge");
-
-      if (response.data?.success && response.data.data) {
-        this.currentItems = response.data.data.items || [];
-        this.notify();
-        return response.data.data;
-      }
-    } catch (error) {
-      console.warn("Lỗi khi tải tủ lạnh từ Backend:", error);
+    const { data } = await apiClient.get<{
+      success: boolean;
+      data: UserFridge;
+    }>("/fridge/my-fridge");
+    if (!data?.success || !Array.isArray(data.data?.items)) {
+      throw new Error("Không tải được dữ liệu tủ lạnh.");
     }
-
-    return {
-      _id: "",
-      userId: "",
-      items: this.currentItems,
-      updatedAt: new Date().toISOString(),
-    };
+    this.currentItems = data.data.items;
+    this.notify();
+    return data.data;
   }
 
   /**
    * Thêm nguyên liệu vào tủ lạnh
    */
   async addItem(payload: AddFridgeItemPayload): Promise<FridgeItem | null> {
-    try {
-      const response = await apiClient.post<{
-        success: boolean;
-        data: UserFridge;
-        message: string;
-      }>("/fridge/items", payload);
+    const { data } = await apiClient.post<{
+      success: boolean;
+      data: UserFridge;
+    }>("/fridge/items", payload);
+    if (!data?.success || !Array.isArray(data.data?.items)) return null;
 
-      if (response.data?.success && response.data.data) {
-        const fridge = response.data.data;
-        this.currentItems = fridge.items || [];
-        this.notify();
-        const item =
-          this.currentItems.find(
-            (it) => it.name.toLowerCase() === payload.name.toLowerCase()
-          ) || this.currentItems[this.currentItems.length - 1];
-        return item || null;
-      }
-    } catch (error) {
-      console.error("Lỗi khi thêm nguyên liệu vào tủ lạnh:", error);
-      throw error;
-    }
-    return null;
+    this.currentItems = data.data.items;
+    this.notify();
+    const name = payload.name.trim().toLowerCase();
+    return this.currentItems.find((item) => item.name.trim().toLowerCase() === name) ?? null;
   }
 
   /**
@@ -133,49 +114,25 @@ class FridgeServiceClass {
    * Xóa nguyên liệu khỏi tủ lạnh
    */
   async removeItem(itemId: string): Promise<boolean> {
-    try {
-      const response = await apiClient.delete<{
-        success: boolean;
-        data: UserFridge;
-        message: string;
-      }>(`/fridge/items/${itemId}`);
-
-      if (response.data?.success) {
-        if (response.data.data?.items) {
-          this.currentItems = response.data.data.items;
-        } else {
-          this.currentItems = this.currentItems.filter((it) => it._id !== itemId);
-        }
-        this.notify();
-        return true;
-      }
-    } catch (error) {
-      console.error(`Lỗi khi xóa nguyên liệu ${itemId}:`, error);
-      throw error;
-    }
-    return false;
+    const { data } = await apiClient.delete<{
+      success: boolean;
+      data: UserFridge;
+    }>(`/fridge/items/${itemId}`);
+    if (!data?.success) return false;
+    this.currentItems = data.data?.items ?? this.currentItems.filter((item) => item._id !== itemId);
+    this.notify();
+    return true;
   }
 
   /**
    * Xóa toàn bộ nguyên liệu khỏi tủ lạnh
    */
   async clearFridge(): Promise<boolean> {
-    try {
-      const response = await apiClient.delete<{
-        success: boolean;
-        message: string;
-      }>("/fridge/clear");
-
-      if (response.data?.success) {
-        this.currentItems = [];
-        this.notify();
-        return true;
-      }
-    } catch (error) {
-      console.error("Lỗi khi làm sạch tủ lạnh:", error);
-      throw error;
-    }
-    return false;
+    const { data } = await apiClient.delete<{ success: boolean }>("/fridge/clear");
+    if (!data?.success) return false;
+    this.currentItems = [];
+    this.notify();
+    return true;
   }
 
   /**

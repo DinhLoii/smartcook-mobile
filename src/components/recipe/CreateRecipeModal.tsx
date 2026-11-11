@@ -30,14 +30,14 @@ interface CreateRecipeModalProps {
 }
 
 const CATEGORIES = [
-  { id: "family", label: "Gia đình", color: "#FF6B35" },
-  { id: "quick", label: "Nấu nhanh < 20p", color: "#F59E0B" },
-  { id: "healthy", label: "Healthy", color: "#10B981" },
-  { id: "budget", label: "Tiết kiệm", color: "#3B82F6" },
-  { id: "kids", label: "Trẻ em", color: "#EC4899" },
-  { id: "vegetarian", label: "Ăn chay", color: "#059669" },
-  { id: "vietnamese", label: "Món Việt", color: "#D97706" },
-  { id: "dessert", label: "Tráng miệng", color: "#8B5CF6" },
+  { id: "family", label: "Gia đình", color: BrandColors.textDark },
+  { id: "quick", label: "Nấu nhanh < 20p", color: "#404040" },
+  { id: "healthy", label: "Healthy", color: BrandColors.textBody },
+  { id: "budget", label: "Tiết kiệm", color: "#363636" },
+  { id: "kids", label: "Trẻ em", color: "#292929" },
+  { id: "vegetarian", label: "Ăn chay", color: "#262626" },
+  { id: "vietnamese", label: "Món Việt", color: BrandColors.textBody },
+  { id: "dessert", label: "Tráng miệng", color: "#292929" },
 ];
 
 const DIFFICULTIES: Array<"Dễ" | "Trung bình" | "Nâng cao"> = [
@@ -759,9 +759,9 @@ export default function CreateRecipeModal({
                   <Text style={styles.inputLabel}>Nhãn món ăn nổi bật</Text>
                   <View style={styles.hotTagsRow}>
                     {[
-                      { id: "hot", label: "🔥 Hot", color: "#EA580C", bg: "#FFF7ED" },
-                      { id: "popular", label: "⭐ Popular", color: "#D97706", bg: "#FEF3C7" },
-                      { id: "new", label: "✨ Mới nhất", color: "#10B981", bg: "#ECFDF5" },
+                      { id: "hot", label: "🔥 Hot", color: BrandColors.textDark, bg: "#F6F6F6" },
+                      { id: "popular", label: "⭐ Popular", color: BrandColors.textBody, bg: "#DADADA" },
+                      { id: "new", label: "✨ Mới nhất", color: BrandColors.textBody, bg: "#F3F3F3" },
                     ].map((tag) => {
                       const isTagActive = selectedHotTag === tag.id;
                       return (
@@ -801,7 +801,7 @@ export default function CreateRecipeModal({
                     {DIFFICULTIES.map((d) => {
                       const isDiffActive = difficulty === d;
                       const diffColor =
-                        d === "Dễ" ? "#10B981" : d === "Trung bình" ? "#F59E0B" : "#EF4444";
+                        d === "Dễ" ? "#353535" : d === "Trung bình" ? "#404040" : "#242424";
                       return (
                         <TouchableOpacity
                           key={d}
@@ -868,7 +868,7 @@ export default function CreateRecipeModal({
                         style={styles.removeBtn}
                         activeOpacity={0.7}
                       >
-                        <Ionicons name="trash-outline" size={15} color="#94A3B8" />
+                        <Ionicons name="trash-outline" size={15} color={BrandColors.textPlaceholder} />
                       </TouchableOpacity>
                     </View>
 
@@ -909,7 +909,7 @@ export default function CreateRecipeModal({
                             : "ellipse-outline"
                         }
                         size={16}
-                        color={item.inFridge ? "#10B981" : "#94A3B8"}
+                        color={item.inFridge ? "#353535" : "#686868"}
                       />
                       <Text
                         style={[
@@ -958,7 +958,7 @@ export default function CreateRecipeModal({
                         style={styles.removeBtn}
                         activeOpacity={0.7}
                       >
-                        <Ionicons name="trash-outline" size={15} color="#94A3B8" />
+                        <Ionicons name="trash-outline" size={15} color={BrandColors.textPlaceholder} />
                       </TouchableOpacity>
                     </View>
 
@@ -1050,8 +1050,8 @@ export default function CreateRecipeModal({
 
                 {/* 4 Chỉ số dinh dưỡng gọn gàng */}
                 <View style={styles.nutritionGrid}>
-                  <View style={[styles.nutritionBox, { borderLeftColor: "#10B981" }]}>
-                    <Text style={[styles.nutritionBoxLabel, { color: "#10B981" }]}>
+                  <View style={[styles.nutritionBox, { borderLeftColor: "#353535" }]}>
+                    <Text style={[styles.nutritionBoxLabel, { color: BrandColors.textBody }]}>
                       Đạm (Protein)
                     </Text>
                     <TextInput
@@ -1063,8 +1063,8 @@ export default function CreateRecipeModal({
                     />
                   </View>
 
-                  <View style={[styles.nutritionBox, { borderLeftColor: "#F59E0B" }]}>
-                    <Text style={[styles.nutritionBoxLabel, { color: "#F59E0B" }]}>
+                  <View style={[styles.nutritionBox, { borderLeftColor: "#404040" }]}>
+                    <Text style={[styles.nutritionBoxLabel, { color: "#404040" }]}>
                       Bột (Carbs)
                     </Text>
                     <TextInput
@@ -1076,8 +1076,8 @@ export default function CreateRecipeModal({
                     />
                   </View>
 
-                  <View style={[styles.nutritionBox, { borderLeftColor: "#EF4444" }]}>
-                    <Text style={[styles.nutritionBoxLabel, { color: "#EF4444" }]}>
+                  <View style={[styles.nutritionBox, { borderLeftColor: "#242424" }]}>
+                    <Text style={[styles.nutritionBoxLabel, { color: "#242424" }]}>
                       Béo (Fat)
                     </Text>
                     <TextInput
@@ -1089,8 +1089,8 @@ export default function CreateRecipeModal({
                     />
                   </View>
 
-                  <View style={[styles.nutritionBox, { borderLeftColor: "#3B82F6" }]}>
-                    <Text style={[styles.nutritionBoxLabel, { color: "#3B82F6" }]}>
+                  <View style={[styles.nutritionBox, { borderLeftColor: "#363636" }]}>
+                    <Text style={[styles.nutritionBoxLabel, { color: "#363636" }]}>
                       Xơ (Fiber)
                     </Text>
                     <TextInput
@@ -1203,7 +1203,7 @@ export default function CreateRecipeModal({
               disabled={isSubmitting}
             >
               <LinearGradient
-                colors={["#EA580C", "#FF5722"]}
+                colors={["#171717", "#171717"]}
                 style={styles.btnGradient}
               >
                 {isSubmitting ? (
@@ -1230,7 +1230,7 @@ export default function CreateRecipeModal({
 const styles = StyleSheet.create({
   modalRoot: {
     flex: 1,
-    backgroundColor: "#FAF9F6",
+    backgroundColor: BrandColors.background,
   },
   modalHeader: {
     flexDirection: "row",
@@ -1238,15 +1238,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
+    borderBottomColor: BrandColors.borderLight,
   },
   headerIconBtn: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1272,9 +1272,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 18,
     paddingVertical: 9,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: BrandColors.borderLight,
   },
   stepCol: {
     alignItems: "center",
@@ -1284,8 +1284,8 @@ const styles = StyleSheet.create({
     height: 25,
     borderRadius: 13,
     borderWidth: 1.5,
-    borderColor: "#E2E8F0",
-    backgroundColor: "#F8FAFC",
+    borderColor: BrandColors.borderLight,
+    backgroundColor: BrandColors.background,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 2,
@@ -1300,20 +1300,20 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   stepCircleCompleted: {
-    borderColor: "#10B981",
-    backgroundColor: "#10B981",
+    borderColor: "#353535",
+    backgroundColor: "#353535",
   },
   stepCircleText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   stepCircleTextActive: {
     color: "#FFFFFF",
   },
   stepLabelText: {
     fontSize: 10,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     fontWeight: "500",
   },
   stepLabelTextActive: {
@@ -1321,13 +1321,13 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   stepLabelTextCompleted: {
-    color: "#10B981",
+    color: BrandColors.textBody,
     fontWeight: "700",
   },
   stepConnectorLine: {
     flex: 1,
     height: 1.5,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
     marginHorizontal: 4,
     marginBottom: 12,
   },
@@ -1354,7 +1354,7 @@ const styles = StyleSheet.create({
   },
   sectionDesc: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginBottom: 10,
     lineHeight: 16,
   },
@@ -1362,12 +1362,12 @@ const styles = StyleSheet.create({
   /* Compact Photo Upload Section */
   compactPhotoSection: {
     flexDirection: "row",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 12,
     padding: 8,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     gap: 10,
     alignItems: "center",
   },
@@ -1376,9 +1376,9 @@ const styles = StyleSheet.create({
     height: 82,
     borderRadius: 10,
     overflow: "hidden",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     borderWidth: 1,
-    borderColor: "#CBD5E1",
+    borderColor: "#C7C7C7",
   },
   photoPreviewImg: {
     width: "100%",
@@ -1390,7 +1390,7 @@ const styles = StyleSheet.create({
   photoActionsTitle: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#334155",
+    color: BrandColors.textBody,
     marginBottom: 5,
   },
   photoBtnsRow: {
@@ -1404,11 +1404,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#FFEDD5",
+    borderColor: BrandColors.borderLight,
   },
   compactPhotoBtnText: {
     fontSize: 11,
@@ -1444,19 +1444,19 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#334155",
+    color: BrandColors.textBody,
     marginBottom: 4,
   },
   inputLabelSmall: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#475569",
+    color: BrandColors.textBody,
     marginBottom: 3,
   },
   textInput: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1,
-    borderColor: "#CBD5E1",
+    borderColor: "#C7C7C7",
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 7,
@@ -1488,13 +1488,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 5,
     borderRadius: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   chipItemText: {
     fontSize: 11,
-    color: "#475569",
+    color: BrandColors.textBody,
     fontWeight: "500",
   },
 
@@ -1507,13 +1507,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1,
-    borderColor: "#CBD5E1",
+    borderColor: "#C7C7C7",
   },
   hotTagChipText: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "600",
   },
   diffRow: {
@@ -1521,8 +1521,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    backgroundColor: "#FFFFFF",
+    borderColor: BrandColors.borderLight,
+    backgroundColor: BrandColors.surfaceCard,
   },
   diffBtn: {
     flex: 1,
@@ -1533,17 +1533,17 @@ const styles = StyleSheet.create({
   diffBtnText: {
     fontSize: 11.5,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
 
   /* Ingredient Card */
   ingredientCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 10,
     padding: 10,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   ingredientTopRow: {
     flexDirection: "row",
@@ -1552,7 +1552,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   ingredientBadge: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 6,
     paddingVertical: 1.5,
     borderRadius: 4,
@@ -1560,7 +1560,7 @@ const styles = StyleSheet.create({
   ingredientBadgeText: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   removeBtn: {
     padding: 2,
@@ -1578,22 +1578,22 @@ const styles = StyleSheet.create({
   },
   fridgeToggleText: {
     fontSize: 11,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "500",
   },
   fridgeToggleTextActive: {
-    color: "#047857",
+    color: "#292929",
     fontWeight: "700",
   },
 
   /* Step Card */
   stepCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 10,
     padding: 10,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   stepCardHeader: {
     flexDirection: "row",
@@ -1605,9 +1605,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#FFEDD5",
+    borderColor: BrandColors.borderLight,
   },
   stepCardBadgeText: {
     fontSize: 11,
@@ -1625,8 +1625,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1.2,
     borderStyle: "dashed",
-    borderColor: "#FDBA74",
-    backgroundColor: "#FFF7ED",
+    borderColor: "#C2C2C2",
+    backgroundColor: BrandColors.surfaceMuted,
     marginTop: 2,
     marginBottom: 12,
   },
@@ -1645,11 +1645,11 @@ const styles = StyleSheet.create({
   },
   nutritionBox: {
     width: "48%",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 10,
     padding: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     borderLeftWidth: 3.5,
   },
   nutritionBoxLabel: {
@@ -1667,11 +1667,11 @@ const styles = StyleSheet.create({
   /* Preview Card */
   previewCard: {
     flexDirection: "row",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 12,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     elevation: 2,
     shadowColor: "#000",
     shadowOpacity: 0.05,
@@ -1697,7 +1697,7 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     fontWeight: "700",
     color: BrandColors.primaryDark,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 5,
     paddingVertical: 1.5,
     borderRadius: 3,
@@ -1705,7 +1705,7 @@ const styles = StyleSheet.create({
   previewCaloText: {
     fontSize: 9.5,
     fontWeight: "800",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   previewTitle: {
     fontSize: 13,
@@ -1715,7 +1715,7 @@ const styles = StyleSheet.create({
   },
   previewSub: {
     fontSize: 10.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginBottom: 4,
     lineHeight: 14,
   },
@@ -1725,11 +1725,11 @@ const styles = StyleSheet.create({
   },
   previewMetaText: {
     fontSize: 9.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   previewMetaDot: {
     fontSize: 9.5,
-    color: "#CBD5E1",
+    color: "#C7C7C7",
     marginHorizontal: 3,
   },
 
@@ -1739,9 +1739,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderTopWidth: 1,
-    borderTopColor: "#E2E8F0",
+    borderTopColor: BrandColors.borderLight,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 14,
@@ -1756,7 +1756,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 10,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
   },
   btnSecondaryText: {
     fontSize: 13,

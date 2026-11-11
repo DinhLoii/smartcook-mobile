@@ -1,3 +1,4 @@
+import { BrandColors } from "@/constants/brandColors";
 import { useAuth } from "@/contexts/AuthContext";
 import { getRecipeById, RECIPES_DATA } from "@/data/recipesData";
 import { CookingHistoryService } from "@/services/cookingHistoryService";
@@ -17,6 +18,7 @@ import { normalizeCookingNutrition } from "@/utils/cookingScope";
 import { cookingStepSeconds } from "@/utils/cookingTimer";
 import { useCookingVoice } from "@/hooks/useCookingVoice";
 import { CookingVoiceOverlay } from "@/components/ai/CookingVoiceOverlay";
+import { RecipeVideoGuide, type RecipeVideoHandle } from "@/components/recipe/RecipeVideoGuide";
 import {
   ActivityIndicator,
   Alert,
@@ -120,9 +122,12 @@ export default function CookingModeScreen() {
 
   // AI Voice Cooking Companion
   const [showVoiceOverlay, setShowVoiceOverlay] = useState<boolean>(false);
+  const videoGuide = useRef<RecipeVideoHandle>(null);
 
   const cookingVoice = useCookingVoice({
+    recipeId: recipe.id,
     recipeTitle: recipe.title,
+    onVideoCommand: (command) => videoGuide.current?.run(command) ?? "Chưa tải được video của món này.",
     recipeContext: {
       servings: String(recipe.servings || ""),
       nutrition: recipe.cookingNutrition === undefined ? normalizeCookingNutrition(recipe.nutrition) : recipe.cookingNutrition ?? undefined,
@@ -586,8 +591,8 @@ export default function CookingModeScreen() {
   if (isLoadingRecipe) {
     return (
       <View style={[styles.screen, { paddingTop: insets.top, justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator size="large" color="#EA580C" />
-        <Text style={{ marginTop: 12, fontSize: 14, fontWeight: "600", color: "#64748B" }}>
+        <ActivityIndicator size="large" color={BrandColors.textDark} />
+        <Text style={{ marginTop: 12, fontSize: 14, fontWeight: "600", color: BrandColors.textMuted }}>
           Đang nạp công thức nấu ăn...
         </Text>
       </View>
@@ -615,7 +620,7 @@ export default function CookingModeScreen() {
           activeOpacity={0.75}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="close" size={17} color="#334155" />
+          <Ionicons name="close" size={17} color={BrandColors.textBody} />
         </TouchableOpacity>
 
         {/* Center Dish Card */}
@@ -664,16 +669,24 @@ export default function CookingModeScreen() {
           <Ionicons
             name={isSpeaking ? "volume-high" : isVoiceActive ? "volume-medium" : "volume-mute"}
             size={16}
-            color={isSpeaking ? "#10B981" : isVoiceActive ? "#EA580C" : "#94A3B8"}
+            color={isSpeaking ? "#353535" : isVoiceActive ? "#171717" : "#686868"}
           />
           {isSpeaking && <View style={styles.voiceSpeakingDot} />}
         </TouchableOpacity>
       </View>
 
+      {recipe.id === id && (
+        <View style={styles.videoEntry}>
+          <RecipeVideoGuide key={`${recipe.id}:${recipe.youtubeVideoId ?? ""}`} title={recipe.title}
+            youtubeVideoId={recipe.youtubeVideoId} voice={cookingVoice} ref={videoGuide}
+            onOpen={() => setShowVoiceOverlay(false)} />
+        </View>
+      )}
+
       {/* 2. SLIM STEP PROGRESS BAR */}
       <View style={styles.progressTrack}>
         <LinearGradient
-          colors={["#FF5722", "#FF7043"]}
+          colors={["#171717", "#292929"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={[styles.progressGradientFill, { width: `${totalProgressPercent}%` }]}
@@ -703,7 +716,7 @@ export default function CookingModeScreen() {
                 activeOpacity={0.8}
               >
                 {isDone && !isActive ? (
-                  <Ionicons name="checkmark" size={12} color="#16A34A" />
+                  <Ionicons name="checkmark" size={12} color="#262626" />
                 ) : (
                   <View
                     style={[
@@ -746,14 +759,14 @@ export default function CookingModeScreen() {
 
             <View style={styles.stepMetaRight}>
               <View style={styles.timeTag}>
-                <Ionicons name="time-outline" size={12} color="#64748B" />
+                <Ionicons name="time-outline" size={12} color={BrandColors.textMuted} />
                 <Text style={styles.timeTagText}>
                   {currentStep.timerMinutes ? `${currentStep.timerMinutes} phút` : "3 phút"}
                 </Text>
               </View>
 
               <View style={styles.heatTag}>
-                <Ionicons name="flame" size={11} color="#EA580C" />
+                <Ionicons name="flame" size={11} color={BrandColors.textDark} />
                 <Text style={styles.heatTagText}>Lửa vừa</Text>
               </View>
             </View>
@@ -779,7 +792,7 @@ export default function CookingModeScreen() {
             <View style={styles.stepIngredientsSection}>
               <View style={styles.stepIngSectionHeader}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                  <Ionicons name="basket-outline" size={12} color="#059669" />
+                  <Ionicons name="basket-outline" size={12} color="#262626" />
                   <Text style={styles.stepIngSectionTitle}>Nguyên liệu cho bước này:</Text>
                 </View>
                 <TouchableOpacity
@@ -795,7 +808,7 @@ export default function CookingModeScreen() {
               <View style={styles.ingredientChipsWrap}>
                 {displayStepIngredients.map((ing, idx) => (
                   <View key={idx} style={styles.compactIngChip}>
-                    <Ionicons name="checkmark-circle" size={11} color="#059669" />
+                    <Ionicons name="checkmark-circle" size={11} color="#262626" />
                     <Text style={styles.compactIngName}>
                       {ing.name}{" "}
                       {ing.amount ? (
@@ -810,9 +823,9 @@ export default function CookingModeScreen() {
 
           {/* Compact Chef Pro Tip */}
           <View style={styles.compactChefTipRow}>
-            <Ionicons name="bulb" size={13} color="#D97706" style={{ marginTop: 1 }} />
+            <Ionicons name="bulb" size={13} color={BrandColors.textBody} style={{ marginTop: 1 }} />
             <Text style={styles.compactChefTipText}>
-              <Text style={{ fontWeight: "700", color: "#92400E" }}>Mẹo bếp: </Text>
+              <Text style={{ fontWeight: "700", color: "#292929" }}>Mẹo bếp: </Text>
               {getChefTip()}
             </Text>
           </View>
@@ -834,7 +847,7 @@ export default function CookingModeScreen() {
                 <Ionicons
                   name={isTimerRunning ? "hourglass" : "timer-outline"}
                   size={13}
-                  color={isTimerRunning ? "#FFFFFF" : "#EA580C"}
+                  color={isTimerRunning ? "#FFFFFF" : "#171717"}
                 />
               </View>
               <Text style={styles.timerInlineTitle}>Hẹn giờ nấu</Text>
@@ -880,7 +893,7 @@ export default function CookingModeScreen() {
               style={[
                 styles.timerMicroFill,
                 { width: `${timerElapsedPercent}%` },
-                timeLeft === 0 && { backgroundColor: "#CBD5E1" },
+                timeLeft === 0 && { backgroundColor: "#C7C7C7" },
               ]}
             />
           </View>
@@ -896,8 +909,8 @@ export default function CookingModeScreen() {
               <LinearGradient
                 colors={
                   isTimerRunning
-                    ? ["#059669", "#10B981"]
-                    : ["#FF5722", "#FF7043"]
+                    ? ["#262626", "#353535"]
+                    : ["#171717", "#292929"]
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
@@ -947,7 +960,7 @@ export default function CookingModeScreen() {
               onPress={resetTimer}
               activeOpacity={0.7}
             >
-              <Ionicons name="refresh" size={13} color="#64748B" />
+              <Ionicons name="refresh" size={13} color={BrandColors.textMuted} />
             </TouchableOpacity>
           </View>
           <Text style={styles.timerHelpText} accessibilityLiveRegion="polite">
@@ -977,7 +990,7 @@ export default function CookingModeScreen() {
                 <Ionicons
                   name={isSpeaking ? "volume-high" : isAutoAdvance ? "time" : "mic-outline"}
                   size={13}
-                  color={isSpeaking || isAutoAdvance ? "#FFFFFF" : "#059669"}
+                  color={isSpeaking || isAutoAdvance ? "#FFFFFF" : "#262626"}
                 />
               </View>
               <View>
@@ -998,11 +1011,11 @@ export default function CookingModeScreen() {
               onPress={() => setShowVoiceSettingsModal(true)}
               activeOpacity={0.75}
             >
-              <Ionicons name="sparkles" size={10} color="#059669" />
+              <Ionicons name="sparkles" size={10} color="#262626" />
               <Text style={styles.voiceConfigNameCompact} numberOfLines={1}>
                 {getVoiceDisplayName(selectedVoiceId)}
               </Text>
-              <Ionicons name="settings-outline" size={11} color="#059669" />
+              <Ionicons name="settings-outline" size={11} color="#262626" />
             </TouchableOpacity>
           </View>
 
@@ -1020,7 +1033,7 @@ export default function CookingModeScreen() {
                 activeOpacity={0.85}
               >
                 <LinearGradient
-                  colors={["#059669", "#10B981"]}
+                  colors={["#262626", "#353535"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.primaryAutoStartGradient}
@@ -1044,7 +1057,7 @@ export default function CookingModeScreen() {
                 <Ionicons
                   name={isSpeaking ? "stop-circle" : "volume-medium"}
                   size={14}
-                  color="#EA580C"
+                  color={BrandColors.textDark}
                 />
                 <Text style={styles.singleStepReadText}>
                   {isSpeaking ? "Dừng" : "Đọc bước này"}
@@ -1084,7 +1097,7 @@ export default function CookingModeScreen() {
                       <Ionicons
                         name={isCountdownActive ? "pause" : "play"}
                         size={11}
-                        color="#059669"
+                        color="#262626"
                       />
                       <Text style={styles.pauseCountdownBtnText}>
                         {isCountdownActive ? "Dừng" : "Tiếp tục"}
@@ -1111,7 +1124,7 @@ export default function CookingModeScreen() {
                     }}
                     activeOpacity={0.7}
                   >
-                    <Ionicons name="close-circle" size={12} color="#EF4444" />
+                    <Ionicons name="close-circle" size={12} color="#242424" />
                     <Text style={styles.turnOffAutoText}>Tắt</Text>
                   </TouchableOpacity>
                 </View>
@@ -1199,12 +1212,12 @@ export default function CookingModeScreen() {
           <Ionicons
             name="chevron-back"
             size={16}
-            color={currentStepIndex === 0 ? "#CBD5E1" : "#475569"}
+            color={currentStepIndex === 0 ? "#C7C7C7" : "#4A4A4A"}
           />
           <Text
             style={[
               styles.compactPrevBtnText,
-              currentStepIndex === 0 && { color: "#CBD5E1" },
+              currentStepIndex === 0 && { color: "#C7C7C7" },
             ]}
           >
             Bước trước
@@ -1219,8 +1232,8 @@ export default function CookingModeScreen() {
           <LinearGradient
             colors={
               currentStepIndex === steps.length - 1
-                ? ["#059669", "#10B981"]
-                : ["#FF5722", "#FF7043"]
+                ? ["#262626", "#353535"]
+                : ["#171717", "#292929"]
             }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
@@ -1271,7 +1284,7 @@ export default function CookingModeScreen() {
                 onPress={() => setShowIngredientsModal(false)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="close" size={17} color="#64748B" />
+                <Ionicons name="close" size={17} color={BrandColors.textMuted} />
               </TouchableOpacity>
             </View>
 
@@ -1323,7 +1336,7 @@ export default function CookingModeScreen() {
               activeOpacity={0.88}
             >
               <LinearGradient
-                colors={["#FF5722", "#FF7043"]}
+                colors={["#171717", "#292929"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.modalDismissGradient}
@@ -1347,7 +1360,7 @@ export default function CookingModeScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.celebrationCard}>
             <View style={styles.celebrationTrophyBox}>
-              <MaterialCommunityIcons name="trophy" size={38} color="#D97706" />
+              <MaterialCommunityIcons name="trophy" size={38} color={BrandColors.textBody} />
             </View>
 
             <Text style={styles.celebrationTitle}>Nấu ăn hoàn tất! 🎉</Text>
@@ -1386,9 +1399,9 @@ export default function CookingModeScreen() {
             {leveledUp && (
               <View
                 style={{
-                  backgroundColor: "#FEF3C7",
+                  backgroundColor: "#DADADA",
                   borderWidth: 1,
-                  borderColor: "#FCD34D",
+                  borderColor: "#CCCCCC",
                   borderRadius: 12,
                   paddingVertical: 10,
                   paddingHorizontal: 14,
@@ -1399,7 +1412,7 @@ export default function CookingModeScreen() {
               >
                 <Text
                   style={{
-                    color: "#B45309",
+                    color: "#292929",
                     fontWeight: "700",
                     fontSize: 13,
                     textAlign: "center",
@@ -1420,7 +1433,7 @@ export default function CookingModeScreen() {
               }
               activeOpacity={0.8}
             >
-              <Ionicons name="camera-outline" size={16} color="#EA580C" />
+              <Ionicons name="camera-outline" size={16} color={BrandColors.textDark} />
               <Text style={styles.celebShareBtnText}>Chụp ảnh thành phẩm</Text>
             </TouchableOpacity>
 
@@ -1433,7 +1446,7 @@ export default function CookingModeScreen() {
               activeOpacity={0.88}
             >
               <LinearGradient
-                colors={["#FF5722", "#FF7043"]}
+                colors={["#171717", "#292929"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.celebHomeBtnGradient}
@@ -1483,13 +1496,13 @@ export default function CookingModeScreen() {
                 }}
                 activeOpacity={0.7}
               >
-                <Ionicons name="close" size={17} color="#64748B" />
+                <Ionicons name="close" size={17} color={BrandColors.textMuted} />
               </TouchableOpacity>
             </View>
 
             {/* Quality Note Callout */}
             <View style={styles.voiceCalloutBox}>
-              <Ionicons name="sparkles" size={14} color="#059669" style={{ marginTop: 2 }} />
+              <Ionicons name="sparkles" size={14} color="#262626" style={{ marginTop: 2 }} />
               <Text style={styles.voiceCalloutText}>
                 SmartCook đã tối ưu bộ lọc âm PCM và chọn lọc giọng đọc trực tuyến Google HD Network để loại bỏ hoàn toàn hiện tượng rè, méo hoặc giật cục.
               </Text>
@@ -1560,7 +1573,7 @@ export default function CookingModeScreen() {
                       </View>
 
                       {isSelected && (
-                        <Ionicons name="checkmark-circle" size={18} color="#059669" />
+                        <Ionicons name="checkmark-circle" size={18} color="#262626" />
                       )}
                     </TouchableOpacity>
                   );
@@ -1622,7 +1635,7 @@ export default function CookingModeScreen() {
                 <Ionicons
                   name={isTestingVoice ? "stop-circle" : "volume-medium"}
                   size={16}
-                  color={isTestingVoice ? "#FFFFFF" : "#059669"}
+                  color={isTestingVoice ? "#FFFFFF" : "#262626"}
                 />
                 <Text
                   style={[
@@ -1645,7 +1658,7 @@ export default function CookingModeScreen() {
               activeOpacity={0.88}
             >
               <LinearGradient
-                colors={["#059669", "#10B981"]}
+                colors={["#262626", "#353535"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.modalDismissGradient}
@@ -1668,7 +1681,7 @@ export default function CookingModeScreen() {
           activeOpacity={0.85}
         >
           <LinearGradient
-            colors={["#059669", "#10B981"]}
+            colors={["#262626", "#353535"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.floatingAiVoiceGradient}
@@ -1710,10 +1723,11 @@ export default function CookingModeScreen() {
 }
 
 const styles = StyleSheet.create({
-  timerHelpText: { fontSize: 12, color: "#64748B", lineHeight: 18, marginTop: 10 },
+  timerHelpText: { fontSize: 12, color: BrandColors.textMuted, lineHeight: 18, marginTop: 10 },
+  videoEntry: { marginHorizontal: 16, marginBottom: 8 },
   screen: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
   },
 
   /* 1. Header Bar (Compact) */
@@ -1723,19 +1737,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 12,
     paddingVertical: 7,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: BrandColors.borderLight,
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   dishPillCard: {
     flexDirection: "row",
@@ -1743,12 +1757,12 @@ const styles = StyleSheet.create({
     gap: 7,
     flex: 1,
     marginHorizontal: 8,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     paddingHorizontal: 7,
     paddingVertical: 3.5,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   dishThumbnail: {
     width: 26,
@@ -1761,7 +1775,7 @@ const styles = StyleSheet.create({
   dishPillTitle: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   dishStepMetaRow: {
     flexDirection: "row",
@@ -1770,11 +1784,11 @@ const styles = StyleSheet.create({
   },
   dishStepProgressText: {
     fontSize: 10,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "600",
   },
   percentBadge: {
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 4,
     paddingVertical: 0.5,
     borderRadius: 3,
@@ -1782,26 +1796,26 @@ const styles = StyleSheet.create({
   percentBadgeText: {
     fontSize: 9,
     fontWeight: "800",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   voiceToggleBtn: {
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     position: "relative",
   },
   voiceToggleBtnActive: {
-    backgroundColor: "#FFF7ED",
-    borderColor: "#FED7AA",
+    backgroundColor: BrandColors.surfaceMuted,
+    borderColor: BrandColors.borderLight,
   },
   voiceToggleBtnSpeaking: {
-    backgroundColor: "#ECFDF5",
-    borderColor: "#A7F3D0",
+    backgroundColor: BrandColors.surfaceMuted,
+    borderColor: BrandColors.borderLight,
   },
   voiceSpeakingDot: {
     position: "absolute",
@@ -1810,13 +1824,13 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#10B981",
+    backgroundColor: "#353535",
   },
 
   /* 2. Progress Track */
   progressTrack: {
     height: 2.5,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
     width: "100%",
   },
   progressGradientFill: {
@@ -1825,10 +1839,10 @@ const styles = StyleSheet.create({
 
   /* 3. Stepper Strip */
   stepStripContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     paddingVertical: 5,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: BrandColors.borderLight,
   },
   stepStripContent: {
     paddingHorizontal: 12,
@@ -1841,38 +1855,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 8,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   stepperChipActive: {
-    backgroundColor: "#FFF7ED",
-    borderColor: "#FDBA74",
+    backgroundColor: BrandColors.surfaceMuted,
+    borderColor: "#C2C2C2",
   },
   stepperChipDone: {
-    backgroundColor: "#F0FDF4",
-    borderColor: "#86EFAC",
+    backgroundColor: BrandColors.surfaceMuted,
+    borderColor: "#C2C2C2",
   },
   stepperDot: {
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: "#94A3B8",
+    backgroundColor: "#686868",
   },
   stepperDotActive: {
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
   },
   stepperText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   stepperTextActive: {
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontWeight: "800",
   },
   stepperTextDone: {
-    color: "#15803D",
+    color: "#292929",
     fontWeight: "700",
   },
 
@@ -1888,12 +1902,12 @@ const styles = StyleSheet.create({
 
   /* Hero Step Card (Compact) */
   heroStepCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: "#0F172A",
+    borderColor: BrandColors.borderLight,
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -1906,17 +1920,17 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   stepNumberBadge: {
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 7,
     paddingVertical: 2.5,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
   },
   stepNumberBadgeText: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#EA580C",
+    color: BrandColors.textDark,
     letterSpacing: 0.5,
   },
   stepMetaRight: {
@@ -1928,7 +1942,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 6,
     paddingVertical: 2.5,
     borderRadius: 5,
@@ -1936,28 +1950,28 @@ const styles = StyleSheet.create({
   timeTagText: {
     fontSize: 10.5,
     fontWeight: "600",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   heatTag: {
     flexDirection: "row",
     alignItems: "center",
     gap: 2.5,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 6,
     paddingVertical: 2.5,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "#FFEDD5",
+    borderColor: BrandColors.borderLight,
   },
   heatTagText: {
     fontSize: 10.5,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   stepTitleText: {
     fontSize: 16.5,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     lineHeight: 22,
     marginBottom: 8,
   },
@@ -1974,9 +1988,9 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
     justifyContent: "center",
     alignItems: "center",
     marginTop: 1,
@@ -1984,22 +1998,22 @@ const styles = StyleSheet.create({
   stepActionNumberText: {
     fontSize: 10.5,
     fontWeight: "800",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   stepActionItemText: {
     flex: 1,
     fontSize: 12.5,
-    color: "#1E293B",
+    color: BrandColors.textDark,
     lineHeight: 18,
   },
 
   /* Step Ingredients Box (Wrap Enabled) */
   stepIngredientsSection: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 8,
     padding: 8,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     marginBottom: 8,
   },
   stepIngSectionHeader: {
@@ -2011,12 +2025,12 @@ const styles = StyleSheet.create({
   stepIngSectionTitle: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   allIngredientsLinkText: {
     fontSize: 10.5,
     fontWeight: "700",
-    color: "#059669",
+    color: "#262626",
   },
   ingredientChipsWrap: {
     flexDirection: "row",
@@ -2027,22 +2041,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 3.5,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   compactIngName: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   compactIngAmount: {
     fontSize: 10.5,
     fontWeight: "700",
-    color: "#059669",
+    color: "#262626",
   },
 
   /* Compact Chef Tip Row */
@@ -2050,29 +2064,29 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#FFFBEB",
+    backgroundColor: "#EEEEEE",
     borderRadius: 8,
     paddingHorizontal: 9,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: "#FDE68A",
+    borderColor: "#C2C2C2",
   },
   compactChefTipText: {
     fontSize: 11.5,
-    color: "#78350F",
+    color: "#292929",
     lineHeight: 16,
     flex: 1,
   },
 
   /* 5. Ultra-Compact Smart Timer Box */
   compactTimerBox: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: "#FED7AA",
-    shadowColor: "#EA580C",
+    borderColor: BrandColors.borderLight,
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 5,
@@ -2093,68 +2107,68 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 6,
-    backgroundColor: "#FFEDD5",
+    backgroundColor: "#EAEAEA",
     justifyContent: "center",
     alignItems: "center",
   },
   timerMiniIconCircleActive: {
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
   },
   timerInlineTitle: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#9A3412",
+    color: "#292929",
   },
   compactClockDigits: {
     fontSize: 22,
     fontWeight: "900",
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontVariant: ["tabular-nums"],
     letterSpacing: 1,
   },
   compactClockDigitsRunning: {
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   compactClockDigitsDone: {
-    color: "#10B981",
+    color: BrandColors.textBody,
   },
   timerMiniStatusBadge: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 5,
   },
   timerMiniStatusBadgeRunning: {
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
   },
   timerMiniStatusBadgeDone: {
-    backgroundColor: "#ECFDF5",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#A7F3D0",
+    borderColor: BrandColors.borderLight,
   },
   timerMiniStatusText: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   timerMiniStatusTextRunning: {
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   timerMiniStatusTextDone: {
-    color: "#059669",
+    color: "#262626",
   },
   timerMicroTrack: {
     height: 3.5,
     borderRadius: 2,
-    backgroundColor: "#FFEDD5",
+    backgroundColor: "#EAEAEA",
     overflow: "hidden",
     marginBottom: 8,
   },
   timerMicroFill: {
     height: "100%",
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
     borderRadius: 2,
   },
   timerControlsInlineRow: {
@@ -2184,30 +2198,30 @@ const styles = StyleSheet.create({
     height: 34,
     paddingHorizontal: 10,
     borderRadius: 8,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
     justifyContent: "center",
     alignItems: "center",
   },
   quickChipText: {
     fontSize: 11,
     fontWeight: "800",
-    color: "#C2410C",
+    color: "#282828",
   },
 
   /* 6. SmartCook Hands-free Auto-Advance Voice Bar */
   autoVoiceCard: {
-    backgroundColor: "#F0FDF4",
+    backgroundColor: BrandColors.surfaceMuted,
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: "#A7F3D0",
+    borderColor: BrandColors.borderLight,
     gap: 7,
   },
   autoVoiceCardSpeaking: {
-    backgroundColor: "#ECFDF5",
-    borderColor: "#6EE7B7",
+    backgroundColor: BrandColors.surfaceMuted,
+    borderColor: "#C2C2C2",
   },
   autoVoiceHeaderRow: {
     flexDirection: "row",
@@ -2223,21 +2237,21 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 7,
-    backgroundColor: "#DCFCE7",
+    backgroundColor: "#EEEEEE",
     justifyContent: "center",
     alignItems: "center",
   },
   autoVoiceMicBadgeActive: {
-    backgroundColor: "#10B981",
+    backgroundColor: "#353535",
   },
   autoVoiceMainTitle: {
     fontSize: 12.5,
     fontWeight: "800",
-    color: "#065F46",
+    color: "#292929",
   },
   autoVoiceSubStatus: {
     fontSize: 10,
-    color: "#047857",
+    color: "#292929",
     fontWeight: "600",
     marginTop: 1,
   },
@@ -2245,17 +2259,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     paddingHorizontal: 7,
     paddingVertical: 3.5,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#A7F3D0",
+    borderColor: BrandColors.borderLight,
   },
   voiceConfigNameCompact: {
     fontSize: 10.5,
     fontWeight: "700",
-    color: "#047857",
+    color: "#292929",
     maxWidth: 110,
   },
 
@@ -2291,23 +2305,23 @@ const styles = StyleSheet.create({
     height: 36,
     paddingHorizontal: 10,
     borderRadius: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
   },
   singleStepReadText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
 
   /* State 2: When Auto-advance is Active */
   autoAdvanceActiveContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 8,
     padding: 8,
     borderWidth: 1,
-    borderColor: "#D1FAE5",
+    borderColor: "#DADADA",
     gap: 6,
   },
   autoCountdownRow: {
@@ -2318,32 +2332,32 @@ const styles = StyleSheet.create({
   autoCountdownLabel: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#047857",
+    color: "#292929",
   },
   autoCountdownTime: {
     fontSize: 13,
     fontWeight: "900",
-    color: "#EA580C",
+    color: BrandColors.textDark,
     fontVariant: ["tabular-nums"],
   },
   pauseCountdownBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 2.5,
-    backgroundColor: "#F0FDF4",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 6,
     paddingVertical: 3,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "#A7F3D0",
+    borderColor: BrandColors.borderLight,
   },
   pauseCountdownBtnText: {
     fontSize: 10,
     fontWeight: "700",
-    color: "#059669",
+    color: "#262626",
   },
   skipNowBtn: {
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 5,
@@ -2357,27 +2371,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 2.5,
-    backgroundColor: "#FEF2F2",
+    backgroundColor: "#F4F4F4",
     paddingHorizontal: 6,
     paddingVertical: 3,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "#FECACA",
+    borderColor: "#DADADA",
   },
   turnOffAutoText: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#DC2626",
+    color: "#212121",
   },
   autoProgressTrack: {
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
     overflow: "hidden",
   },
   autoProgressFill: {
     height: "100%",
-    backgroundColor: "#10B981",
+    backgroundColor: "#353535",
     borderRadius: 1.5,
   },
   delayIntervalRow: {
@@ -2388,7 +2402,7 @@ const styles = StyleSheet.create({
   },
   delayIntervalLabel: {
     fontSize: 10,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "600",
     marginRight: 2,
   },
@@ -2396,21 +2410,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 5,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   intervalChipSelected: {
-    backgroundColor: "#ECFDF5",
-    borderColor: "#10B981",
+    backgroundColor: BrandColors.surfaceMuted,
+    borderColor: "#353535",
   },
   intervalChipText: {
     fontSize: 10,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   intervalChipTextSelected: {
-    color: "#059669",
+    color: "#262626",
     fontWeight: "800",
   },
 
@@ -2420,9 +2434,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderTopWidth: 1,
-    borderTopColor: "#E2E8F0",
+    borderTopColor: BrandColors.borderLight,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
@@ -2441,9 +2455,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 38,
     borderRadius: 8,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   compactPrevBtnDisabled: {
     opacity: 0.45,
@@ -2451,14 +2465,14 @@ const styles = StyleSheet.create({
   compactPrevBtnText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   compactNextBtn: {
     flex: 1,
     height: 38,
     borderRadius: 8,
     overflow: "hidden",
-    shadowColor: "#FF5722",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -2480,11 +2494,11 @@ const styles = StyleSheet.create({
   /* 8. Ingredients Modal */
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.55)",
+    backgroundColor: "rgba(27, 27, 27, 0.55)",
     justifyContent: "flex-end",
   },
   modalSheetCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     paddingHorizontal: 16,
@@ -2495,7 +2509,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 3.5,
     borderRadius: 2,
-    backgroundColor: "#CBD5E1",
+    backgroundColor: "#C7C7C7",
     alignSelf: "center",
     marginBottom: 10,
   },
@@ -2508,29 +2522,29 @@ const styles = StyleSheet.create({
   modalHeaderTitle: {
     fontSize: 15,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   modalHeaderSub: {
     fontSize: 11.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 1,
   },
   modalCloseBtn: {
     width: 28,
     height: 28,
     borderRadius: 6,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   checklistRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 9,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: BrandColors.borderLight,
     gap: 10,
   },
   checklistRowChecked: {
@@ -2541,28 +2555,28 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: "#CBD5E1",
-    backgroundColor: "#FFFFFF",
+    borderColor: "#C7C7C7",
+    backgroundColor: BrandColors.surfaceCard,
     justifyContent: "center",
     alignItems: "center",
   },
   checklistCheckboxChecked: {
-    backgroundColor: "#10B981",
-    borderColor: "#10B981",
+    backgroundColor: "#353535",
+    borderColor: "#353535",
   },
   checklistIngredientName: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#1E293B",
+    color: BrandColors.textDark,
     flex: 1,
   },
   checklistIngredientNameChecked: {
     textDecorationLine: "line-through",
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
   },
   checklistIngredientAmount: {
     fontSize: 11.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "600",
   },
   modalDismissBtn: {
@@ -2587,12 +2601,12 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: "auto",
     marginTop: "auto",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 14,
     padding: 16,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
@@ -2603,22 +2617,22 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#FEF3C7",
+    backgroundColor: "#DADADA",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 10,
     borderWidth: 1.5,
-    borderColor: "#FDE68A",
+    borderColor: "#C2C2C2",
   },
   celebrationTitle: {
     fontSize: 18,
     fontWeight: "900",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginBottom: 3,
   },
   celebrationSubtitle: {
     fontSize: 12,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     textAlign: "center",
     marginBottom: 12,
   },
@@ -2626,11 +2640,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     padding: 7,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#FFEDD5",
+    borderColor: BrandColors.borderLight,
     width: "100%",
     marginBottom: 12,
   },
@@ -2642,20 +2656,20 @@ const styles = StyleSheet.create({
   celebrationDishName: {
     fontSize: 13,
     fontWeight: "800",
-    color: "#9A3412",
+    color: "#292929",
     flex: 1,
   },
   celebrationStatsGrid: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 10,
     paddingVertical: 8,
     width: "100%",
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   celebStatCol: {
     alignItems: "center",
@@ -2664,18 +2678,18 @@ const styles = StyleSheet.create({
   celebStatVal: {
     fontSize: 14,
     fontWeight: "900",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   celebStatLbl: {
     fontSize: 10,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 1,
     fontWeight: "600",
   },
   celebStatDivider: {
     width: 1,
     height: 20,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
   },
   celebShareBtn: {
     flexDirection: "row",
@@ -2685,15 +2699,15 @@ const styles = StyleSheet.create({
     height: 38,
     width: "100%",
     borderRadius: 8,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
     marginBottom: 8,
   },
   celebShareBtnText: {
     fontSize: 12,
     fontWeight: "800",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   celebHomeBtn: {
     height: 40,
@@ -2718,12 +2732,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: 8,
-    backgroundColor: "#F0FDF4",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 7,
     borderWidth: 1,
-    borderColor: "#DCFCE7",
+    borderColor: "#EEEEEE",
   },
   voiceConfigPill: {
     flexDirection: "row",
@@ -2735,33 +2749,33 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#10B981",
+    backgroundColor: "#353535",
   },
   voiceConfigName: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#047857",
+    color: "#292929",
     flex: 1,
   },
   voiceQuickTestBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 3.5,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
   },
   voiceQuickTestBtnActive: {
-    backgroundColor: "#EA580C",
-    borderColor: "#EA580C",
+    backgroundColor: "#171717",
+    borderColor: "#171717",
   },
   voiceQuickTestText: {
     fontSize: 10.5,
     fontWeight: "800",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   voiceQuickTestTextActive: {
     color: "#FFFFFF",
@@ -2769,40 +2783,40 @@ const styles = StyleSheet.create({
 
   /* Voice Settings Modal Styles */
   voiceHdBadge: {
-    backgroundColor: "#ECFDF5",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "#A7F3D0",
+    borderColor: BrandColors.borderLight,
   },
   voiceHdBadgeText: {
     fontSize: 9.5,
     fontWeight: "800",
-    color: "#059669",
+    color: "#262626",
     letterSpacing: 0.5,
   },
   voiceCalloutBox: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 7,
-    backgroundColor: "#F0FDF4",
+    backgroundColor: BrandColors.surfaceMuted,
     padding: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#D1FAE5",
+    borderColor: "#DADADA",
     marginBottom: 10,
   },
   voiceCalloutText: {
     fontSize: 11,
-    color: "#065F46",
+    color: "#292929",
     lineHeight: 15,
     flex: 1,
   },
   voiceSectionTitle: {
     fontSize: 11,
     fontWeight: "800",
-    color: "#475569",
+    color: BrandColors.textBody,
     letterSpacing: 0.5,
     marginBottom: 7,
   },
@@ -2812,22 +2826,22 @@ const styles = StyleSheet.create({
   voiceOptionCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 9,
     padding: 9,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   voiceOptionCardSelected: {
-    backgroundColor: "#F0FDF4",
-    borderColor: "#10B981",
+    backgroundColor: BrandColors.surfaceMuted,
+    borderColor: "#353535",
   },
   voiceOptionRadio: {
     width: 18,
     height: 18,
     borderRadius: 9,
     borderWidth: 2,
-    borderColor: "#CBD5E1",
+    borderColor: "#C7C7C7",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -2835,7 +2849,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#10B981",
+    backgroundColor: "#353535",
   },
   voiceRadioDotInactive: {
     width: 0,
@@ -2844,10 +2858,10 @@ const styles = StyleSheet.create({
   voiceOptionName: {
     fontSize: 12.5,
     fontWeight: "700",
-    color: "#1E293B",
+    color: BrandColors.textDark,
   },
   voiceOptionNameSelected: {
-    color: "#065F46",
+    color: "#292929",
     fontWeight: "800",
   },
   voiceTagBadge: {
@@ -2856,26 +2870,26 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   voiceTagBadgeHD: {
-    backgroundColor: "#ECFDF5",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#A7F3D0",
+    borderColor: BrandColors.borderLight,
   },
   voiceTagBadgeDefault: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
   },
   voiceTagBadgeText: {
     fontSize: 9,
     fontWeight: "800",
   },
   voiceTagBadgeTextHD: {
-    color: "#059669",
+    color: "#262626",
   },
   voiceTagBadgeTextDefault: {
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   voiceOptionDesc: {
     fontSize: 10.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     marginTop: 2,
     lineHeight: 14,
   },
@@ -2888,23 +2902,23 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 7,
     borderRadius: 7,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   speedPillSelected: {
-    backgroundColor: "#ECFDF5",
-    borderColor: "#10B981",
+    backgroundColor: BrandColors.surfaceMuted,
+    borderColor: "#353535",
   },
   speedPillText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   speedPillTextSelected: {
-    color: "#059669",
+    color: "#262626",
     fontWeight: "800",
   },
   previewTestBtn: {
@@ -2914,19 +2928,19 @@ const styles = StyleSheet.create({
     gap: 6,
     height: 38,
     borderRadius: 8,
-    backgroundColor: "#ECFDF5",
+    backgroundColor: BrandColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#A7F3D0",
+    borderColor: BrandColors.borderLight,
     marginBottom: 6,
   },
   previewTestBtnActive: {
-    backgroundColor: "#EA580C",
-    borderColor: "#EA580C",
+    backgroundColor: "#171717",
+    borderColor: "#171717",
   },
   previewTestBtnText: {
     fontSize: 12,
     fontWeight: "800",
-    color: "#059669",
+    color: "#262626",
   },
   previewTestBtnTextActive: {
     color: "#FFFFFF",
@@ -2936,7 +2950,7 @@ const styles = StyleSheet.create({
     bottom: 84,
     right: 16,
     borderRadius: 24,
-    shadowColor: "#059669",
+    shadowColor: "#262626",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 10,

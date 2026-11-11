@@ -170,7 +170,7 @@ export default function ChatRoomModal({
             activeOpacity={0.7}
             onPress={onClose}
           >
-            <Ionicons name="chevron-back" size={24} color="#0F172A" />
+            <Ionicons name="chevron-back" size={24} color={BrandColors.textDark} />
           </TouchableOpacity>
 
           <View style={styles.headerInfo}>
@@ -190,7 +190,7 @@ export default function ChatRoomModal({
           </View>
 
           <TouchableOpacity style={styles.infoBtn} activeOpacity={0.7}>
-            <Ionicons name="ellipsis-vertical" size={18} color="#64748B" />
+            <Ionicons name="ellipsis-vertical" size={18} color={BrandColors.textMuted} />
           </TouchableOpacity>
         </View>
 
@@ -227,7 +227,7 @@ export default function ChatRoomModal({
                 style={styles.removeAttachedBtn}
                 onPress={() => setAttachedImage(null)}
               >
-                <Ionicons name="close-circle" size={20} color="#EF4444" />
+                <Ionicons name="close-circle" size={20} color="#242424" />
               </TouchableOpacity>
             </View>
           )}
@@ -249,7 +249,7 @@ export default function ChatRoomModal({
                   ? "Hỏi Chef AI về món ăn, thay nguyên liệu..."
                   : "Nhập tin nhắn cùng hội bếp..."
               }
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={BrandColors.textPlaceholder}
               value={inputText}
               onChangeText={setInputText}
               multiline
@@ -267,7 +267,7 @@ export default function ChatRoomModal({
               <Ionicons
                 name="send"
                 size={16}
-                color={inputText.trim() || attachedImage ? "#FFFFFF" : "#94A3B8"}
+                color={inputText.trim() || attachedImage ? "#FFFFFF" : "#686868"}
               />
             </TouchableOpacity>
           </View>
@@ -281,16 +281,16 @@ export default function ChatRoomModal({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
   },
   topHeader: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: BrandColors.borderLight,
   },
   backBtn: {
     padding: 6,
@@ -307,16 +307,16 @@ const styles = StyleSheet.create({
   roomTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     maxWidth: "80%",
   },
   aiBadge: {
-    backgroundColor: "#FFF3E0",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "#FFE0B2",
+    borderColor: "#DADADA",
   },
   aiBadgeText: {
     fontSize: 9,
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   },
   roomSubtitle: {
     fontSize: 11,
-    color: "#10B981",
+    color: BrandColors.textBody,
     fontWeight: "500",
     marginTop: 1,
   },
@@ -335,16 +335,16 @@ const styles = StyleSheet.create({
   aiHintBanner: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 14,
     paddingVertical: 8,
     gap: 6,
     borderBottomWidth: 1,
-    borderBottomColor: "#FFEDD5",
+    borderBottomColor: BrandColors.borderLight,
   },
   aiHintText: {
     fontSize: 11.5,
-    color: "#C2410C",
+    color: "#282828",
     flex: 1,
   },
   keyboardContainer: {
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     marginRight: 8,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
   },
   bubbleWrapper: {
     flexShrink: 1,
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   senderName: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   messageBubble: {
     paddingHorizontal: 14,
@@ -394,10 +394,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   bubbleOther: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderTopLeftRadius: 4,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
   },
   bubbleMe: {
     backgroundColor: BrandColors.primary,
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   textOther: {
-    color: "#1E293B",
+    color: BrandColors.textDark,
   },
   textMe: {
     color: "#FFFFFF",
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
   },
   messageTime: {
     fontSize: 10,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     marginTop: 3,
   },
   timeLeft: {
@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
   },
   attachedThumb: {
     width: 50,
@@ -452,9 +452,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: BrandColors.borderLight,
   },
   attachBtn: {
     padding: 8,
@@ -462,21 +462,21 @@ const styles = StyleSheet.create({
   },
   chatInput: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
     fontSize: 13.5,
-    color: "#0F172A",
+    color: BrandColors.textDark,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     maxHeight: 80,
   },
   sendBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 8,

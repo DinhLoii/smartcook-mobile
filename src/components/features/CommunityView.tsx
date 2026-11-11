@@ -3,9 +3,9 @@ import CreatePostModal from "@/components/community/CreatePostModal";
 import DirectChatModal from "@/components/community/DirectChatModal";
 import MessengerConversationsModal from "@/components/community/MessengerConversationsModal";
 import PostCard from "@/components/community/PostCard";
+import { useAuth } from "@/contexts/AuthContext";
 import { BrandColors } from "@/constants/brandColors";
 import { CommunityService, CURRENT_USER } from "@/services/communityService";
-import { socketService } from "@/services/socketService";
 import {
   ChatMessage,
   CommunityAuthor,
@@ -13,7 +13,7 @@ import {
   DirectConversation,
 } from "@/types";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Image,
@@ -38,17 +38,24 @@ const COMMUNITY_TAGS = [
 export default function CommunityView({
   insetsTop,
   insetsBottom,
+  openInboxOnMount = false,
+  onInboxOpened,
+  onOpenAssistant,
 }: {
   insetsTop: number;
   insetsBottom?: number;
+  openInboxOnMount?: boolean;
+  onInboxOpened?: () => void;
+  onOpenAssistant: () => void;
 }) {
+  const { user } = useAuth();
   // State from CommunityService
   const [posts, setPosts] = useState<CommunityPost[]>(() =>
     CommunityService.getPosts(),
   );
-  const [conversations, setConversations] = useState<DirectConversation[]>(() =>
-    CommunityService.getConversations(),
-  );
+  const [conversations, setConversations] = useState<DirectConversation[]>([]);
+  const [inboxLoading, setInboxLoading] = useState(false);
+  const [inboxError, setInboxError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   // Filters & Search
@@ -58,7 +65,7 @@ export default function CommunityView({
 
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showConversationsModal, setShowConversationsModal] = useState(false);
+  const [showConversationsModal, setShowConversationsModal] = useState(openInboxOnMount);
   const [activeCommentPost, setActiveCommentPost] =
     useState<CommunityPost | null>(null);
 
@@ -67,68 +74,56 @@ export default function CommunityView({
     useState<CommunityAuthor | null>(null);
   const [activeConvId, setActiveConvId] = useState<string>("");
   const [directMessages, setDirectMessages] = useState<ChatMessage[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatError, setChatError] = useState(false);
+  const chatRequest = useRef(0);
+  const activeRoom = useRef("");
+  const returnToInbox = useRef(false);
 
   // Calculate total unread messages
   const totalUnread = useMemo(() => {
     return conversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
   }, [conversations]);
 
-  // Initial connect & fetch from backend
-  useEffect(() => {
-    socketService.connect();
-    CommunityService.fetchPosts({ tag: selectedTag, search: searchQuery });
-    CommunityService.fetchConversations();
+  const refreshInbox = useCallback(async () => {
+    setInboxLoading(true);
+    setInboxError(false);
+    try {
+      await CommunityService.fetchConversations();
+    } catch {
+      setInboxError(true);
+    } finally {
+      setInboxLoading(false);
+    }
   }, []);
 
-  // Subscribe to service updates
   useEffect(() => {
-    const unsub = CommunityService.subscribe(() => {
+    if (openInboxOnMount) onInboxOpened?.();
+  }, [openInboxOnMount, onInboxOpened]);
+
+  useEffect(() => {
+    CommunityService.setChatUser(user?.id);
+    setConversations(CommunityService.getConversations());
+    const unsubscribe = CommunityService.subscribe(() => {
       setPosts(CommunityService.getPosts());
       setConversations(CommunityService.getConversations());
-      if (directChatTarget) {
-        setDirectMessages(
-          CommunityService.getDirectMessages(activeConvId || directChatTarget.id),
-        );
-      }
+      if (activeRoom.current) setDirectMessages(CommunityService.getDirectMessages(activeRoom.current));
     });
-    return unsub;
-  }, [directChatTarget, activeConvId]);
+    void CommunityService.fetchPosts();
+    if (user?.id) void refreshInbox();
+    return () => {
+      chatRequest.current++;
+      activeRoom.current = "";
+      unsubscribe();
+      CommunityService.setActiveConversation("");
+    };
+  }, [user?.id, refreshInbox]);
 
-  // Realtime Socket listener for incoming messages
-  useEffect(() => {
-    const unsubSocket = socketService.onNewMessage((msg) => {
-      // If message belongs to active direct chat
-      if (
-        directChatTarget &&
-        (msg.conversationId === activeConvId ||
-          msg.sender?.id === directChatTarget.id ||
-          (msg.sender as any)?._id === directChatTarget.id)
-      ) {
-        setDirectMessages((prev) => {
-          if (prev.some((m) => m.id === msg.id)) return prev;
-          const isSenderTarget =
-            msg.sender?.id === directChatTarget.id ||
-            (msg.sender as any)?._id === directChatTarget.id ||
-            msg.sender?.name === directChatTarget.name;
-          const isMe = msg.isMe !== undefined ? Boolean(msg.isMe) : !isSenderTarget;
-
-          return [
-            ...prev,
-            {
-              id: msg.id,
-              sender: msg.sender as any,
-              text: msg.text,
-              imageUri: msg.imageUri,
-              timestamp: msg.timestamp,
-              isMe,
-            },
-          ];
-        });
-      }
-    });
-
-    return unsubSocket;
-  }, [directChatTarget, activeConvId]);
+  const chatContacts = useMemo(() => {
+    const authors = posts.map((post) => post.author)
+      .filter((author) => /^[a-f0-9]{24}$/i.test(author.id) && author.id !== user?.id);
+    return [...new Map(authors.map((author) => [author.id, author])).values()];
+  }, [posts, user?.id]);
 
   // On refresh with full backend synchronization
   const onRefresh = async () => {
@@ -198,51 +193,50 @@ export default function CommunityView({
     }
   };
 
-  // Open direct 1-1 chat with a user
-  const handleOpenDirectChat = async (author: CommunityAuthor) => {
-    // Leave previous room if any
-    if (activeConvId) {
-      socketService.leaveRoom(activeConvId);
+  const handleOpenDirectChat = async (author: CommunityAuthor, conversationId?: string) => {
+    if (author.id === user?.id) return;
+    if (!/^[a-f0-9]{24}$/i.test(author.id)) {
+      Alert.alert("Tin nhắn", "Tài khoản này chưa có trên SmartCook.");
+      return;
     }
 
-    // Instantly clear/load cache for the new target so previous chat never persists
+    const request = ++chatRequest.current;
+    activeRoom.current = "";
+    CommunityService.setActiveConversation("");
     setActiveConvId("");
     setDirectChatTarget(author);
-    const cached = CommunityService.getDirectMessages(author.id);
-    setDirectMessages(cached);
-    CommunityService.markConversationAsRead(author.id);
-
+    setDirectMessages([]);
+    setChatLoading(true);
+    setChatError(false);
     try {
-      const directInfo = await CommunityService.getOrCreateDirectChat(author.id);
-      setActiveConvId(directInfo.conversationId);
-      const history = await CommunityService.fetchMessageHistory(directInfo.conversationId);
-      setDirectMessages(history);
-    } catch (e) {
-      console.warn("Lỗi tải lịch sử chat:", e);
+      const id = conversationId ?? (await CommunityService.getOrCreateDirectChat(author.id)).conversationId;
+      if (request !== chatRequest.current) return;
+      activeRoom.current = id;
+      CommunityService.setActiveConversation(id);
+      setActiveConvId(id);
+      setDirectMessages(CommunityService.getDirectMessages(id));
+      await CommunityService.fetchMessageHistory(id);
+    } catch {
+      if (request === chatRequest.current) setChatError(true);
+    } finally {
+      if (request === chatRequest.current) setChatLoading(false);
     }
   };
 
   const handleCloseDirectChat = () => {
-    if (activeConvId) {
-      socketService.leaveRoom(activeConvId);
-    }
+    chatRequest.current++;
+    activeRoom.current = "";
+    CommunityService.setActiveConversation("");
     setDirectChatTarget(null);
     setActiveConvId("");
     setDirectMessages([]);
+    if (returnToInbox.current) setShowConversationsModal(true);
+    returnToInbox.current = false;
   };
 
   const handleSendDirectMessage = async (text: string, imageUri?: string) => {
-    if (!directChatTarget) return;
-    const sent = await CommunityService.sendDirectMessage(
-      directChatTarget,
-      text,
-      imageUri,
-      activeConvId,
-    );
-    setDirectMessages((prev) => {
-      if (prev.some((m) => m.id === sent.id)) return prev;
-      return [...prev, sent];
-    });
+    if (!activeConvId) throw new Error("Hội thoại chưa sẵn sàng.");
+    await CommunityService.sendDirectMessage(activeConvId, text, imageUri);
   };
 
   return (
@@ -250,18 +244,18 @@ export default function CommunityView({
       {/* Header */}
       <View style={[styles.header, { paddingTop: insetsTop + 8 }]}>
         <View style={styles.headerTop}>
-          <View style={styles.communityLeft}>
-            <View style={styles.communityIconBadge}>
-              <MaterialCommunityIcons
-                name="account-group"
-                size={22}
-                color={BrandColors.primary}
-              />
-            </View>
-            <Text style={styles.communityLabel}>Cộng đồng</Text>
-          </View>
+          <Text style={styles.communityLabel} accessibilityRole="header">Cộng đồng</Text>
 
           <View style={styles.headerActionsRight}>
+            <TouchableOpacity
+              style={styles.headerActionBtn}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel="Mở trợ lý SmartCook"
+              onPress={onOpenAssistant}
+            >
+              <Ionicons name="sparkles-outline" size={20} color={BrandColors.textDark} />
+            </TouchableOpacity>
             {/* Search Icon Button */}
             <TouchableOpacity
               style={[
@@ -269,12 +263,14 @@ export default function CommunityView({
                 isSearchOpen && styles.headerActionBtnActive,
               ]}
               activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel={isSearchOpen ? "Đóng tìm kiếm" : "Tìm bài viết"}
               onPress={() => setIsSearchOpen((prev) => !prev)}
             >
               <Ionicons
                 name={isSearchOpen ? "close" : "search-outline"}
                 size={20}
-                color={isSearchOpen ? BrandColors.primary : "#0F172A"}
+                color={isSearchOpen ? BrandColors.primary : "#171717"}
               />
             </TouchableOpacity>
 
@@ -282,12 +278,14 @@ export default function CommunityView({
             <TouchableOpacity
               style={styles.headerActionBtn}
               activeOpacity={0.75}
-              onPress={() => setShowConversationsModal(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Tin nhắn"
+              onPress={() => { setShowConversationsModal(true); void refreshInbox(); }}
             >
               <MaterialCommunityIcons
                 name="message-processing-outline"
                 size={22}
-                color="#0F172A"
+                color={BrandColors.textDark}
               />
               {totalUnread > 0 && (
                 <View style={styles.messengerBadge}>
@@ -310,7 +308,7 @@ export default function CommunityView({
             <TextInput
               style={styles.searchInput}
               placeholder="Tìm món ngon, thành viên, bí quyết..."
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={BrandColors.textPlaceholder}
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoFocus
@@ -324,7 +322,7 @@ export default function CommunityView({
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 style={styles.clearBtn}
               >
-                <Ionicons name="close-circle" size={16} color="#94A3B8" />
+                <Ionicons name="close-circle" size={16} color={BrandColors.textPlaceholder} />
               </TouchableOpacity>
             )}
           </View>
@@ -346,11 +344,12 @@ export default function CommunityView({
           { paddingBottom: 110 + (insetsBottom || 0) },
         ]}
       >
-        {/* Modern Create Post Banner / Action Card */}
+        {/* Composer */}
         <View style={styles.createPostCard}>
           <TouchableOpacity
             style={styles.createPostTopRow}
             activeOpacity={0.85}
+            accessibilityRole="button"
             onPress={() => setShowCreateModal(true)}
           >
             <Image
@@ -359,12 +358,10 @@ export default function CommunityView({
             />
             <View style={styles.fakeInput}>
               <Text style={styles.fakeInputPlaceholder}>
-                Hôm nay bạn nấu món gì ngon? Chia sẻ nhé...
+                Hôm nay bạn nấu món gì?
               </Text>
             </View>
           </TouchableOpacity>
-
-          <View style={styles.createPostDivider} />
 
           <View style={styles.createPostActionsRow}>
             {/* Quick action: Image */}
@@ -373,14 +370,7 @@ export default function CommunityView({
               activeOpacity={0.75}
               onPress={() => setShowCreateModal(true)}
             >
-              <View
-                style={[
-                  styles.actionPillIconWrap,
-                  { backgroundColor: "#FEF2F2" },
-                ]}
-              >
-                <Ionicons name="images" size={16} color="#EF4444" />
-              </View>
+              <Ionicons name="images-outline" size={18} color={BrandColors.textDark} />
               <Text style={styles.actionPillText}>Ảnh món ăn</Text>
             </TouchableOpacity>
 
@@ -390,7 +380,7 @@ export default function CommunityView({
               activeOpacity={0.85}
               onPress={() => setShowCreateModal(true)}
             >
-              <Ionicons name="add-circle" size={16} color="#FFFFFF" />
+              <Ionicons name="add" size={18} color={BrandColors.surfaceCard} />
               <Text style={styles.publishPostBtnText}>Đăng bài</Text>
             </TouchableOpacity>
           </View>
@@ -410,6 +400,8 @@ export default function CommunityView({
                   key={tag}
                   style={[styles.tagChip, isSelected && styles.tagChipActive]}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
                   onPress={() => {
                     setSelectedTag(tag);
                     CommunityService.fetchPosts({
@@ -451,7 +443,7 @@ export default function CommunityView({
           ))
         ) : (
           <View style={styles.emptyState}>
-            <Ionicons name="restaurant-outline" size={48} color="#CBD5E1" />
+            <Ionicons name="restaurant-outline" size={48} color="#C7C7C7" />
             <Text style={styles.emptyTitle}>Chưa có bài viết nào phù hợp</Text>
             <Text style={styles.emptySubtitle}>
               Hãy là người đầu tiên chia sẻ công thức hoặc mẹo nấu ăn hữu ích này nhé!
@@ -490,16 +482,26 @@ export default function CommunityView({
       <MessengerConversationsModal
         visible={showConversationsModal}
         conversations={conversations}
+        contacts={chatContacts}
+        loading={inboxLoading}
+        loadError={inboxError}
+        onRetry={refreshInbox}
         onClose={() => setShowConversationsModal(false)}
-        onSelectConversation={(user) => {
+        onSelectConversation={(author, conversationId) => {
+          returnToInbox.current = true;
           setShowConversationsModal(false);
-          handleOpenDirectChat(user);
+          void handleOpenDirectChat(author, conversationId);
         }}
       />
 
       {/* 1-1 Direct Messenger Chat Window */}
       <DirectChatModal
+        key={directChatTarget?.id ?? "closed"}
         visible={!!directChatTarget}
+        loading={chatLoading}
+        loadError={chatError}
+        canSend={!!activeConvId}
+        onRetry={() => { if (directChatTarget) void handleOpenDirectChat(directChatTarget, activeConvId || undefined); }}
         targetUser={directChatTarget}
         messages={directMessages}
         onClose={handleCloseDirectChat}
@@ -513,39 +515,26 @@ export default function CommunityView({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
   },
   header: {
     paddingHorizontal: 16,
     paddingBottom: 10,
     marginBottom: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: BrandColors.borderLight,
   },
   headerTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  communityLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  communityIconBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#FFF3E0",
-    justifyContent: "center",
-    alignItems: "center",
-  },
   communityLabel: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: "800",
-    color: "#0F172A",
-    letterSpacing: -0.2,
+    color: BrandColors.textDark,
+    letterSpacing: -0.6,
   },
   headerActionsRight: {
     flexDirection: "row",
@@ -553,25 +542,22 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerActionBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "#F8FAFC",
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
   },
   headerActionBtnActive: {
-    backgroundColor: "#FFF3E0",
+    backgroundColor: BrandColors.inputBg,
     borderColor: BrandColors.primary,
   },
   messengerBadge: {
     position: "absolute",
     top: -3,
     right: -3,
-    backgroundColor: "#EF4444",
+    backgroundColor: "#242424",
     minWidth: 16,
     height: 16,
     borderRadius: 8,
@@ -589,7 +575,7 @@ const styles = StyleSheet.create({
   headerSearchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 7,
@@ -601,7 +587,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 13,
-    color: "#0F172A",
+    color: BrandColors.textDark,
     paddingVertical: 4,
     fontWeight: "500",
   },
@@ -615,17 +601,11 @@ const styles = StyleSheet.create({
     paddingBottom: 90,
   },
   createPostCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 14,
+    gap: 10,
+    paddingBottom: 14,
     marginBottom: 14,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderBottomWidth: 1,
+    borderBottomColor: BrandColors.borderLight,
   },
   createPostTopRow: {
     flexDirection: "row",
@@ -636,26 +616,21 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
   },
   fakeInput: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 22,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   fakeInputPlaceholder: {
     fontSize: 13,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     fontWeight: "500",
-  },
-  createPostDivider: {
-    height: 1,
-    backgroundColor: "#F1F5F9",
-    marginVertical: 10,
   },
   createPostActionsRow: {
     flexDirection: "row",
@@ -666,20 +641,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingVertical: 4,
+    minHeight: 44,
     paddingHorizontal: 8,
-  },
-  actionPillIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
   },
   actionPillText: {
     fontSize: 12.5,
     fontWeight: "600",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   publishPostBtn: {
     flexDirection: "row",
@@ -687,13 +655,8 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: BrandColors.primary,
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    shadowColor: BrandColors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 3,
+    minHeight: 44,
+    borderRadius: 11,
   },
   publishPostBtnText: {
     fontSize: 12.5,
@@ -709,21 +672,21 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   tagChip: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   tagChipActive: {
-    backgroundColor: "#FFF3E0",
+    backgroundColor: BrandColors.inputBg,
     borderColor: BrandColors.primary,
   },
   tagChipText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#64748B",
+    color: BrandColors.textMuted,
   },
   tagChipTextActive: {
     color: BrandColors.primaryDark,
@@ -738,12 +701,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#334155",
+    color: BrandColors.textBody,
     marginTop: 10,
   },
   emptySubtitle: {
     fontSize: 12.5,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     textAlign: "center",
     marginTop: 4,
     lineHeight: 18,

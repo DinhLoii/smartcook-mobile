@@ -131,7 +131,7 @@ export default function CommentsModal({
                 activeOpacity={0.7}
                 onPress={onClose}
               >
-                <Ionicons name="close" size={20} color="#64748B" />
+                <Ionicons name="close" size={20} color={BrandColors.textMuted} />
               </TouchableOpacity>
             </View>
           </View>
@@ -148,7 +148,7 @@ export default function CommentsModal({
                 <Ionicons
                   name="chatbubbles-outline"
                   size={42}
-                  color="#CBD5E1"
+                  color="#C7C7C7"
                 />
                 <Text style={styles.emptyText}>
                   Chưa có bình luận nào. Hãy là người đầu tiên đặt câu hỏi hoặc
@@ -163,7 +163,7 @@ export default function CommentsModal({
             <TextInput
               style={styles.textInput}
               placeholder="Viết bình luận hoặc trao đổi bí quyết..."
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={BrandColors.textPlaceholder}
               value={commentText}
               onChangeText={setCommentText}
               multiline
@@ -180,7 +180,7 @@ export default function CommentsModal({
               <Ionicons
                 name="send"
                 size={16}
-                color={commentText.trim().length > 0 ? "#FFFFFF" : "#94A3B8"}
+                color={commentText.trim().length > 0 ? "#FFFFFF" : "#686868"}
               />
             </TouchableOpacity>
           </View>
@@ -198,10 +198,10 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(15, 23, 42, 0.45)",
+    backgroundColor: "rgba(27, 27, 27, 0.45)",
   },
   sheetContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: "80%",
@@ -217,14 +217,14 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: BrandColors.borderLight,
     paddingBottom: 12,
   },
   indicatorBar: {
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
     marginBottom: 8,
   },
   headerTitleRow: {
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   sheetTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   closeBtn: {
     padding: 4,
@@ -262,16 +262,16 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
   },
   commentBubble: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     paddingHorizontal: 12,
     paddingVertical: 9,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: BrandColors.borderLight,
   },
   authorHeader: {
     flexDirection: "row",
@@ -287,10 +287,10 @@ const styles = StyleSheet.create({
   authorName: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   badgePill: {
-    backgroundColor: "#FFF3E0",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 6,
@@ -304,13 +304,13 @@ const styles = StyleSheet.create({
   commentChatBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF3E0",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,
     gap: 3,
     borderWidth: 1,
-    borderColor: "#FFE0B2",
+    borderColor: "#DADADA",
     marginLeft: 6,
   },
   commentChatBtnText: {
@@ -321,11 +321,11 @@ const styles = StyleSheet.create({
   commentBody: {
     fontSize: 13,
     lineHeight: 18,
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   timestamp: {
     fontSize: 10.5,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     marginTop: 4,
   },
   emptyContainer: {
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 13,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     textAlign: "center",
     marginTop: 10,
     lineHeight: 18,
@@ -347,26 +347,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
-    backgroundColor: "#FFFFFF",
+    borderTopColor: BrandColors.borderLight,
+    backgroundColor: BrandColors.surfaceCard,
   },
   textInput: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
     fontSize: 13.5,
-    color: "#0F172A",
+    color: BrandColors.textDark,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     maxHeight: 80,
   },
   sendButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#E5E5E5",
     alignItems: "center",
     justifyContent: "center",
     marginLeft: 10,

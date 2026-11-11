@@ -6,6 +6,7 @@ import React, {
 } from "react";
 import authService from "@/services/authService";
 import { CartService } from "@/services/cartService";
+import { CommunityService } from "@/services/communityService";
 import socketService from "@/services/socketService";
 import { onSessionExpired } from "@/services/apiClient";
 import { tokenStorage } from "@/utils/tokenStorage";
@@ -41,6 +42,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<StoredUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    CommunityService.setChatUser(user?.id);
+    return () => CommunityService.setChatUser();
+  }, [user?.id]);
 
   // Initialize Auth state from AsyncStorage on app launch
   useEffect(() => {

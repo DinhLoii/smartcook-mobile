@@ -1,3 +1,4 @@
+import { BrandColors } from "@/constants/brandColors";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -89,7 +90,7 @@ export default function ShoppingNoteModal({
           {/* Header đơn giản */}
           <View style={styles.headerRow}>
             <View style={styles.headerLeft}>
-              <Ionicons name="cart-outline" size={20} color="#0F172A" />
+              <Ionicons name="cart-outline" size={20} color={BrandColors.textDark} />
               <Text style={styles.headerTitle}>Giỏ hàng đi chợ</Text>
               <View style={styles.countPill}>
                 <Text style={styles.countText}>{items.length} món</Text>
@@ -101,7 +102,7 @@ export default function ShoppingNoteModal({
               onPress={onClose}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Ionicons name="close" size={18} color="#64748B" />
+              <Ionicons name="close" size={18} color={BrandColors.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -115,7 +116,7 @@ export default function ShoppingNoteModal({
           >
             {items.length === 0 ? (
               <View style={styles.emptyBox}>
-                <Ionicons name="basket-outline" size={36} color="#CBD5E1" />
+                <Ionicons name="basket-outline" size={36} color="#C7C7C7" />
                 <Text style={styles.emptyTitle}>Giỏ hàng đi chợ trống</Text>
                 <Text style={styles.emptySub}>
                   Hãy bấm &quot;+ Thêm vào giỏ&quot; ở từng nguyên liệu để ghi nhớ món cần mua nhé!
@@ -164,7 +165,7 @@ export default function ShoppingNoteModal({
                       onPress={() => handleDelete(item.id, item.name)}
                       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
-                      <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                      <Ionicons name="trash-outline" size={16} color="#242424" />
                     </TouchableOpacity>
                   </View>
                 );
@@ -225,7 +226,7 @@ export default function ShoppingNoteModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.5)",
+    backgroundColor: "rgba(27, 27, 27, 0.5)",
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 8,
@@ -236,10 +237,10 @@ const styles = StyleSheet.create({
     maxWidth: 520,
     height: "80%",
     maxHeight: "88%",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     borderRadius: 12, // bo tròn khung nhẹ
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     paddingTop: 16,
     paddingBottom: 16,
     paddingHorizontal: 16,
@@ -265,10 +266,10 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
   },
   countPill: {
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6, // bo tròn nhẹ
@@ -276,21 +277,21 @@ const styles = StyleSheet.create({
   countText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#475569",
+    color: BrandColors.textBody,
   },
   closeBtn: {
     width: 28,
     height: 28,
     borderRadius: 8, // bo tròn nhẹ
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
   },
   divider: {
     height: 1,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: BrandColors.inputBg,
     marginBottom: 6,
   },
   scrollList: {
@@ -307,11 +308,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 14.5,
     fontWeight: "700",
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   emptySub: {
     fontSize: 12,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
     textAlign: "center",
     paddingHorizontal: 16,
     lineHeight: 17,
@@ -321,7 +322,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#F8FAFC",
+    borderBottomColor: "#F7F7F7",
     gap: 10,
   },
   checkbox: {
@@ -329,14 +330,14 @@ const styles = StyleSheet.create({
     height: 19,
     borderRadius: 4, // bo tròn nhẹ
     borderWidth: 1.5,
-    borderColor: "#CBD5E1",
-    backgroundColor: "#FFFFFF",
+    borderColor: "#C7C7C7",
+    backgroundColor: BrandColors.surfaceCard,
     justifyContent: "center",
     alignItems: "center",
   },
   checkboxChecked: {
-    backgroundColor: "#10B981",
-    borderColor: "#10B981",
+    backgroundColor: "#353535",
+    borderColor: "#353535",
   },
   nameCol: {
     flex: 1,
@@ -344,26 +345,26 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#1E293B",
+    color: BrandColors.textDark,
   },
   itemNameChecked: {
     textDecorationLine: "line-through",
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
   },
   itemPrice: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   itemPriceChecked: {
     textDecorationLine: "line-through",
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
   },
   deleteBtn: {
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: "#FEE2E2",
+    backgroundColor: "#EEEEEE",
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 6,
@@ -372,7 +373,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: BrandColors.borderLight,
     gap: 10,
   },
   footerSummaryRow: {
@@ -382,26 +383,26 @@ const styles = StyleSheet.create({
   },
   footerLabel: {
     fontSize: 11.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "600",
   },
   footerPrice: {
     fontSize: 15,
     fontWeight: "800",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   statusPill: {
-    backgroundColor: "#FFF7ED",
+    backgroundColor: BrandColors.surfaceMuted,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#FFEDD5",
+    borderColor: BrandColors.borderLight,
   },
   statusPillText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   actionButtonsRow: {
     flexDirection: "row",
@@ -414,7 +415,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#10B981",
+    backgroundColor: "#353535",
     paddingVertical: 9,
     borderRadius: 8, // bo tròn nhẹ
     gap: 6,
@@ -431,6 +432,6 @@ const styles = StyleSheet.create({
   clearAllText: {
     fontSize: 11.5,
     fontWeight: "600",
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
   },
 });

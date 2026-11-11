@@ -1,3 +1,4 @@
+import { BrandColors } from "@/constants/brandColors";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -35,13 +36,13 @@ export default function ShoppingReminderBanner({
       style={[styles.bannerContainer, style]}
     >
       <LinearGradient
-        colors={["#FFF7ED", "#FFEDD5"]}
+        colors={["#F6F6F6", "#EAEAEA"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.bannerGradient}
       >
         <View style={styles.bannerIconBox}>
-          <Ionicons name="cart" size={17} color="#EA580C" />
+          <Ionicons name="cart" size={17} color={BrandColors.textDark} />
         </View>
 
         <View style={styles.bannerTextCol}>
@@ -58,7 +59,7 @@ export default function ShoppingReminderBanner({
 
         <View style={styles.bannerActionBtn}>
           <Text style={styles.bannerActionText}>Xem giỏ</Text>
-          <Ionicons name="chevron-forward" size={13} color="#EA580C" />
+          <Ionicons name="chevron-forward" size={13} color={BrandColors.textDark} />
         </View>
       </LinearGradient>
     </TouchableOpacity>
@@ -72,8 +73,8 @@ const styles = StyleSheet.create({
     borderRadius: 10, // bo tròn nhẹ
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#FDBA74",
-    shadowColor: "#EA580C",
+    borderColor: "#C2C2C2",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -90,11 +91,11 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
   },
   bannerTextCol: {
     flex: 1,
@@ -107,10 +108,10 @@ const styles = StyleSheet.create({
   bannerTitle: {
     fontSize: 12.5,
     fontWeight: "800",
-    color: "#9A3412",
+    color: "#292929",
   },
   bannerBadge: {
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
     paddingHorizontal: 6,
     paddingVertical: 1.5,
     borderRadius: 6,
@@ -122,24 +123,24 @@ const styles = StyleSheet.create({
   },
   bannerSubText: {
     fontSize: 11,
-    color: "#C2410C",
+    color: "#282828",
     marginTop: 1,
     fontWeight: "500",
   },
   bannerActionBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 6,
     gap: 2,
     borderWidth: 1,
-    borderColor: "#FED7AA",
+    borderColor: BrandColors.borderLight,
   },
   bannerActionText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
 });

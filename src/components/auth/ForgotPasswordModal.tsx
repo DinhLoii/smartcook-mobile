@@ -162,7 +162,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                   <Text style={styles.stepBadgeText}>Bước {step}/3</Text>
                 </View>
                 <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                  <Ionicons name="close" size={20} color="#64748B" />
+                  <Ionicons name="close" size={20} color={BrandColors.textMuted} />
                 </TouchableOpacity>
               </View>
 
@@ -180,7 +180,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               {/* Error banner */}
               {errorMessage && (
                 <View style={styles.errorBox}>
-                  <Ionicons name="alert-circle" size={16} color="#DC2626" />
+                  <Ionicons name="alert-circle" size={16} color="#212121" />
                   <Text style={styles.errorText}>{errorMessage}</Text>
                 </View>
               )}
@@ -190,11 +190,11 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 <View style={styles.formContainer}>
                   <Text style={styles.inputLabel}>Địa chỉ Email</Text>
                   <View style={styles.inputWrap}>
-                    <Ionicons name="mail-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
+                    <Ionicons name="mail-outline" size={18} color={BrandColors.textPlaceholder} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       placeholder="nguyenvana@gmail.com"
-                      placeholderTextColor="#94A3B8"
+                      placeholderTextColor={BrandColors.textPlaceholder}
                       value={email}
                       onChangeText={setEmail}
                       keyboardType="email-address"
@@ -225,11 +225,11 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 <View style={styles.formContainer}>
                   <Text style={styles.inputLabel}>Mã xác thực OTP (6 chữ số)</Text>
                   <View style={styles.inputWrap}>
-                    <Ionicons name="key-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
+                    <Ionicons name="key-outline" size={18} color={BrandColors.textPlaceholder} style={styles.inputIcon} />
                     <TextInput
                       style={[styles.input, styles.otpInput]}
                       placeholder="123456"
-                      placeholderTextColor="#94A3B8"
+                      placeholderTextColor={BrandColors.textPlaceholder}
                       value={otp}
                       onChangeText={(t) => setOtp(t.replace(/[^0-9]/g, "").slice(0, 6))}
                       keyboardType="number-pad"
@@ -266,11 +266,11 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                 <View style={styles.formContainer}>
                   <Text style={styles.inputLabel}>Mật khẩu mới</Text>
                   <View style={styles.inputWrap}>
-                    <Ionicons name="lock-closed-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
+                    <Ionicons name="lock-closed-outline" size={18} color={BrandColors.textPlaceholder} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       placeholder="Ít nhất 6 ký tự"
-                      placeholderTextColor="#94A3B8"
+                      placeholderTextColor={BrandColors.textPlaceholder}
                       value={newPassword}
                       onChangeText={setNewPassword}
                       secureTextEntry={!showPassword}
@@ -279,18 +279,18 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                       <Ionicons
                         name={showPassword ? "eye-off-outline" : "eye-outline"}
                         size={18}
-                        color="#94A3B8"
+                        color={BrandColors.textPlaceholder}
                       />
                     </TouchableOpacity>
                   </View>
 
                   <Text style={styles.inputLabel}>Xác nhận mật khẩu</Text>
                   <View style={styles.inputWrap}>
-                    <Ionicons name="shield-checkmark-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
+                    <Ionicons name="shield-checkmark-outline" size={18} color={BrandColors.textPlaceholder} style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       placeholder="Nhập lại mật khẩu mới"
-                      placeholderTextColor="#94A3B8"
+                      placeholderTextColor={BrandColors.textPlaceholder}
                       value={confirmPassword}
                       onChangeText={setConfirmPassword}
                       secureTextEntry={!showPassword}
@@ -321,13 +321,13 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.65)",
+    backgroundColor: "rgba(27, 27, 27, 0.65)",
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
   modalCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     width: "100%",
     maxWidth: 420,
     borderRadius: 24,
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   stepBadge: {
-    backgroundColor: "#FFEDD5",
+    backgroundColor: "#EAEAEA",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
   stepBadgeText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   closeBtn: {
     padding: 4,
@@ -361,21 +361,21 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "800",
-    color: "#0F172A",
+    color: BrandColors.textDark,
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 13,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     lineHeight: 18,
     marginBottom: 16,
   },
   errorBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FEF2F2",
+    backgroundColor: "#F4F4F4",
     borderWidth: 1,
-    borderColor: "#FECACA",
+    borderColor: "#DADADA",
     borderRadius: 10,
     padding: 10,
     gap: 8,
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
-    color: "#DC2626",
+    color: "#212121",
     flex: 1,
     fontWeight: "500",
   },
@@ -393,14 +393,14 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#334155",
+    color: BrandColors.textBody,
   },
   inputWrap: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: BrandColors.background,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: BrandColors.borderLight,
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 48,
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: Platform.OS === "web" ? 16 : 14,
-    color: "#0F172A",
+    color: BrandColors.textDark,
     height: "100%",
   },
   otpInput: {
@@ -426,23 +426,23 @@ const styles = StyleSheet.create({
   },
   resendText: {
     fontSize: 12,
-    color: "#94A3B8",
+    color: BrandColors.textPlaceholder,
   },
   resendLink: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#EA580C",
+    color: BrandColors.textDark,
   },
   submitBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#EA580C",
+    backgroundColor: "#171717",
     borderRadius: 14,
     height: 48,
     marginTop: 8,
     gap: 8,
-    shadowColor: "#EA580C",
+    shadowColor: "#171717",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,

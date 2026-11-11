@@ -214,7 +214,7 @@ export default function LoginScreen() {
                 <Ionicons
                   name="alert-circle"
                   size={18}
-                  color="#DC2626"
+                  color="#212121"
                   style={{ marginRight: 8 }}
                 />
                 <Text style={styles.serverErrorBannerText}>{serverError}</Text>
@@ -353,7 +353,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.background,
   },
   keyboardAvoid: {
     flex: 1,
@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 4,
     paddingBottom: 4,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
     justifyContent: "center",
   },
   checkboxRow: {
@@ -384,11 +384,11 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 5,
     borderWidth: 1.5,
-    borderColor: "#CBD5E1",
+    borderColor: "#C7C7C7",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: BrandColors.surfaceCard,
   },
   checkboxChecked: {
     backgroundColor: BrandColors.primary,
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   },
   checkboxLabel: {
     fontSize: 12.5,
-    color: "#64748B",
+    color: BrandColors.textMuted,
     fontWeight: "600",
   },
   actionRow: {
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: 12.5,
-    color: "#64748B", // Warm Gourmet Tangerine
+    color: BrandColors.textMuted, // Warm Gourmet Tangerine
     fontWeight: "600",
   },
   loginButtonWrapper: {
@@ -452,9 +452,9 @@ const styles = StyleSheet.create({
   serverErrorBanner: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FEF2F2",
+    backgroundColor: "#F4F4F4",
     borderWidth: 1.5,
-    borderColor: "#FCA5A5",
+    borderColor: "#DADADA",
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     fontWeight: "600",
-    color: "#DC2626",
+    color: "#212121",
     lineHeight: 18,
   },
 });
